@@ -1,9 +1,9 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import { Box, Card, CardContent, Divider, Typography } from "@mui/material";
+import { Box, Card, CardContent, Divider, LinearProgress, Typography } from "@mui/material";
 import React from "react";
 function ReadingHistoryCard({ readingHistory }) {
   return (
-    <Card sx={{ mt: 6, mx: 4, overscrollBehavior: "contain" }}>
+    <Card sx={{ mt: 6, mx: 2, textAlign: "left", overscrollBehavior: "contain" }}>
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <AccessTimeIcon sx={{ mr: 1, fontSize: 16 }} />
@@ -23,6 +23,18 @@ function ReadingHistoryCard({ readingHistory }) {
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
                 Last read: {book.lastRead}
               </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={60}
+                sx={{
+                  "& .MuiLinearProgress-root": {
+                    backgroundColor: "gray",
+                  },
+                  "& .MuiLinearProgress-bar": {
+                    backgroundColor: "black",
+                  },
+                }}
+              />
               {index < readingHistory.length - 1 && <Divider sx={{ mt: 1 }} />}
             </Box>
           ))}

@@ -2,7 +2,7 @@ import { Star } from "@mui/icons-material";
 import { Box, Button, Card, CardActions, CardContent, Typography } from "@mui/material";
 
 export const BookGrid = ({ books }) => (
-  <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={3}>
+  <Box sx={{ textAlign: "left", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 3 }}>
     {books.map((book) => (
       <Card key={book.id} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <CardContent sx={{ flexGrow: 1 }}>
@@ -14,7 +14,7 @@ export const BookGrid = ({ books }) => (
             {book.author}
           </Typography>
           <Box display="flex" alignItems="center" mt={1}>
-            <Star fontSize="small" color="primary" />
+            <Star fontSize="small" />
             <Typography variant="body2" ml={0.5}>
               {book.rating}
             </Typography>

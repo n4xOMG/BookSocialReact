@@ -24,7 +24,7 @@ export const Sidebar = () => {
           { text: "Home", icon: <Book />, link: "/" },
           { text: "My Stories", icon: <Person />, link: "/stories" },
           { text: "Book Clubs", icon: <Chat />, link: "/book-clubs" },
-          { text: "My Bookshelf", icon: <Bookmark />, link: "/bookshelf" },
+          { text: "Library", icon: <Bookmark />, link: "/library" },
         ].map((item, index) => (
           <ListItem onClick={() => navigate(`${item.link}`)} sx={{ cursor: "pointer" }} button key={index}>
             <ListItemIcon>{item.icon}</ListItemIcon>

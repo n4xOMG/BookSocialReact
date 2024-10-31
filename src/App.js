@@ -47,7 +47,7 @@ function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/bookshelf" element={<UserBookshelf />} />
+        <Route path="/library" element={<UserBookshelf />} />
         <Route path="/book-clubs" element={<BookClubs />} />
         <Route path="/stories" element={<UserBooks />} />
       </Routes>

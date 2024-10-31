@@ -1,265 +1,166 @@
 import { Box } from "@mui/material";
-import React, { useState } from "react";
-import { Sidebar } from "../../components/HomePage/Sidebar";
+import React from "react";
 import { Header } from "../../components/HomePage/Header";
 import { MainTabs } from "../../components/HomePage/MainTabs";
+import { Sidebar } from "../../components/HomePage/Sidebar";
 
 export default function HomePage() {
-  const [books, setBooks] = useState([
-    {
-      id: 1,
-      title: "The Great Gatsby",
-      author: "F. Scott Fitzgerald",
-      content:
-        "Just finished 'The Great Gatsby' and I'm in awe of Fitzgerald's prose! The way he captures the decadence and hollow pursuit of the American Dream in the 1920s is masterful. This quote really stuck with me: 'In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since.'",
-      likes: 42,
-      comments: 15,
-      shares: 7,
-      image: "https://g-m5ylkkul1dt.vusercontent.nethttps://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.5,
-      progress: 100,
-      genre: "Classic",
-      userImage: "https://g-m5ylkkul1dt.vusercontent.nethttps://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      userName: "LiteraryExplorer",
-      postTime: "2 hours ago",
-    },
-    {
-      id: 2,
-      title: "To Kill a Mockingbird",
-      author: "Harper Lee",
-      content:
-        "Re-reading 'To Kill a Mockingbird' for the umpteenth time, and it never fails to move me. Harper Lee's exploration of racial injustice and loss of innocence is as relevant today as it was when first published. This line always gives me chills: 'Mockingbirds don't do one thing but make music for us to enjoy. They don't eat up people's gardens, don't nest in corncribs, they don't do one thing but sing their hearts out for us.'",
-      likes: 57,
-      comments: 23,
-      shares: 12,
-      image: "/placeholder.svg?height=400&width=300",
-      rating: 5,
-      progress: 75,
-      genre: "Fiction",
-      userImage: "https://g-m5ylkkul1dt.vusercontent.nethttps://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      userName: "ClassicBookworm",
-      postTime: "1 day ago",
-    },
-  ]);
-
-  const [notifications, setNotifications] = useState([
-    { id: 1, content: "Jane Doe liked your review of 'Pride and Prejudice'", time: "2 hours ago" },
-    { id: 2, content: "New comment on your 'The Catcher in the Rye' post", time: "5 hours ago" },
-    { id: 3, content: "Book club meeting reminder: 'Dune' discussion tonight", time: "1 day ago" },
-  ]);
-
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "Alice", content: "Have you read the new Stephen King?", time: "10:30 AM" },
-    { id: 2, sender: "Bob", content: "What did you think of the ending of 1984?", time: "Yesterday" },
-    { id: 3, sender: "Carol", content: "Can you recommend a good sci-fi novel?", time: "2 days ago" },
-  ]);
-
-  const [featuredBooks, setFeaturedBooks] = useState([
+  const featuredBooks = [
     {
       id: 1,
       title: "The Midnight Library",
       author: "Matt Haig",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.8,
+      cover: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&auto=format&fit=crop&q=60",
+      rating: 4,
+      reviews: 4231,
     },
     {
       id: 2,
-      title: "Klara and the Sun",
-      author: "Kazuo Ishiguro",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.6,
-    },
-    {
-      id: 3,
-      title: "The Vanishing Half",
-      author: "Brit Bennett",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.7,
-    },
-    {
-      id: 4,
-      title: "The Four Winds",
-      author: "Kristin Hannah",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.5,
-    },
-    {
-      id: 5,
-      title: "Project Hail Mary",
-      author: "Andy Weir",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.9,
-    },
-  ]);
-
-  const [popularBooks, setPopularBooks] = useState([
-    {
-      id: 1,
-      title: "Atomic Habits",
-      author: "James Clear",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.9,
-    },
-    {
-      id: 2,
-      title: "Where the Crawdads Sing",
-      author: "Delia Owens",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.7,
-    },
-    {
-      id: 3,
-      title: "The Silent Patient",
-      author: "Alex Michaelides",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.5,
-    },
-    {
-      id: 4,
-      title: "The Invisible Life of Addie LaRue",
-      author: "V.E. Schwab",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.3,
-    },
-    {
-      id: 5,
       title: "The Seven Husbands of Evelyn Hugo",
       author: "Taylor Jenkins Reid",
-      image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-      rating: 4.6,
-    },
-  ]);
-
-  const [categorizedBooks, setCategorizedBooks] = useState([
-    {
-      category: "Science Fiction",
-      books: [
-        {
-          id: 1,
-          title: "Dune",
-          author: "Frank Herbert",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.7,
-        },
-        {
-          id: 2,
-          title: "The Hitchhiker's Guide to the Galaxy",
-          author: "Douglas Adams",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.5,
-        },
-        {
-          id: 3,
-          title: "Neuromancer",
-          author: "William Gibson",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.3,
-        },
-        {
-          id: 4,
-          title: "The Martian",
-          author: "Andy Weir",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.6,
-        },
-        {
-          id: 5,
-          title: "1984",
-          author: "George Orwell",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.8,
-        },
-      ],
+      cover: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=60",
+      rating: 5,
+      reviews: 3892,
     },
     {
-      category: "Mystery",
-      books: [
-        {
-          id: 1,
-          title: "The Girl with the Dragon Tattoo",
-          author: "Stieg Larsson",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.1,
-        },
-        {
-          id: 2,
-          title: "Gone Girl",
-          author: "Gillian Flynn",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.0,
-        },
-        {
-          id: 3,
-          title: "The Da Vinci Code",
-          author: "Dan Brown",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 3.8,
-        },
-        {
-          id: 4,
-          title: "And Then There Were None",
-          author: "Agatha Christie",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.7,
-        },
-        {
-          id: 5,
-          title: "The Girl on the Train",
-          author: "Paula Hawkins",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 3.9,
-        },
-      ],
+      id: 3,
+      title: "Tomorrow, and Tomorrow, and Tomorrow",
+      author: "Gabrielle Zevin",
+      cover: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=800&auto=format&fit=crop&q=60",
+      rating: 4,
+      reviews: 2789,
+    },
+  ];
+  const booksByCategory = {
+    Fiction: [
+      {
+        id: 1,
+        title: "Cloud Cuckoo Land",
+        author: "Anthony Doerr",
+        cover: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=800&auto=format&fit=crop&q=60",
+      },
+      {
+        id: 2,
+        title: "Demon Copperhead",
+        author: "Barbara Kingsolver",
+        cover: "https://images.unsplash.com/photo-1515098506762-79e1384e9d8e?w=800&auto=format&fit=crop&q=60",
+      },
+    ],
+    Mystery: [
+      {
+        id: 3,
+        title: "The Silent Patient",
+        author: "Alex Michaelides",
+        cover: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800&auto=format&fit=crop&q=60",
+      },
+      {
+        id: 4,
+        title: "The Thursday Murder Club",
+        author: "Richard Osman",
+        cover: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800&auto=format&fit=crop&q=60",
+      },
+    ],
+    Romance: [
+      {
+        id: 5,
+        title: "Book Lovers",
+        author: "Emily Henry",
+        cover: "https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=800&auto=format&fit=crop&q=60",
+      },
+      {
+        id: 6,
+        title: "Love and Other Words",
+        author: "Christina Lauren",
+        cover: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=800&auto=format&fit=crop&q=60",
+      },
+    ],
+    "Sci-Fi": [
+      {
+        id: 7,
+        title: "Project Hail Mary",
+        author: "Andy Weir",
+        cover: "https://images.unsplash.com/photo-1465929639680-64ee080eb3ed?w=800&auto=format&fit=crop&q=60",
+      },
+      {
+        id: 8,
+        title: "Sea of Tranquility",
+        author: "Emily St. John Mandel",
+        cover: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60",
+      },
+    ],
+    Biography: [
+      {
+        id: 9,
+        title: "The Light We Carry",
+        author: "Michelle Obama",
+        cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=60",
+      },
+      {
+        id: 10,
+        title: "I'm Glad My Mom Died",
+        author: "Jennette McCurdy",
+        cover: "https://images.unsplash.com/photo-1490633874781-1c63cc424610?w=800&auto=format&fit=crop&q=60",
+      },
+    ],
+    History: [
+      {
+        id: 11,
+        title: "The 1619 Project",
+        author: "Nikole Hannah-Jones",
+        cover: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800&auto=format&fit=crop&q=60",
+      },
+      {
+        id: 12,
+        title: "The Splendid and the Vile",
+        author: "Erik Larson",
+        cover: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=60",
+      },
+    ],
+  };
+  const trendingBooks = [
+    {
+      id: 1,
+      title: "Lessons in Chemistry",
+      author: "Bonnie Garmus",
+      cover: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=60",
+      readers: 25420,
     },
     {
-      category: "Fantasy",
-      books: [
-        {
-          id: 1,
-          title: "The Name of the Wind",
-          author: "Patrick Rothfuss",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.6,
-        },
-        {
-          id: 2,
-          title: "The Way of Kings",
-          author: "Brandon Sanderson",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.8,
-        },
-        {
-          id: 3,
-          title: "A Game of Thrones",
-          author: "George R.R. Martin",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.4,
-        },
-        {
-          id: 4,
-          title: "The Hobbit",
-          author: "J.R.R. Tolkien",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.7,
-        },
-        {
-          id: 5,
-          title: "Mistborn: The Final Empire",
-          author: "Brandon Sanderson",
-          image: "https://g-m5ylkkul1dt.vusercontent.net/placeholder.svg?height=300&width=200",
-          rating: 4.5,
-        },
-      ],
+      id: 2,
+      title: "Fourth Wing",
+      author: "Rebecca Yarros",
+      cover: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=60",
+      readers: 21350,
     },
-  ]);
-
+    {
+      id: 3,
+      title: "Iron Flame",
+      author: "Rebecca Yarros",
+      cover: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=60",
+      readers: 19845,
+    },
+    {
+      id: 4,
+      title: "Happy Place",
+      author: "Emily Henry",
+      cover: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=60",
+      readers: 17234,
+    },
+    {
+      id: 5,
+      title: "Hello Beautiful",
+      author: "Ann Napolitano",
+      cover: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=60",
+      readers: 15932,
+    },
+  ];
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
       <Sidebar />
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <Header />
         <Box component="main" sx={{ flex: 1, overflow: "auto", p: 3 }}>
-          <MainTabs featuredBooks={featuredBooks} popularBooks={popularBooks} categorizedBooks={categorizedBooks} />
+          <MainTabs featuredBooks={featuredBooks} booksByCategory={booksByCategory} trendingBooks={trendingBooks} />
         </Box>
       </Box>
     </Box>

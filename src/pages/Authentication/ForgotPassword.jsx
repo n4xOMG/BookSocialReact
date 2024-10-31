@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { sendForgotPasswordMail } from "../redux/auth/auth.action";
+import { sendForgotPasswordMail } from "../../redux/auth/auth.action";
 import { Alert, Box, Button, Card, CardContent, CardHeader, CircularProgress, Snackbar, TextField } from "@mui/material";
 
 const ForgotPassword = () => {

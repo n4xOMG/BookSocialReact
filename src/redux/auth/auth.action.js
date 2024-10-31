@@ -34,8 +34,8 @@ export const loginUserAction = (loginData) => async (dispatch) => {
       console.log("Error response data: ", error.response.data);
       console.log("Error response status: ", error.response.status);
 
-      if (error.response.status === 401) {
-        dispatch({ type: LOGIN_FAILED, payload: error.response.data });
+      if (error.response.status === 403) {
+        dispatch({ type: LOGIN_FAILED, payload: error.response.data.message });
       } else {
         dispatch({ type: LOGIN_FAILED, payload: error.message });
       }
@@ -57,7 +57,7 @@ export const registerUserAction = (registerData) => async (dispatch) => {
       console.log("Error response status: ", error.response.status);
 
       if (error.response.status === 406) {
-        dispatch({ type: REGISTER_FAILED, payload: error.response.data });
+        dispatch({ type: REGISTER_FAILED, payload: error.response.data.message });
       } else {
         dispatch({ type: REGISTER_FAILED, payload: error.message });
       }

@@ -17,7 +17,6 @@ export const UploadToCloudinary = async (file, folder) => {
     const formData = new FormData();
     formData.append("file", file.slice(start, end));
     formData.append("cloud_name", process.env.REACT_APP_CLOUD_NAME);
-    console.log("cloud_name", process.env.REACT_APP_CLOUD_NAME);
     formData.append("upload_preset", process.env.REACT_APP_UPLOAD_PRESET);
     formData.append("folder", folder);
 

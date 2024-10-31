@@ -18,8 +18,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUserAction } from "../redux/auth/auth.action";
-import UploadToCloudinary from "../utils/uploadToCloudinary";
+import { registerUserAction } from "../../redux/auth/auth.action";
+import UploadToCloudinary from "../../utils/uploadToCloudinary";
 
 export default function SignUp() {
   const dispatch = useDispatch();
@@ -134,7 +134,6 @@ export default function SignUp() {
           ...registerData,
           avatarUrl,
         };
-        console.log(formData);
         await dispatch(registerUserAction({ data: formData }));
       } catch (e) {
         console.error("Error signing up", e);

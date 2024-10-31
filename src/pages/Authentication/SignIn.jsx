@@ -14,10 +14,10 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
-import { getCurrentUserByJwt, loginUserAction } from "../redux/auth/auth.action";
+import { getCurrentUserByJwt, loginUserAction } from "../../redux/auth/auth.action";
 import { Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 function Copyright(props) {
   return (

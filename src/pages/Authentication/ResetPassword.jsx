@@ -16,7 +16,7 @@ import {
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { resetPasswordAction } from "../redux/auth/auth.action";
+import { resetPasswordAction } from "../../redux/auth/auth.action";
 const ResetPassword = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();

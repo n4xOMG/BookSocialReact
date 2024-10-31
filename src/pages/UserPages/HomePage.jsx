@@ -54,13 +54,6 @@ export default function HomePage() {
     { id: 3, sender: "Carol", content: "Can you recommend a good sci-fi novel?", time: "2 days ago" },
   ]);
 
-  const [readingHistory, setReadingHistory] = useState([
-    { id: 1, title: "1984", author: "George Orwell", lastRead: "2 days ago" },
-    { id: 2, title: "The Catcher in the Rye", author: "J.D. Salinger", lastRead: "1 week ago" },
-    { id: 3, title: "Pride and Prejudice", author: "Jane Austen", lastRead: "2 weeks ago" },
-    { id: 4, title: "The Hobbit", author: "J.R.R. Tolkien", lastRead: "1 month ago" },
-  ]);
-
   const [featuredBooks, setFeaturedBooks] = useState([
     {
       id: 1,
@@ -259,9 +252,10 @@ export default function HomePage() {
       ],
     },
   ]);
+
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
-      <Sidebar readingHistory={readingHistory} />
+      <Sidebar />
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <Header />
         <Box component="main" sx={{ flex: 1, overflow: "auto", p: 3 }}>

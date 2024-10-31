@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Divider, Typography } from "@mui/material";
 import React from "react";
 function ReadingHistoryCard({ readingHistory }) {
   return (
-    <Card sx={{ mt: 6, mx: 4 }}>
+    <Card sx={{ mt: 6, mx: 4, overscrollBehavior: "contain" }}>
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <AccessTimeIcon sx={{ mr: 1, fontSize: 16 }} />

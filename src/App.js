@@ -10,6 +10,9 @@ import SignIn from "./pages/Authentication/SignIn";
 import SignUp from "./pages/Authentication/SignUp";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
 import ResetPassword from "./pages/Authentication/ResetPassword";
+import UserBookshelf from "./components/HomePage/UserBookshelf";
+import BookClubs from "./pages/UserPages/BookClubs";
+import UserBooks from "./pages/UserPages/UserBooks";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -44,6 +47,9 @@ function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/bookshelf" element={<UserBookshelf />} />
+        <Route path="/book-clubs" element={<BookClubs />} />
+        <Route path="/stories" element={<UserBooks />} />
       </Routes>
       <AuthDialog />
     </div>

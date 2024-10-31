@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import React from "react";
 import { Header } from "../../components/HomePage/Header";
-import { MainTabs } from "../../components/HomePage/MainTabs";
+import { MainContent } from "../../components/HomePage/MainContent";
 import { Sidebar } from "../../components/HomePage/Sidebar";
 
 export default function HomePage() {
@@ -160,7 +160,7 @@ export default function HomePage() {
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <Header />
         <Box component="main" sx={{ flex: 1, overflow: "auto", p: 3 }}>
-          <MainTabs featuredBooks={featuredBooks} booksByCategory={booksByCategory} trendingBooks={trendingBooks} />
+          <MainContent featuredBooks={featuredBooks} booksByCategory={booksByCategory} trendingBooks={trendingBooks} />
         </Box>
       </Box>
     </Box>

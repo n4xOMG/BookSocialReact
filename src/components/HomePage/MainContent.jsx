@@ -3,7 +3,7 @@ import { Box, Grid2, IconButton, List, ListItem, Paper, Typography } from "@mui/
 import React from "react";
 import { BookCard } from "./BookCard";
 import { CategorySection } from "./CategorySection";
-export const MainTabs = ({ featuredBooks, booksByCategory, trendingBooks }) => {
+export const MainContent = ({ featuredBooks, booksByCategory, trendingBooks }) => {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "grey.50", textAlign: "left" }}>
       {/* Main Content */}

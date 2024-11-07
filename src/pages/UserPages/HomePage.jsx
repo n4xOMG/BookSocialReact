@@ -1,10 +1,24 @@
 import { Box } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import { Header } from "../../components/HomePage/Header";
 import { MainContent } from "../../components/HomePage/MainContent";
 import { Sidebar } from "../../components/HomePage/Sidebar";
+import { useDispatch, useSelector } from "react-redux";
+import { getBooksByCategories, getCategories } from "../../redux/category/category.action";
 
 export default function HomePage() {
+  const dispatch = useDispatch();
+  const { categories, booksByCategory, loading, error } = useSelector((state) => state.category);
+
+  useEffect(() => {
+    const fetchCategoriesAndBooks = async () => {
+      await dispatch(getCategories());
+      const categoryIds = categories.map((category) => category.id);
+      dispatch(getBooksByCategories(categoryIds));
+    };
+
+    fetchCategoriesAndBooks();
+  }, [dispatch]);
   const featuredBooks = [
     {
       id: 1,
@@ -31,7 +45,7 @@ export default function HomePage() {
       reviews: 2789,
     },
   ];
-  const booksByCategory = {
+  const booksByCategory2 = {
     Fiction: [
       {
         id: 1,
@@ -160,7 +174,13 @@ export default function HomePage() {
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <Header />
         <Box component="main" sx={{ flex: 1, overflow: "auto", p: 3 }}>
-          <MainContent featuredBooks={featuredBooks} booksByCategory={booksByCategory} trendingBooks={trendingBooks} />
+          <MainContent
+            featuredBooks={featuredBooks}
+            booksByCategory={booksByCategory}
+            trendingBooks={trendingBooks}
+            loading={loading}
+            error={error}
+          />
         </Box>
       </Box>
     </Box>

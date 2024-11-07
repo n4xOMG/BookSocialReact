@@ -1,8 +1,20 @@
 import { applyMiddleware, combineReducers, legacy_createStore } from "redux";
 import { thunk } from "redux-thunk";
 import { authReducer } from "./auth/auth.reducer";
+import { userReducer } from "./user/user.reducer";
+import { bookReducer } from "./book/book.reducer";
+import { categoryReducer } from "./category/category.reducer";
+import { tagReducer } from "./tag/tag.reducer";
+import { chapterReducer } from "./chapter/chapter.reducer";
+import { commentReducer } from "./comment/comment.reducer";
 
 const rootReducers = combineReducers({
   auth: authReducer,
+  user: userReducer,
+  book: bookReducer,
+  chapter: chapterReducer,
+  comment: commentReducer,
+  category: categoryReducer,
+  tag: tagReducer,
 });
 export const store = legacy_createStore(rootReducers, applyMiddleware(thunk));

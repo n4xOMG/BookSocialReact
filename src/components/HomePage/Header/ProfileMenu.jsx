@@ -1,9 +1,20 @@
 import { History, Logout, Settings } from "@mui/icons-material";
 import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutAction } from "../../../redux/auth/auth.action";
+import { useNavigate } from "react-router-dom";
 export default function ProfileMenu() {
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
   const open = Boolean(anchorEl);
+  const handleLogout = () => {
+    localStorage.removeItem("jwt");
+    dispatch(logoutAction());
+    navigate("/sign-in");
+  };
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -63,28 +74,35 @@ export default function ProfileMenu() {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem onClick={handleClose}>
-          <Avatar /> Profile
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon>
-            <History fontSize="small" />
-          </ListItemIcon>
-          Reading History
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon>
-            <Settings fontSize="small" />
-          </ListItemIcon>
-          Settings
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon>
-            <Logout fontSize="small" />
-          </ListItemIcon>
-          Logout
-        </MenuItem>
+        {user
+          ? [
+              <MenuItem divider onClick={handleClose}>
+                <Avatar /> Profile
+              </MenuItem>,
+              <MenuItem onClick={handleClose}>
+                <ListItemIcon>
+                  <History fontSize="small" />
+                </ListItemIcon>
+                Reading History
+              </MenuItem>,
+              <MenuItem onClick={handleClose}>
+                <ListItemIcon>
+                  <Settings fontSize="small" />
+                </ListItemIcon>
+                Settings
+              </MenuItem>,
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <Logout fontSize="small" />
+                </ListItemIcon>
+                Logout
+              </MenuItem>,
+            ]
+          : [
+              <MenuItem key="login" onClick={() => navigate("/sign-in")}>
+                Sign in
+              </MenuItem>,
+            ]}
       </Menu>
     </>
   );

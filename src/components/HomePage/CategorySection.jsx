@@ -19,15 +19,15 @@ export function CategorySection({ category, books }) {
       </Typography>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {books.map((book) => (
-          <Box key={book.id} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Box sx={{ position: "relative" }}>
+          <Box key={book.id} sx={{ display: "flex", alignItems: "center", gap: 2, width: "100%", height: 120 }}>
+            <Box sx={{ position: "relative", width: 64, height: 80 }}>
               <Box
                 component="img"
                 src={book.cover}
                 alt={book.title}
                 sx={{
-                  width: 64,
-                  height: 80,
+                  width: "100%",
+                  height: "100%",
                   objectFit: "cover",
                   borderRadius: "4px",
                   transition: "opacity 0.3s",
@@ -58,18 +58,6 @@ export function CategorySection({ category, books }) {
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
                 {book.author}
               </Typography>
-              <Button
-                size="small"
-                sx={{
-                  p: 0,
-                  minWidth: 0,
-                  fontSize: "0.75rem",
-                  color: "primary.main",
-                  "&:hover": { color: "primary.dark" },
-                }}
-              >
-                Read Now
-              </Button>
             </Box>
           </Box>
         ))}

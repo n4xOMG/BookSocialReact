@@ -1,11 +1,20 @@
 import { MenuBook, People, TrendingUp } from "@mui/icons-material";
-import { Box, Grid2, IconButton, List, ListItem, Paper, Typography } from "@mui/material";
+import { Box, CircularProgress, Grid2, IconButton, List, ListItem, Typography } from "@mui/material";
 import React from "react";
 import { BookCard } from "./BookCard";
 import { CategorySection } from "./CategorySection";
-export const MainContent = ({ featuredBooks, booksByCategory, trendingBooks }) => {
+
+export const MainContent = ({ featuredBooks, booksByCategory, trendingBooks, loading, error }) => {
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
+
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "grey.50", textAlign: "left" }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "grey.50", textAlign: "left", position: "relative" }}>
       {/* Main Content */}
       <Box component="main" sx={{ pt: 2 }}>
         <Box sx={{ maxWidth: "lg", mx: "auto", p: 3 }}>
@@ -20,7 +29,6 @@ export const MainContent = ({ featuredBooks, booksByCategory, trendingBooks }) =
               </Grid2>
             ))}
           </Grid2>
-
           <Grid2 container spacing={3} mt={4}>
             {/* Categories */}
             <Grid2 item xs={12} lg={9}>
@@ -35,7 +43,7 @@ export const MainContent = ({ featuredBooks, booksByCategory, trendingBooks }) =
             </Grid2>
             {/* Trending Books */}
             <Grid2 item xs={12} lg={3}>
-              <Paper sx={{ p: 3, borderRadius: 2 }}>
+              <Box sx={{ width: "100%", p: 3, bgcolor: "white", boxShadow: 3 }}>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
                   <TrendingUp color="primary" />
                   <Typography variant="h6">Trending Now</Typography>
@@ -92,7 +100,7 @@ export const MainContent = ({ featuredBooks, booksByCategory, trendingBooks }) =
                     </ListItem>
                   ))}
                 </List>
-              </Paper>
+              </Box>
             </Grid2>
           </Grid2>
         </Box>

@@ -45,7 +45,9 @@ export const loginUserAction = (loginData) => async (dispatch) => {
     }
   }
 };
-
+export const logoutAction = () => ({
+  type: LOGOUT,
+});
 export const registerUserAction = (registerData) => async (dispatch) => {
   dispatch({ type: REGISTER_REQUEST });
   try {

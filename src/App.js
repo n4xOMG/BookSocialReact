@@ -13,6 +13,7 @@ import ResetPassword from "./pages/Authentication/ResetPassword";
 import UserBookshelf from "./components/HomePage/UserBookshelf";
 import BookClubs from "./pages/UserPages/BookClubs";
 import UserBooks from "./pages/UserPages/UserBooks";
+import UserUploadBook from "./pages/UserPages/UserUploadBook";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -50,6 +51,7 @@ function App() {
         <Route path="/library" element={<UserBookshelf />} />
         <Route path="/book-clubs" element={<BookClubs />} />
         <Route path="/stories" element={<UserBooks />} />
+        <Route path="/upload-book" element={<UserUploadBook />} />
       </Routes>
       <AuthDialog />
     </div>

@@ -5,8 +5,10 @@ import MessageMenu from "./Header/MessageMenu";
 import { useState } from "react";
 import NotificationMenu from "./Header/NotificationMenu";
 import ProfileMenu from "./Header/ProfileMenu";
+import { useNavigate } from "react-router-dom";
 
 export const Header = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     { id: 1, sender: "Alice", content: "Have you read the new Stephen King?", time: "10:30 AM" },
     { id: 2, sender: "Bob", content: "What did you think of the ending of 1984?", time: "Yesterday" },
@@ -25,7 +27,7 @@ export const Header = () => {
           <SearchBar />
         </Box>
         <Stack direction="row" spacing={2} alignItems="center">
-          <IconButton>
+          <IconButton onClick={() => navigate("/upload-book")}>
             <Upload />
           </IconButton>
           <MessageMenu messages={messages} />

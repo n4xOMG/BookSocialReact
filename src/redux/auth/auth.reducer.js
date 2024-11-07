@@ -8,6 +8,7 @@ import {
   LOGIN_FAILED,
   LOGIN_REQUEST,
   LOGIN_SUCCEED,
+  LOGOUT,
   REGISTER_FAILED,
   REGISTER_REQUEST,
   REGISTER_SUCCEED,
@@ -55,7 +56,11 @@ export const authReducer = (state = initialState, action) => {
     case RESET_PASSWORD_FAILED:
     case UPDATE_PROFILE_FAILED:
       return { ...state, loading: false, error: action.payload };
-
+    case LOGOUT:
+      return {
+        ...initialState,
+        loading: false,
+      };
     default:
       return state;
   }

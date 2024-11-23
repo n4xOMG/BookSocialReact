@@ -1,40 +1,77 @@
-import { Inbox, Message, Notifications, Search, Upload } from "@mui/icons-material";
-import { AppBar, Avatar, Badge, Box, IconButton, InputBase, Stack, Toolbar } from "@mui/material";
-import SearchBar from "./SearchBar";
+import { Upload } from "@mui/icons-material";
+import { AppBar, Box, IconButton, Stack, Toolbar } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import MessageMenu from "./Header/MessageMenu";
-import { useState } from "react";
 import NotificationMenu from "./Header/NotificationMenu";
 import ProfileMenu from "./Header/ProfileMenu";
-import { useNavigate } from "react-router-dom";
+import SearchBar from "./SearchBar";
+import { useAuthCheck } from "../../utils/useAuthCheck";
+import { getNotifications } from "../../redux/notification/notification.action";
+import LoadingSpinner from "../LoadingSpinner";
+import { fetchUserChats } from "../../redux/chat/chat.action";
+import { getCategories } from "../../redux/category/category.action";
+import { getTags } from "../../redux/tag/tag.action";
 
-export const Header = () => {
+const Header = () => {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "Alice", content: "Have you read the new Stephen King?", time: "10:30 AM" },
-    { id: 2, sender: "Bob", content: "What did you think of the ending of 1984?", time: "Yesterday" },
-    { id: 3, sender: "Carol", content: "Can you recommend a good sci-fi novel?", time: "2 days ago" },
-  ]);
-  const [notifications, setNotifications] = useState([
-    { id: 1, content: "Jane Doe liked your review of 'Pride and Prejudice'", time: "2 hours ago" },
-    { id: 2, content: "New comment on your 'The Catcher in the Rye' post", time: "5 hours ago" },
-    { id: 3, content: "Book club meeting reminder: 'Dune' discussion tonight", time: "1 day ago" },
-  ]);
+  const { checkAuth, AuthDialog } = useAuthCheck();
+  const { notifications } = useSelector((state) => state.notification);
+  const { chats } = useSelector((state) => state.chat);
+  const { user } = useSelector((state) => state.auth);
+  const { categories } = useSelector((state) => state.category);
+  const { tags } = useSelector((state) => state.tag);
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    setLoading(true);
+    try {
+      dispatch(getCategories());
+      dispatch(getTags());
+      dispatch(fetchUserChats());
+      dispatch(getNotifications());
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [dispatch]);
 
   return (
-    <AppBar position="sticky" color="default">
-      <Toolbar>
-        <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
-          <SearchBar />
-        </Box>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <IconButton onClick={() => navigate("/upload-book")}>
-            <Upload />
-          </IconButton>
-          <MessageMenu messages={messages} />
-          <NotificationMenu notifications={notifications} />
-          <ProfileMenu />
-        </Stack>
-      </Toolbar>
-    </AppBar>
+    <>
+      {loading ? (
+        <LoadingSpinner />
+      ) : (
+        <AppBar position="sticky" color="default">
+          <Toolbar>
+            <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
+              <SearchBar categories={categories} tags={tags} />
+            </Box>
+            <Stack direction="row" spacing={2} alignItems="center">
+              {/* Upload Button with Authentication Check */}
+              <IconButton onClick={checkAuth(() => navigate("/upload-book"))}>
+                <Upload />
+              </IconButton>
+
+              {/* Conditionally render MessageMenu and NotificationMenu if user is authenticated */}
+              {user && (
+                <>
+                  <MessageMenu chats={chats} />
+                  <NotificationMenu notifications={notifications} />
+                </>
+              )}
+
+              <ProfileMenu />
+            </Stack>
+          </Toolbar>
+        </AppBar>
+      )}
+
+      {/* Render AuthDialog */}
+      <AuthDialog />
+    </>
   );
 };
+
+export default Header;

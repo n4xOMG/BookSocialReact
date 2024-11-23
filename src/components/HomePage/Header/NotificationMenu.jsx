@@ -36,9 +36,9 @@ export default function NotificationMenu({ notifications }) {
           Notifcations
         </Typography>
         <Paper sx={{ maxHeight: 300, overflowY: "auto" }}>
-          {notifications.map((noti, index) => (
+          {notifications?.map((noti, index) => (
             <Box
-              key={noti.id}
+              key={noti?.id}
               sx={{
                 backgroundColor: "white",
                 color: "black",
@@ -51,12 +51,12 @@ export default function NotificationMenu({ notifications }) {
               }}
             >
               <Box sx={{ display: "flex", flexDirection: "column" }}>
-                <Typography variant="body2">{noti.content}</Typography>
+                <Typography variant="body2">{noti?.content}</Typography>
                 <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  {noti.time}
+                  {noti?.time}
                 </Typography>
               </Box>
-              {index < notifications.length - 1 && <Divider sx={{ my: 1 }} />}
+              {index < notifications?.length - 1 && <Divider sx={{ my: 1 }} />}
             </Box>
           ))}
         </Paper>

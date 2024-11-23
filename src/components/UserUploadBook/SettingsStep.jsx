@@ -1,20 +1,8 @@
-import { Box, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Switch, TextField } from "@mui/material";
+import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import React from "react";
-export default function SettingsStep({ bookInfo, handleInputChange, setBookInfo }) {
+export default function SettingsStep({ bookInfo, setBookInfo }) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <TextField
-        label="Upload Date"
-        id="uploadDate"
-        name="uploadDate"
-        type="date"
-        value={bookInfo.uploadDate}
-        onChange={handleInputChange}
-        fullWidth
-        required
-        InputLabelProps={{ shrink: true }}
-      />
-
       <FormControl fullWidth>
         <InputLabel id="language-label">Language</InputLabel>
         <Select

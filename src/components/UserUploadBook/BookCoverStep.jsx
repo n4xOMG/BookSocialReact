@@ -33,9 +33,9 @@ export default function BookCoverStep({ bookInfo, handleFileChange }) {
         </Box>
         <input type="file" id="coverImage" name="coverImage" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
       </Box>
-      {bookInfo.coverImage && (
+      {bookInfo.bookCover && (
         <Box mt={2}>
-          <img src={bookInfo.coverImage} alt="Book cover preview" style={{ maxWidth: "100%", height: "auto" }} />
+          <img src={bookInfo.bookCover} alt="Book cover preview" style={{ maxWidth: "100%", height: "auto" }} />
         </Box>
       )}
     </Box>

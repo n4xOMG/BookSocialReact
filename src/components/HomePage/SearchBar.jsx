@@ -1,100 +1,126 @@
-import { FilterList, Search } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  IconButton,
-  InputAdornment,
-  Popover,
-  TextField,
-  Typography,
-} from "@mui/material";
 import React, { useState } from "react";
+import { TextField, Autocomplete, Checkbox, Chip, Popover, Typography, Box } from "@mui/material";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 
-export default function SearchBar() {
+const SearchBar = ({ tags, categories, onSearch }) => {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [categories, setCategories] = useState([
-    { id: "fiction", label: "Fiction" },
-    { id: "non-fiction", label: "Non-Fiction" },
-    { id: "mystery", label: "Mystery" },
-    { id: "sci-fi", label: "Science Fiction" },
-    { id: "fantasy", label: "Fantasy" },
-  ]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
-  const [tags, setTags] = useState([
-    { id: "bestseller", label: "Bestseller" },
-    { id: "classic", label: "Classic" },
-    { id: "award-winning", label: "Award-winning" },
-    { id: "young-adult", label: "Young Adult" },
-    { id: "romance", label: "Romance" },
-  ]);
-  const handlePopoverOpen = (event) => {
+  const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handlePopoverClose = () => {
+  const handleClose = () => {
     setAnchorEl(null);
   };
 
   const open = Boolean(anchorEl);
 
+  const handleTagChange = (event, values) => {
+    setSelectedTags(values);
+    onSearch({ tags: values, categories: selectedCategories });
+  };
+
+  const handleCategoryChange = (event, values) => {
+    setSelectedCategories(values);
+    onSearch({ tags: selectedTags, categories: values });
+  };
+
+  const popoverContentStyle = {
+    padding: 16,
+    maxWidth: 300,
+  };
+
+  const chipContainerStyle = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 16,
+  };
+
   return (
-    <Box sx={{ display: "flex", alignItems: "center", width: "100%", maxWidth: 480 }}>
+    <div>
       <TextField
+        variant="outlined"
+        label="Search"
+        onClick={handleClick}
         fullWidth
-        placeholder="Search books, authors, readers..."
-        type="search"
         InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton onClick={handlePopoverOpen}>
-                <FilterList fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ),
+          endAdornment: <CheckBoxOutlineBlankIcon />,
         }}
-        sx={{ pr: 5 }}
       />
       <Popover
         open={open}
         anchorEl={anchorEl}
-        onClose={handlePopoverClose}
+        onClose={handleClose}
         anchorOrigin={{
           vertical: "bottom",
-          horizontal: "right",
+          horizontal: "left",
         }}
         transformOrigin={{
           vertical: "top",
-          horizontal: "right",
+          horizontal: "left",
         }}
-        sx={{ mt: 1, width: 320 }}
       >
-        <Box sx={{ p: 2, width: 320 }}>
-          <Box sx={{ mx: 2, mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight="medium">
-              Categories
-            </Typography>
-            <Divider sx={{ mb: 1 }} />
-            {categories.map((category) => (
-              <FormControlLabel key={category.id} control={<Checkbox id={category.id} />} label={category.label} sx={{ mb: 1 }} />
+        <Box style={popoverContentStyle}>
+          <Typography variant="h6">Filter by Tags</Typography>
+          <Autocomplete
+            multiple
+            options={tags}
+            getOptionLabel={(option) => option.name}
+            value={selectedTags}
+            onChange={handleTagChange}
+            disableCloseOnSelect
+            renderOption={(props, option, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                  checkedIcon={<CheckBoxIcon fontSize="small" />}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.name}
+              </li>
+            )}
+            renderInput={(params) => <TextField {...params} variant="standard" placeholder="Select Tags" />}
+          />
+          <Typography variant="h6" style={{ marginTop: 16 }}>
+            Filter by Categories
+          </Typography>
+          <Autocomplete
+            multiple
+            options={categories}
+            getOptionLabel={(option) => option.name}
+            value={selectedCategories}
+            onChange={handleCategoryChange}
+            disableCloseOnSelect
+            renderOption={(props, option, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                  checkedIcon={<CheckBoxIcon fontSize="small" />}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.name}
+              </li>
+            )}
+            renderInput={(params) => <TextField {...params} variant="standard" placeholder="Select Categories" />}
+          />
+          <Box style={chipContainerStyle}>
+            {selectedTags.map((tag) => (
+              <Chip key={tag.id} label={tag.name} />
             ))}
-          </Box>
-          <Box mb={2} mx={2}>
-            <Typography variant="subtitle1" fontWeight="medium">
-              Tags
-            </Typography>
-            <Divider sx={{ mb: 1 }} />
-            {tags.map((tag) => (
-              <FormControlLabel key={tag.id} control={<Checkbox id={tag.id} />} label={tag.label} sx={{ mb: 1 }} />
+            {selectedCategories.map((category) => (
+              <Chip key={category.id} label={category.name} />
             ))}
           </Box>
         </Box>
       </Popover>
-      <Button variant="outlined" sx={{ ml: 2, minWidth: 0, p: 1 }}>
-        <Search fontSize="small" />
-      </Button>
-    </Box>
+    </div>
   );
-}
+};
+
+export default SearchBar;

@@ -1,67 +1,111 @@
-import { Box, Chip, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
-import React, { useState } from "react";
+import { Alert, Box, Chip, CircularProgress, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Typography } from "@mui/material";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getCategories } from "../../redux/category/category.action";
+import { getTags } from "../../redux/tag/tag.action";
+
 export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
-  const [tagInput, setTagInput] = useState("");
+  const dispatch = useDispatch();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.category);
+  const { tags, loading: tagsLoading, error: tagsError } = useSelector((state) => state.tag);
 
-  const handleTagInput = (e) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      const newTags = tagInput
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag);
-      setBookInfo((prev) => ({ ...prev, tags: [...prev.tags, ...newTags] }));
-      setTagInput("");
-    }
-  };
-
-  const handleCategoryChange = (event) => {
-    const value = event.target.value;
-    if (!bookInfo.categories.includes(value)) {
-      setBookInfo((prev) => ({ ...prev, categories: [...prev.categories, value] }));
-    }
-  };
+  useEffect(() => {
+    dispatch(getCategories());
+    dispatch(getTags());
+  }, [dispatch]);
 
   const handleTagChange = (event) => {
-    const value = event.target.value;
-    if (!bookInfo.tags.includes(value)) {
-      setBookInfo((prev) => ({ ...prev, tags: [...prev.tags, value] }));
-    }
+    const {
+      target: { value },
+    } = event;
+    setBookInfo((prev) => ({
+      ...prev,
+      tags: typeof value === "string" ? value.split(",") : value,
+    }));
   };
+
+  const handleDeleteTag = (tagToDelete) => () => {
+    setBookInfo((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag.id !== tagToDelete.id),
+    }));
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {/* Categories Section */}
       <Box>
         <FormControl fullWidth>
-          <InputLabel id="categories-label">Categories</InputLabel>
-          <Select labelId="categories-label" id="categories" value="" onChange={handleCategoryChange} label="Categories">
-            <MenuItem value="fiction">Fiction</MenuItem>
-            <MenuItem value="non-fiction">Non-Fiction</MenuItem>
-            <MenuItem value="mystery">Mystery</MenuItem>
-            <MenuItem value="sci-fi">Science Fiction</MenuItem>
-            <MenuItem value="romance">Romance</MenuItem>
+          <InputLabel id="category-label">Category</InputLabel>
+          <Select
+            labelId="category-label"
+            id="category"
+            value={bookInfo.category}
+            onChange={(event) => setBookInfo({ ...bookInfo, category: event.target.value })}
+            input={<OutlinedInput label="Category" />}
+            disabled={categoriesLoading}
+            renderValue={(selected) => <Typography>{selected ? selected.name : ""}</Typography>}
+          >
+            {categories.map((category) => (
+              <MenuItem key={category.id} value={category}>
+                {category.name}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-          {bookInfo.categories.map((category, index) => (
-            <Chip key={index} label={category} color="primary" sx={{ color: "primary.contrastText" }} />
-          ))}
-        </Box>
       </Box>
 
+      {/* Tags Section */}
       <Box>
         <FormControl fullWidth>
           <InputLabel id="tags-label">Tags</InputLabel>
-          <Select labelId="tags-label" id="tags" value="" onChange={handleTagChange} label="Tags">
-            <MenuItem value="classic">Classic</MenuItem>
-            <MenuItem value="normal">Normal</MenuItem>
-            <MenuItem value="90s">90s</MenuItem>
+          <Select
+            labelId="tags-label"
+            id="tags"
+            multiple
+            value={bookInfo.tags}
+            onChange={handleTagChange}
+            input={<OutlinedInput label="Tags" />}
+            disabled={tagsLoading}
+            renderValue={(selected) => (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                {selected.map((tag) => (
+                  <Chip key={tag.id} label={tag.name} onDelete={handleDeleteTag(tag)} />
+                ))}
+              </Box>
+            )}
+          >
+            {tagsLoading ? (
+              <MenuItem>
+                <CircularProgress size={24} />
+              </MenuItem>
+            ) : tagsError ? (
+              <MenuItem>
+                <Alert severity="error">Failed to load tags</Alert>
+              </MenuItem>
+            ) : (
+              tags.map((tag) => (
+                <MenuItem key={tag.id} value={tag}>
+                  {tag.name}
+                </MenuItem>
+              ))
+            )}
           </Select>
         </FormControl>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-          {bookInfo.tags.map((tag, index) => (
-            <Chip key={index} label={tag} color="secondary" sx={{ color: "secondary.contrastText" }} />
-          ))}
-        </Box>
+        {/* Display Selected Tags as Chips */}
+        {bookInfo.tags.length > 0 && (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+            {bookInfo.tags.map((tag) => (
+              <Chip
+                key={tag.id}
+                label={tag.name}
+                color="secondary"
+                onDelete={handleDeleteTag(tag)}
+                sx={{ color: "secondary.contrastText" }}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
     </Box>
   );

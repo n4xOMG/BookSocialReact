@@ -1,5 +1,8 @@
 import { api, API_BASE_URL } from "../../api/api";
 import {
+  BAN_USER_FAILED,
+  BAN_USER_REQUEST,
+  BAN_USER_SUCCESS,
   DELETE_USER_FAILED,
   DELETE_USER_REQUEST,
   DELETE_USER_SUCCESS,
@@ -9,20 +12,20 @@ import {
   GET_READING_PROGRESS_BY_USER_FAILED,
   GET_READING_PROGRESS_BY_USER_REQUEST,
   GET_READING_PROGRESS_BY_USER_SUCCESS,
-  GET_USER_FAV_BOOKS_FAILED,
-  GET_USER_FAV_BOOKS_REQUEST,
-  GET_USER_FAV_BOOKS_SUCCESS,
-  GET_USER_FAV_IMAGES_FAILED,
-  GET_USER_FAV_IMAGES_REQUEST,
-  GET_USER_FAV_IMAGES_SUCCESS,
   SUSPEND_USER_FAILED,
   SUSPEND_USER_REQUEST,
   SUSPEND_USER_SUCCESS,
+  UNBAN_USER_FAILED,
+  UNBAN_USER_REQUEST,
+  UNBAN_USER_SUCCESS,
   UNSUSPEND_USER_FAILED,
   UNSUSPEND_USER_REQUEST,
   UNSUSPEND_USER_SUCCESS,
   UPDATE_USER_FAILED,
   UPDATE_USER_REQUEST,
+  UPDATE_USER_ROLE_FAILED,
+  UPDATE_USER_ROLE_REQUEST,
+  UPDATE_USER_ROLE_SUCCESS,
   UPDATE_USER_SUCCESS,
 } from "./user.actionType";
 
@@ -97,6 +100,33 @@ export const unsuspendUserAction = (userId) => async (dispatch) => {
     dispatch({ type: UNSUSPEND_USER_FAILED, payload: error.message });
   }
 };
+export const banUserAction = (userId) => async (dispatch) => {
+  dispatch({ type: BAN_USER_REQUEST });
+  try {
+    const { data } = await api.patch(`${API_BASE_URL}/admin/users/ban/${userId}`);
+
+    console.log("Banned user", data);
+    dispatch({ type: BAN_USER_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error: ", error);
+    dispatch({ type: BAN_USER_FAILED, payload: error.message });
+  }
+};
+
+export const unbanUserAction = (userId) => async (dispatch) => {
+  dispatch({ type: UNBAN_USER_REQUEST });
+  try {
+    const { data } = await api.patch(`${API_BASE_URL}/admin/users/unban/${userId}`);
+
+    console.log("Unbanned user", data);
+    dispatch({ type: UNBAN_USER_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error: ", error);
+    dispatch({ type: UNBAN_USER_FAILED, payload: error.message });
+  }
+};
 export const getReadingProgressByUser = () => async (dispatch) => {
   dispatch({ type: GET_READING_PROGRESS_BY_USER_REQUEST });
   try {
@@ -107,25 +137,20 @@ export const getReadingProgressByUser = () => async (dispatch) => {
     dispatch({ type: GET_READING_PROGRESS_BY_USER_FAILED, payload: error.message });
   }
 };
-export const getAllUserFollowingBookAction = () => async (dispatch) => {
-  dispatch({ type: GET_USER_FAV_BOOKS_REQUEST });
+export const updateUserRoleAction = (userId, roleName) => async (dispatch) => {
+  dispatch({ type: UPDATE_USER_ROLE_REQUEST });
   try {
-    const { data } = await api.get(`/api/books/favoured`);
-    dispatch({ type: GET_USER_FAV_BOOKS_SUCCESS, payload: data });
+    const { data } = await api.put(
+      `${API_BASE_URL}/admin/users/${userId}/role`,
+      null, // No request body
+      { params: { roleName } } // Query parameter
+    );
+
+    console.log("Updated user role", data);
+    dispatch({ type: UPDATE_USER_ROLE_SUCCESS, payload: data });
     return { payload: data };
   } catch (error) {
-    console.log("error trying to get all user favoured books", error.message);
-    dispatch({ type: GET_USER_FAV_BOOKS_FAILED, payload: error });
-  }
-};
-export const getUserFavImages = () => async (dispatch) => {
-  dispatch({ type: GET_USER_FAV_IMAGES_REQUEST });
-  try {
-    const { data } = await api.get(`${API_BASE_URL}/api/gallery/favoured`);
-    dispatch({ type: GET_USER_FAV_IMAGES_SUCCESS, payload: data });
-    return { payload: data };
-  } catch (error) {
-    console.log("error trying to get all images", error.message);
-    dispatch({ type: GET_USER_FAV_IMAGES_FAILED, payload: error });
+    console.log("Api error: ", error);
+    dispatch({ type: UPDATE_USER_ROLE_FAILED, payload: error.response?.data || error.message });
   }
 };

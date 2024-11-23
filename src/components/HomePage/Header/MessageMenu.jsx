@@ -2,7 +2,7 @@ import { Inbox } from "@mui/icons-material";
 import { Badge, Box, Divider, IconButton, Menu, Paper, Typography } from "@mui/material";
 import React, { useState } from "react";
 
-export default function MessageMenu({ messages }) {
+export default function MessageMenu({ chats }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -36,9 +36,9 @@ export default function MessageMenu({ messages }) {
           Messages
         </Typography>
         <Paper sx={{ maxHeight: 300, overflowY: "auto" }}>
-          {messages.map((message, index) => (
+          {chats?.map((chat, index) => (
             <Box
-              key={message.id}
+              key={chat?.id}
               sx={{
                 backgroundColor: "white",
                 color: "black",
@@ -52,14 +52,14 @@ export default function MessageMenu({ messages }) {
             >
               <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                  {message.sender}
+                  {chat?.fullname}
                 </Typography>
-                <Typography variant="body2">{message.content}</Typography>
+                <Typography variant="body2">{chat?.lastMessageContent}</Typography>
                 <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  {message.time}
+                  {chat?.lastMessageTimestamp}
                 </Typography>
               </Box>
-              {index < messages.length - 1 && <Divider sx={{ my: 1 }} />}
+              {index < chats?.length - 1 && <Divider sx={{ my: 1 }} />}
             </Box>
           ))}
         </Paper>

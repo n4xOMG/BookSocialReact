@@ -1,26 +1,36 @@
-import { History, Logout, Settings } from "@mui/icons-material";
-import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip } from "@mui/material";
+import { History, Logout, Settings, AdminPanelSettings } from "@mui/icons-material";
+import { Avatar, Box, IconButton, ListItemIcon, Menu, MenuItem, Tooltip } from "@mui/material";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { logoutAction } from "../../../redux/auth/auth.action";
 import { useNavigate } from "react-router-dom";
+import { logoutAction } from "../../../redux/auth/auth.action";
+import { getOptimizedImageUrl } from "../../../utils/optimizeImages";
+
 export default function ProfileMenu() {
   const [anchorEl, setAnchorEl] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const open = Boolean(anchorEl);
+
   const handleLogout = () => {
     localStorage.removeItem("jwt");
     dispatch(logoutAction());
     navigate("/sign-in");
   };
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
+
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const navigateToAdmin = () => {
+    navigate("/admin/overview");
+  };
+
   return (
     <>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
@@ -33,7 +43,11 @@ export default function ProfileMenu() {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
           >
-            <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
+            {user && user?.avatarUrl ? (
+              <Avatar src={getOptimizedImageUrl(user?.avatarUrl)} sx={{ width: 32, height: 32, mr: 2 }} />
+            ) : (
+              <Avatar>{user?.username[0]}</Avatar>
+            )}
           </IconButton>
         </Tooltip>
       </Box>
@@ -76,22 +90,30 @@ export default function ProfileMenu() {
       >
         {user
           ? [
-              <MenuItem divider onClick={handleClose}>
-                <Avatar /> Profile
+              <MenuItem divider onClick={() => navigate("/profile")} key="profile">
+                <Avatar src={user.avatarUrl} /> Profile
               </MenuItem>,
-              <MenuItem onClick={handleClose}>
+              <MenuItem onClick={handleClose} key="reading-history">
                 <ListItemIcon>
                   <History fontSize="small" />
                 </ListItemIcon>
                 Reading History
               </MenuItem>,
-              <MenuItem onClick={handleClose}>
+              user.role && user.role.name === "ADMIN" && (
+                <MenuItem onClick={navigateToAdmin} key="admin-dashboard">
+                  <ListItemIcon>
+                    <AdminPanelSettings fontSize="small" />
+                  </ListItemIcon>
+                  Admin Dashboard
+                </MenuItem>
+              ),
+              <MenuItem onClick={handleClose} key="settings">
                 <ListItemIcon>
                   <Settings fontSize="small" />
                 </ListItemIcon>
                 Settings
               </MenuItem>,
-              <MenuItem onClick={handleLogout}>
+              <MenuItem onClick={handleLogout} key="logout">
                 <ListItemIcon>
                   <Logout fontSize="small" />
                 </ListItemIcon>

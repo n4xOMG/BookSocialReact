@@ -9,6 +9,7 @@ import {
   LOGIN_FAILED,
   LOGIN_REQUEST,
   LOGIN_SUCCEED,
+  LOGOUT,
   REGISTER_FAILED,
   REGISTER_REQUEST,
   REGISTER_SUCCEED,
@@ -117,7 +118,7 @@ export const resetPasswordAction = (code, password) => async (dispatch) => {
 export const updateUserProfile = (reqData) => async (dispatch) => {
   dispatch({ type: UPDATE_PROFILE_REQUEST });
   try {
-    const { data } = await api.put(`${API_BASE_URL}/api/user/profile`, reqData.data);
+    const { data } = await api.put(`${API_BASE_URL}/api/user/profile`, reqData);
 
     dispatch({ type: UPDATE_PROFILE_SUCCESS, payload: data });
     return { payload: data };

@@ -8,9 +8,6 @@ import {
   EDIT_CHAPTER_FAILED,
   EDIT_CHAPTER_REQUEST,
   EDIT_CHAPTER_SUCCEED,
-  GET_ADAPTED_CHAPTERS_FAILED,
-  GET_ADAPTED_CHAPTERS_REQUEST,
-  GET_ADAPTED_CHAPTERS_SUCCESS,
   GET_ALL_CHAPTER_FAILED,
   GET_ALL_CHAPTER_REQUEST,
   GET_ALL_CHAPTER_SUCCESS,
@@ -35,8 +32,8 @@ const initialState = {
   error: null,
   chapter: null,
   chapters: [],
-  adaptedChapters: [],
   readingProgress: null,
+  loading: false,
 };
 
 export const chapterReducer = (state = initialState, action) => {
@@ -49,26 +46,29 @@ export const chapterReducer = (state = initialState, action) => {
     case SAVE_PROGRESS_REQUEST:
     case GET_PROGRESS_REQUEST:
     case GET_CHAPTERS_BY_BOOK_REQUEST:
-    case GET_ADAPTED_CHAPTERS_REQUEST:
     case GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_REQUEST:
-      return { ...state, error: null };
+      return { ...state, loading: true, error: null };
 
     case GET_CHAPTER_SUCCESS:
+      return { ...state, loading: false, error: null, chapter: action.payload };
     case CHAPTER_UPLOAD_SUCCEED:
+      return { ...state, loading: false, error: null, chapters: [...state.chapters, action.payload] };
     case EDIT_CHAPTER_SUCCEED:
-      return { ...state, error: null, chapter: action.payload };
-
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        chapters: state.chapters.map((chapter) => (chapter.id === action.payload.id ? action.payload : chapter)),
+      };
     case SAVE_PROGRESS_SUCCESS:
     case GET_PROGRESS_SUCCESS:
-      return { ...state, error: null, readingProgress: action.payload };
+      return { ...state, loading: false, error: null, readingProgress: action.payload };
     case DELETE_CHAPTER_SUCCEED:
-      return { ...state, error: null };
+      return { ...state, loading: false, error: null, chapters: state.chapters.filter((chapter) => chapter.id !== action.payload) };
     case GET_ALL_CHAPTER_SUCCESS:
     case GET_CHAPTERS_BY_BOOK_SUCCESS:
     case GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_SUCCESS:
-      return { ...state, error: null, chapters: action.payload };
-    case GET_ADAPTED_CHAPTERS_SUCCESS:
-      return { ...state, error: null, adaptedChapters: action.payload };
+      return { ...state, loading: false, error: null, chapters: action.payload };
     case CHAPTER_UPLOAD_FAILED:
     case EDIT_CHAPTER_FAILED:
     case DELETE_CHAPTER_FAILED:
@@ -77,9 +77,8 @@ export const chapterReducer = (state = initialState, action) => {
     case SAVE_PROGRESS_FAILED:
     case GET_PROGRESS_FAILED:
     case GET_CHAPTERS_BY_BOOK_FAILED:
-    case GET_ADAPTED_CHAPTERS_FAILED:
     case GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_FAILED:
-      return { ...state, error: action.payload };
+      return { ...state, loading: false, error: action.payload };
 
     default:
       return state;

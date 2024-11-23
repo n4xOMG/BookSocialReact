@@ -7,6 +7,10 @@ import { categoryReducer } from "./category/category.reducer";
 import { tagReducer } from "./tag/tag.reducer";
 import { chapterReducer } from "./chapter/chapter.reducer";
 import { commentReducer } from "./comment/comment.reducer";
+import creditPackageReducer from "./creditpackage/creditpackage.reducer";
+import { websocketReducer } from "./websocket/websocketReducer";
+import { notificationReducer } from "./notification/notification.reducer";
+import { chatReducer } from "./chat/chat.reducer";
 
 const rootReducers = combineReducers({
   auth: authReducer,
@@ -16,5 +20,9 @@ const rootReducers = combineReducers({
   comment: commentReducer,
   category: categoryReducer,
   tag: tagReducer,
+  creditpackage: creditPackageReducer,
+  chat: chatReducer,
+  notification: notificationReducer,
+  websocket: websocketReducer,
 });
 export const store = legacy_createStore(rootReducers, applyMiddleware(thunk));

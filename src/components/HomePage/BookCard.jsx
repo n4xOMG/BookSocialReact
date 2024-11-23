@@ -1,87 +1,58 @@
-import { MenuBook } from "@mui/icons-material";
-import { Box, Button, Typography } from "@mui/material";
+import { Favorite, Share } from "@mui/icons-material";
+import { Button, Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
+import React from "react";
+
 export function BookCard({ book }) {
   return (
-    <Box
+    <Card
       sx={{
-        width: 200, // Fixed width
-        height: 350, // Fixed height
-        backgroundColor: "white",
-        borderRadius: "12px",
-        boxShadow: 1,
+        width: 300,
+        height: 450,
+        bgcolor: "rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(10px)",
+        border: "1px solid rgba(255, 255, 255, 0.3)",
+        boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+        borderRadius: "16px",
         overflow: "hidden",
-        transition: "box-shadow 0.3s",
-        textAlign: "left",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        transition: "transform 0.3s",
         "&:hover": {
-          boxShadow: 3,
+          transform: "scale(1.05)",
         },
       }}
     >
-      <Box sx={{ position: "relative", height: 192 }}>
-        {" "}
-        {/* Fixed image height */}
-        <Box
-          component="img"
-          src={book.cover}
-          alt={`${book.title} cover`}
-          sx={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transition: "opacity 0.3s",
-            "&:hover": { opacity: 0.9 },
-          }}
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{
-            position: "absolute",
-            bottom: 16,
-            right: 16,
-            opacity: 0,
-            transition: "opacity 0.3s",
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            "&:hover": { backgroundColor: "primary.dark" },
-            ".MuiBox-root:hover &": { opacity: 1 },
-          }}
-        >
-          <MenuBook fontSize="small" />
-          <Typography variant="button" color="inherit">
-            Read Now
-          </Typography>
-        </Button>
-      </Box>
-      <Box sx={{ p: 2 }}>
-        <Typography
-          variant="h6"
-          component="h3"
-          noWrap
-          sx={{
-            mb: 0.5,
-            maxWidth: "100%",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
+      <CardMedia
+        component="img"
+        height="250"
+        image={book.cover}
+        alt={book.title}
+        sx={{
+          objectFit: "cover",
+          width: "100%",
+          height: "250px",
+        }}
+      />
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Typography gutterBottom variant="h6" component="div" sx={{ color: "black" }}>
           {book.title}
         </Typography>
-        <Typography variant="body2" color="text.secondary" noWrap sx={{ mb: 1 }}>
-          {book.author}
+        <Typography variant="body2" sx={{ color: "gray" }}>
+          {book.authorName}
         </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Typography variant="body2" sx={{ color: "warning.main" }}>
-            {"★".repeat(book.rating)}
-            {"☆".repeat(5 - book.rating)}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            ({book.reviews.toLocaleString()} reviews)
-          </Typography>
-        </Box>
-      </Box>
-    </Box>
+      </CardContent>
+      <CardActions>
+        <Button size="small" variant="contained" color="primary">
+          Read More
+        </Button>
+        <IconButton aria-label="add to favorites">
+          <Favorite sx={{ color: "red" }} />
+        </IconButton>
+        <IconButton aria-label="share">
+          <Share sx={{ color: "black" }} />
+        </IconButton>
+      </CardActions>
+    </Card>
   );
 }

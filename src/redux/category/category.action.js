@@ -21,6 +21,12 @@ import {
   GET_BOOKS_BY_CATEGORY_REQUEST,
   GET_BOOKS_BY_CATEGORY_SUCCESS,
   GET_BOOKS_BY_CATEGORY_FAILED,
+  GET_TOP_CATEGORIES_REQUEST,
+  GET_TOP_CATEGORIES_SUCCESS,
+  GET_TOP_CATEGORIES_FAILED,
+  GET_CATEGORY_BY_BOOK_REQUEST,
+  GET_CATEGORY_BY_BOOK_SUCCESS,
+  GET_CATEGORY_BY_BOOK_FAILED,
 } from "./category.actionType";
 import { API_BASE_URL, api } from "../../api/api";
 
@@ -47,7 +53,7 @@ export const getCategoryById = (categoryId) => async (dispatch) => {
 export const getBooksByCategories = (categoryIds) => async (dispatch) => {
   dispatch({ type: GET_BOOKS_BY_CATEGORY_REQUEST });
   try {
-    const promises = categoryIds.map((categoryId) => axios.get(`${API_BASE_URL}/books/categories/${categoryId}/books`));
+    const promises = categoryIds.map((categoryId) => axios.get(`${API_BASE_URL}/categories/${categoryId}/books`));
     const results = await Promise.all(promises);
     const booksByCategory = results.reduce((acc, result, index) => {
       acc[categoryIds[index]] = result.data;
@@ -59,16 +65,24 @@ export const getBooksByCategories = (categoryIds) => async (dispatch) => {
   }
 };
 
-export const getCategoriesByBook = (bookId) => async (dispatch) => {
-  dispatch({ type: GET_CATEGORIES_BY_BOOK_REQUEST });
+export const getCategoryByBook = (bookId) => async (dispatch) => {
+  dispatch({ type: GET_CATEGORY_BY_BOOK_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/categories`);
-    dispatch({ type: GET_CATEGORIES_BY_BOOK_SUCCESS, payload: data });
+    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/category`);
+    dispatch({ type: GET_CATEGORY_BY_BOOK_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({ type: GET_CATEGORIES_BY_BOOK_FAILED, payload: error.message });
+    dispatch({ type: GET_CATEGORY_BY_BOOK_FAILED, payload: error.message });
   }
 };
-
+export const getTopCategoriesWithBooks = () => async (dispatch) => {
+  dispatch({ type: GET_TOP_CATEGORIES_REQUEST });
+  try {
+    const response = await axios.get(`${API_BASE_URL}/books/top-categories`);
+    dispatch({ type: GET_TOP_CATEGORIES_SUCCESS, payload: response.data });
+  } catch (error) {
+    dispatch({ type: GET_TOP_CATEGORIES_FAILED, payload: error.message });
+  }
+};
 export const addCategory = (category) => async (dispatch) => {
   dispatch({ type: ADD_CATEGORY_REQUEST });
   try {

@@ -16,6 +16,8 @@ import UserBooks from "./pages/UserPages/UserBooks";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ProfilePage from "./pages/UserPages/ProfilePage";
+import { BookDetailPage } from "./pages/UserPages/BookDetailPage";
+import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -56,6 +58,8 @@ function App() {
         <Route path="/book-clubs" element={<BookClubs />} />
         <Route path="/stories" element={user ? <UserBooks /> : <HomePage />} />
         <Route path="/upload-book" element={<UserUploadBook />} />
+        <Route path="/books/:bookId" element={<BookDetailPage />} />
+        <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />
       </Routes>
       <AuthDialog />
     </div>

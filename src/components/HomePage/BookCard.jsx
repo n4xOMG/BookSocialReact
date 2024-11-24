@@ -1,8 +1,10 @@
 import { Favorite, Share } from "@mui/icons-material";
 import { Button, Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export function BookCard({ book }) {
+  const navigate = useNavigate();
   return (
     <Card
       sx={{
@@ -22,11 +24,12 @@ export function BookCard({ book }) {
           transform: "scale(1.05)",
         },
       }}
+      onClick={() => navigate(`/books/${book.id}`)}
     >
       <CardMedia
         component="img"
         height="250"
-        image={book.cover}
+        image={book.bookCover}
         alt={book.title}
         sx={{
           objectFit: "cover",

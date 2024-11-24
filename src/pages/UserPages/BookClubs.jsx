@@ -1,214 +1,181 @@
-import { Favorite, Message, Share, Star } from "@mui/icons-material";
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Input,
-  MenuItem,
-  Select,
-  TextareaAutosize,
-  Typography,
-} from "@mui/material";
-import React, { useState } from "react";
-import { Sidebar } from "../../components/HomePage/Sidebar";
+import React, { useEffect, useState } from "react";
+import { Box, Button, Avatar, TextField, IconButton, Typography, Stack, Paper, CircularProgress } from "@mui/material";
+import ImageIcon from "@mui/icons-material/Image";
+import SendIcon from "@mui/icons-material/Send";
+import { useDispatch, useSelector } from "react-redux";
+import { addPost, fetchPosts } from "../../redux/post/post.action";
+import UploadToCloudinary from "../../utils/uploadToCloudinary"; // Adjust the path as necessary
+import Sidebar from "../../components/HomePage/Sidebar";
+import PostList from "../../components/BookClubs/PostList";
 
-const initialPosts = [
-  {
-    id: 1,
-    userAvatar: "/placeholder.svg?height=40&width=40",
-    userName: "Alice Johnson",
-    bookCover: "/placeholder.svg?height=200&width=150",
-    bookTitle: "The Midnight Library",
-    author: "Matt Haig",
-    description:
-      "Between life and death there is a library. When Nora Seed finds herself in the Midnight Library, she has a chance to make things right...",
-    userCaption: "This book really made me think about the choices we make in life. Highly recommend!",
-    likes: 152,
-    comments: 23,
-    rating: 4,
-    readingStatus: "Read",
-  },
-  {
-    id: 2,
-    userAvatar: "/placeholder.svg?height=40&width=40",
-    userName: "Bob Smith",
-    bookCover: "/placeholder.svg?height=200&width=150",
-    bookTitle: "Atomic Habits",
-    author: "James Clear",
-    description:
-      "No matter your goals, Atomic Habits offers a proven framework for improving--every day. James Clear, one of the world's leading experts on habit formation...",
-    userCaption: "Just started this one. The concept of 1% improvements is really motivating!",
-    likes: 98,
-    comments: 15,
-    rating: 5,
-    readingStatus: "Currently Reading",
-  },
-];
+const BookClubs = () => {
+  const dispatch = useDispatch();
+  const { posts, loading, error } = useSelector((state) => state.post);
+  const { user } = useSelector((state) => state.auth);
 
-export default function BookClubs() {
-  const [posts, setPosts] = useState(initialPosts);
-  const [newPost, setNewPost] = useState({
-    bookTitle: "",
-    author: "",
-    description: "",
-    userCaption: "",
-    rating: 0,
-    readingStatus: "Want to Read",
-  });
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [postContent, setPostContent] = useState("");
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
 
-  const handleLike = (id) => {
-    setPosts(posts.map((post) => (post.id === id ? { ...post, likes: post.likes + 1 } : post)));
+  useEffect(() => {
+    dispatch(fetchPosts());
+  }, [dispatch]);
+
+  const handleImageChange = (e) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedImages((prevImages) => [...prevImages, ...filesArray]);
+    }
   };
 
-  const handleNewPost = (e) => {
-    e.preventDefault();
-    const newId = Math.max(...posts.map((p) => p.id), 0) + 1;
-    setPosts([
-      {
-        id: newId,
-        userAvatar: "/placeholder.svg",
-        userName: "Current User",
-        bookCover: "/placeholder.svg",
-        likes: 0,
-        comments: 0,
-        ...newPost,
-      },
-      ...posts,
-    ]);
-    setNewPost({
-      bookTitle: "",
-      author: "",
-      description: "",
-      userCaption: "",
-      rating: 0,
-      readingStatus: "Want to Read",
-    });
-    setIsDialogOpen(false);
+  const handleRemoveImage = (index) => {
+    setSelectedImages((prevImages) => prevImages.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitPost = async () => {
+    if (isSubmitting) return;
+
+    if (!postContent.trim() && selectedImages.length === 0) {
+      setSubmissionError("Please enter some text or select images to post.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmissionError("");
+
+    try {
+      const uploadedImageUrls = await Promise.all(selectedImages.map((image) => UploadToCloudinary(image, "bookposts")));
+
+      const postData = {
+        content: postContent,
+        images: uploadedImageUrls,
+        user: user,
+      };
+
+      await dispatch(addPost(postData));
+
+      setPostContent("");
+      setSelectedImages([]);
+    } catch (err) {
+      console.error("Failed to add post:", err);
+      setSubmissionError("Failed to add post. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Box sx={{ display: "flex", overscrollBehavior: "contain" }}>
       <Sidebar />
-      <Box sx={{ width: "100%", mx: "auto", p: 3, gap: 3 }}>
-        <Card sx={{ mb: 3 }}>
-          <CardHeader
-            avatar={<Avatar src="/placeholder.svg" alt="Current User" />}
-            title={
-              <Button variant="outlined" onClick={() => setIsDialogOpen(true)}>
-                What are you reading?
-              </Button>
-            }
-          />
-        </Card>
-
-        <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-          <DialogTitle>Create Post</DialogTitle>
-          <DialogContent>
-            <Box component="form" onSubmit={handleNewPost} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextareaAutosize
+      <Box sx={{ width: "100%", mx: "auto", p: 3 }}>
+        {/* Enhanced "What are you reading?" Box */}
+        <Paper
+          elevation={3}
+          sx={{
+            p: 2,
+            mb: 3,
+            borderRadius: 2,
+            backgroundColor: "#f5f5f5",
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="flex-start">
+            {/* User Avatar */}
+            <Avatar alt={user?.username || "User"} src={user?.profilePicture || ""} />
+            {/* Post Input Field */}
+            <Box sx={{ flexGrow: 1 }}>
+              <TextField
+                label={`What are you reading, ${user?.username || "User"}?`}
+                multiline
+                minRows={3}
+                maxRows={6}
+                variant="outlined"
+                fullWidth
+                value={postContent}
+                onChange={(e) => setPostContent(e.target.value)}
                 placeholder="Share your thoughts..."
-                value={newPost.userCaption}
-                onChange={(e) => setNewPost({ ...newPost, userCaption: e.target.value })}
-                required
               />
-              <Input
-                placeholder="Book Title"
-                value={newPost.bookTitle}
-                onChange={(e) => setNewPost({ ...newPost, bookTitle: e.target.value })}
-                required
-              />
-              <Input
-                placeholder="Author"
-                value={newPost.author}
-                onChange={(e) => setNewPost({ ...newPost, author: e.target.value })}
-                required
-              />
-              <TextareaAutosize
-                placeholder="Book Description"
-                value={newPost.description}
-                onChange={(e) => setNewPost({ ...newPost, description: e.target.value })}
-                required
-              />
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <Select
-                  value={newPost.readingStatus ? newPost.readingStatus : "willread"}
-                  onChange={(e) => setNewPost({ ...newPost, readingStatus: e.target.value })}
-                  style={{ padding: "8px", borderRadius: "4px" }}
+              {/* Images Preview */}
+              {selectedImages.length > 0 && (
+                <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 2 }}>
+                  {selectedImages.map((image, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        position: "relative",
+                        width: "100px",
+                        height: "100px",
+                      }}
+                    >
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt={`Selected ${index + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveImage(index)}
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          right: 0,
+                          backgroundColor: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      >
+                        &#10005;
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              {/* Action Buttons */}
+              <Stack direction="row" spacing={1} sx={{ mt: 2 }} alignItems="center">
+                {/* Image Upload Button */}
+                <label htmlFor="upload-images">
+                  <input
+                    style={{ display: "none" }}
+                    id="upload-images"
+                    name="upload-images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                  <IconButton color="primary" component="span">
+                    <ImageIcon />
+                  </IconButton>
+                </label>
+                {/* Submit Button */}
+                <Button
+                  variant="contained"
+                  endIcon={<SendIcon />}
+                  onClick={handleSubmitPost}
+                  disabled={isSubmitting}
+                  sx={{ textTransform: "none" }}
                 >
-                  <MenuItem value="willread">Will Read</MenuItem>
-                  <MenuItem value="currentlyreading">Currently Reading</MenuItem>
-                  <MenuItem value="finished">Finished</MenuItem>
-                  <MenuItem value="rereading">Re-reading</MenuItem>
-                </Select>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      sx={{ cursor: "pointer", color: star <= newPost.rating ? "gold" : "grey" }}
-                      onClick={() => setNewPost({ ...newPost, rating: star })}
-                    />
-                  ))}
-                </Box>
-              </Box>
+                  {isSubmitting ? <CircularProgress size={24} color="inherit" /> : "Post"}
+                </Button>
+              </Stack>
+              {/* Display Submission Error */}
+              {submissionError && (
+                <Typography variant="body2" color="error" mt={1}>
+                  {submissionError}
+                </Typography>
+              )}
             </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button type="submit" onClick={handleNewPost}>
-              Post
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </Stack>
+        </Paper>
 
-        {posts.map((post) => (
-          <Card key={post.id} sx={{ mb: 3 }}>
-            <CardHeader
-              avatar={<Avatar src={post.userAvatar} alt={post.userName} />}
-              title={<Typography variant="h6">{post.userName}</Typography>}
-              subheader={post.readingStatus}
-            />
-            <CardContent sx={{ display: "flex", gap: 2 }}>
-              <Box component="img" src={post.bookCover} alt={post.bookTitle} sx={{ width: 100, height: 150, objectFit: "cover" }} />
-              <Box>
-                <Typography variant="h6">{post.bookTitle}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  by {post.author}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} sx={{ color: star <= post.rating ? "gold" : "grey" }} />
-                  ))}
-                </Box>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  {post.description}
-                </Typography>
-                <Typography variant="body2" sx={{ fontStyle: "italic", mt: 1 }}>
-                  “{post.userCaption}”
-                </Typography>
-              </Box>
-            </CardContent>
-            <Box sx={{ display: "flex", justifyContent: "space-between", p: 2 }}>
-              <IconButton onClick={() => handleLike(post.id)}>
-                <Favorite /> {post.likes}
-              </IconButton>
-              <IconButton>
-                <Message /> {post.comments}
-              </IconButton>
-              <IconButton>
-                <Share />
-              </IconButton>
-            </Box>
-          </Card>
-        ))}
+        {/* Posts List */}
+        <PostList posts={posts} loading={loading} error={error} />
       </Box>
     </Box>
   );
-}
+};
+
+export default BookClubs;

@@ -1,58 +1,117 @@
-import React, { useEffect, useState } from "react";
+// src/components/EditBookDialog.jsx
+
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Box,
-  Typography,
   Button,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
+  Chip,
+  OutlinedInput,
+  Box,
+  Typography,
+  IconButton,
 } from "@mui/material";
+import { useDispatch } from "react-redux";
+import UploadToCloudinary from "../../../../utils/uploadToCloudinary";
+import { editBookAction } from "../../../../redux/book/book.action";
 
-const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, handleBookChange, handleEditSubmit, isSubmitting }) => {
-  const [previewUrl, setPreviewUrl] = useState("");
+const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, isSubmitting }) => {
+  const dispatch = useDispatch();
+
+  // Local state for the form fields
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [language, setLanguage] = useState("");
+  const [status, setStatus] = useState("");
+  const [category, setCategory] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [bookCoverPreview, setBookCoverPreview] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (currentBook && currentBook.bookCover) {
-      setPreviewUrl(currentBook.bookCover);
-    } else {
-      setPreviewUrl("");
+    if (currentBook) {
+      setTitle(currentBook.title || "");
+      setDescription(currentBook.description || "");
+      setLanguage(currentBook.language || "");
+      setStatus(currentBook.status || "");
+      setCategory(currentBook.category?.id || "");
+      setSelectedTags(currentBook.tags ? currentBook.tags.map((tag) => tag.id) : []);
+      setBookCoverPreview(currentBook.bookCover || "");
+      setCoverFile(null);
     }
   }, [currentBook]);
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
-      handleBookChange("bookCover", objectUrl); // For preview
-      handleBookChange("coverFile", file); // For upload
+  const handleSubmit = async () => {
+    // Basic validation
+    if (!title || !description || !language || !status || !category) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    setError("");
+
+    let uploadedImageUrl = currentBook.bookCover;
+
+    if (coverFile) {
+      try {
+        uploadedImageUrl = await UploadToCloudinary(coverFile, "books");
+      } catch (uploadError) {
+        console.error("Failed to upload image:", uploadError);
+        setError("Failed to upload the book cover. Please try again.");
+        return;
+      }
+    }
+
+    const updatedBook = {
+      ...currentBook,
+      title,
+      description,
+      language,
+      status,
+      categoryId: category,
+      tagIds: selectedTags,
+      bookCover: uploadedImageUrl,
+    };
+
+    try {
+      await dispatch(editBookAction(currentBook.id, updatedBook));
+      handleClose(); // Close the dialog upon successful submission
+    } catch (updateError) {
+      console.error("Failed to update book:", updateError);
+      setError("Failed to update the book. Please try again.");
     }
   };
 
-  // Cleanup the object URL to avoid memory leaks
-  useEffect(() => {
-    return () => {
-      if (previewUrl && previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
+  const handleTagsChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedTags(
+      // On autofill we get a stringified value.
+      typeof value === "string" ? value.split(",") : value
+    );
+  };
 
-  if (!currentBook) {
-    return null;
-  }
+  const handleCoverChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setCoverFile(file);
+      setBookCoverPreview(URL.createObjectURL(file));
+    }
+  };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>Edit Book</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers>
         <Box
           component="form"
           sx={{
@@ -64,99 +123,45 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, hand
           noValidate
           autoComplete="off"
         >
-          {/* Image Preview */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <Typography variant="subtitle1">Book Cover Preview:</Typography>
-            {previewUrl ? (
-              <img src={previewUrl} alt="Book Cover Preview" style={{ width: "200px", height: "auto", borderRadius: "4px" }} />
-            ) : (
-              <Typography variant="body2">No image selected.</Typography>
-            )}
-            <Button variant="contained" component="label">
-              Upload New Cover Image
-              <input type="file" accept="image/*" hidden onChange={handleFileChange} />
-            </Button>
-          </Box>
+          {/* Title Field */}
+          <TextField label="Title" variant="outlined" fullWidth required value={title} onChange={(e) => setTitle(e.target.value)} />
 
-          {/* Text Fields */}
-          <TextField
-            label="Title"
-            name="title"
-            value={currentBook.title || ""}
-            onChange={(e) => handleBookChange("title", e.target.value)}
-            required
-          />
-          <TextField
-            label="Author Name"
-            name="authorName"
-            value={currentBook.authorName || ""}
-            onChange={(e) => handleBookChange("authorName", e.target.value)}
-            required
-          />
-          <TextField
-            label="Artist Name"
-            name="artistName"
-            value={currentBook.artistName || ""}
-            onChange={(e) => handleBookChange("artistName", e.target.value)}
-          />
+          {/* Description Field */}
           <TextField
             label="Description"
-            name="description"
-            value={currentBook.description || ""}
-            onChange={(e) => handleBookChange("description", e.target.value)}
+            variant="outlined"
+            fullWidth
             multiline
-            rows={4}
+            minRows={3}
+            required
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
+
+          {/* Language Field */}
           <TextField
             label="Language"
-            name="language"
-            value={currentBook.language || ""}
-            onChange={(e) => handleBookChange("language", e.target.value)}
+            variant="outlined"
+            fullWidth
+            required
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
           />
-          <FormControl>
-            <InputLabel id="status-edit-label">Status</InputLabel>
+
+          {/* Status Field */}
+          <TextField label="Status" variant="outlined" fullWidth required value={status} onChange={(e) => setStatus(e.target.value)} />
+
+          {/* Category Selection (Single Select) */}
+          <FormControl fullWidth variant="outlined" required>
+            <InputLabel id="category-select-label">Category</InputLabel>
             <Select
-              labelId="status-edit-label"
-              name="status"
-              value={currentBook.status || ""}
-              label="Status"
-              onChange={(e) => handleBookChange("status", e.target.value)}
-            >
-              <MenuItem value="">All</MenuItem>
-              <MenuItem value="published">Published</MenuItem>
-              <MenuItem value="ongoing">Ongoing</MenuItem>
-              <MenuItem value="finished">Finished</MenuItem>
-              {/* Add more status options as needed */}
-            </Select>
-          </FormControl>
-          <FormControl>
-            <InputLabel id="category-edit-label">Category</InputLabel>
-            <Select
-              labelId="category-edit-label"
-              name="category"
-              multiple
-              value={currentBook.categories ? currentBook.categories.map((cat) => cat.id) : []}
+              labelId="category-select-label"
+              id="category-select"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
               label="Category"
-              onChange={(e) => {
-                const selectedIds = e.target.value;
-                const selectedCategories = categories.filter((cat) => selectedIds.includes(cat.id));
-                handleBookChange("categories", selectedCategories);
-              }}
-              renderValue={(selected) =>
-                categories
-                  .filter((cat) => selected.includes(cat.id))
-                  .map((cat) => cat.name)
-                  .join(", ")
-              }
             >
-              {categories.length > 0 ? (
+              {categories && categories.length > 0 ? (
                 categories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id}>
                     {cat.name}
@@ -164,32 +169,32 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, hand
                 ))
               ) : (
                 <MenuItem value="" disabled>
-                  No categories available
+                  No Categories Available
                 </MenuItem>
               )}
             </Select>
           </FormControl>
-          <FormControl>
-            <InputLabel id="tags-edit-label">Tags</InputLabel>
+
+          {/* Tags Selection (Multiple Select) */}
+          <FormControl fullWidth variant="outlined">
+            <InputLabel id="tags-select-label">Tags</InputLabel>
             <Select
-              labelId="tags-edit-label"
-              name="tags"
+              labelId="tags-select-label"
+              id="tags-select"
               multiple
-              value={currentBook.tags ? currentBook.tags.map((tag) => tag.id) : []}
-              label="Tags"
-              onChange={(e) => {
-                const selectedIds = e.target.value;
-                const selectedTags = tags.filter((tag) => selectedIds.includes(tag.id));
-                handleBookChange("tags", selectedTags);
-              }}
-              renderValue={(selected) =>
-                tags
-                  .filter((tag) => selected.includes(tag.id))
-                  .map((tag) => tag.name)
-                  .join(", ")
-              }
+              value={selectedTags}
+              onChange={handleTagsChange}
+              input={<OutlinedInput label="Tags" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {selected.map((tagId) => {
+                    const tag = tags.find((t) => t.id === tagId);
+                    return <Chip key={tagId} label={tag?.name || "Unknown"} size="small" />;
+                  })}
+                </Box>
+              )}
             >
-              {tags.length > 0 ? (
+              {tags && tags.length > 0 ? (
                 tags.map((tag) => (
                   <MenuItem key={tag.id} value={tag.id}>
                     {tag.name}
@@ -197,26 +202,59 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, hand
                 ))
               ) : (
                 <MenuItem value="" disabled>
-                  No tags available
+                  No Tags Available
                 </MenuItem>
               )}
             </Select>
           </FormControl>
+
+          {/* Book Cover Upload */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>
+              Book Cover
+            </Typography>
+            <Button variant="contained" component="label">
+              Upload Cover
+              <input type="file" accept="image/*" hidden onChange={handleCoverChange} />
+            </Button>
+            {bookCoverPreview && (
+              <Box mt={2} sx={{ position: "relative", display: "inline-block" }}>
+                <img src={bookCoverPreview} alt="Book Cover Preview" style={{ width: "100%", maxWidth: "200px", borderRadius: "4px" }} />
+                {coverFile && (
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setCoverFile(null);
+                      setBookCoverPreview(currentBook.bookCover || "");
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      backgroundColor: "rgba(255, 255, 255, 0.7)",
+                    }}
+                  >
+                    ✕
+                  </IconButton>
+                )}
+              </Box>
+            )}
+          </Box>
+
+          {/* Display Error Message */}
+          {error && (
+            <Typography variant="body2" color="error">
+              {error}
+            </Typography>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={isSubmitting}>
+        <Button onClick={handleClose} color="secondary" disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button onClick={handleEditSubmit} variant="contained" color="primary" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <Box display="flex" alignItems="center" gap={1}>
-              <CircularProgress size={20} />
-              Saving...
-            </Box>
-          ) : (
-            "Save"
-          )}
+        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save Changes"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -10,12 +10,18 @@ import {
   CREATE_CHAPTER_COMMENT_FAILED,
   CREATE_CHAPTER_COMMENT_REQUEST,
   CREATE_CHAPTER_COMMENT_SUCCESS,
+  CREATE_POST_COMMENT_FAILED,
+  CREATE_POST_COMMENT_REQUEST,
+  CREATE_POST_COMMENT_SUCCESS,
   CREATE_REPLY_BOOK_COMMENT_FAILED,
   CREATE_REPLY_BOOK_COMMENT_REQUEST,
   CREATE_REPLY_BOOK_COMMENT_SUCCESS,
   CREATE_REPLY_CHAPTER_COMMENT_FAILED,
   CREATE_REPLY_CHAPTER_COMMENT_REQUEST,
   CREATE_REPLY_CHAPTER_COMMENT_SUCCESS,
+  CREATE_REPLY_POST_COMMENT_FAILED,
+  CREATE_REPLY_POST_COMMENT_REQUEST,
+  CREATE_REPLY_POST_COMMENT_SUCCESS,
   DELETE_COMMENT_FAILED,
   DELETE_COMMENT_REQUEST,
   DELETE_COMMENT_SUCCESS,
@@ -25,6 +31,9 @@ import {
   GET_ALL_CHAPTER_COMMENT_FAILED,
   GET_ALL_CHAPTER_COMMENT_REQUEST,
   GET_ALL_CHAPTER_COMMENT_SUCCESS,
+  GET_ALL_POST_COMMENT_FAILED,
+  GET_ALL_POST_COMMENT_REQUEST,
+  GET_ALL_POST_COMMENT_SUCCESS,
   GET_ALL_SENSITIVE_WORDS_FAILED,
   GET_ALL_SENSITIVE_WORDS_REQUEST,
   GET_ALL_SENSITIVE_WORDS_SUCCESS,
@@ -80,7 +89,30 @@ export const createChapterCommentAction = (reqData) => async (dispatch) => {
     }
   }
 };
+export const createPostCommentAction = (reqData) => async (dispatch) => {
+  dispatch({ type: CREATE_POST_COMMENT_REQUEST });
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/api/posts/${reqData.postId}/comments`, reqData.data);
+    dispatch({ type: CREATE_POST_COMMENT_SUCCESS, payload: data });
+  } catch (error) {
+    if (error.response) {
+      console.log("Error response data: ", error.response.data);
+      console.log("Error response status: ", error.response.status);
 
+      if (error.response.status === 406) {
+        dispatch({ type: CREATE_POST_COMMENT_FAILED, payload: error.response.data });
+        return { error: error.response.data };
+      } else {
+        dispatch({ type: CREATE_POST_COMMENT_FAILED, payload: error.message });
+        return { error: error.data };
+      }
+    } else {
+      console.log("No response from server");
+      dispatch({ type: CREATE_BOOK_COMMENT_FAILED, payload: "No response from server" });
+      return { error: "No response from server" };
+    }
+  }
+};
 export const createReplyBookCommentAction = (reqData) => async (dispatch) => {
   dispatch({ type: CREATE_REPLY_BOOK_COMMENT_REQUEST });
   try {
@@ -128,6 +160,29 @@ export const createReplyChapterCommentAction = (reqData) => async (dispatch) => 
     } else {
       console.log("No response from server");
       dispatch({ type: CREATE_REPLY_CHAPTER_COMMENT_FAILED, payload: "No response from server" });
+    }
+  }
+};
+export const createReplyPostCommentAction = (reqData) => async (dispatch) => {
+  dispatch({ type: CREATE_REPLY_POST_COMMENT_REQUEST });
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/api/posts/${reqData.postId}/comments/${reqData.parentCommentId}/reply`, reqData.data);
+    dispatch({ type: CREATE_REPLY_POST_COMMENT_SUCCESS, payload: data });
+  } catch (error) {
+    if (error.response) {
+      console.log("Error response data: ", error.response.data);
+      console.log("Error response status: ", error.response.status);
+
+      if (error.response.status === 406) {
+        dispatch({ type: CREATE_REPLY_POST_COMMENT_FAILED, payload: error.response.data });
+        return { error: error.response.data };
+      } else {
+        dispatch({ type: CREATE_REPLY_POST_COMMENT_FAILED, payload: error.message });
+        return { error: error.response.data };
+      }
+    } else {
+      console.log("No response from server");
+      dispatch({ type: CREATE_REPLY_POST_COMMENT_FAILED, payload: "No response from server" });
     }
   }
 };
@@ -190,7 +245,18 @@ export const getAllCommentByChapterAction = (bookId, chapterId) => async (dispat
     dispatch({ type: GET_ALL_CHAPTER_COMMENT_FAILED, payload: error });
   }
 };
-
+export const getAllCommentByPostAction = (postId) => async (dispatch) => {
+  dispatch({ type: GET_ALL_POST_COMMENT_REQUEST });
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/posts/${postId}/comments`);
+    dispatch({ type: GET_ALL_POST_COMMENT_SUCCESS, payload: data });
+    console.log("Got post comments: ", data);
+    return { payload: data };
+  } catch (error) {
+    console.log("error trying to get all chapter comments", error);
+    dispatch({ type: GET_ALL_POST_COMMENT_FAILED, payload: error });
+  }
+};
 export const getAllSensitiveWord = () => async (dispatch) => {
   dispatch({ type: GET_ALL_SENSITIVE_WORDS_REQUEST });
   try {

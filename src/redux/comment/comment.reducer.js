@@ -5,8 +5,12 @@ import {
   CREATE_BOOK_COMMENT_FAILED,
   CREATE_BOOK_COMMENT_REQUEST,
   CREATE_BOOK_COMMENT_SUCCESS,
+  CREATE_CHAPTER_COMMENT_SUCCESS,
+  CREATE_POST_COMMENT_SUCCESS,
   CREATE_REPLY_BOOK_COMMENT_FAILED,
   CREATE_REPLY_BOOK_COMMENT_SUCCESS,
+  CREATE_REPLY_CHAPTER_COMMENT_SUCCESS,
+  CREATE_REPLY_POST_COMMENT_SUCCESS,
   DELETE_COMMENT_FAILED,
   DELETE_COMMENT_REQUEST,
   DELETE_COMMENT_SUCCESS,
@@ -18,6 +22,8 @@ import {
   GET_ALL_BOOK_COMMENT_SUCCESS,
   GET_ALL_CHAPTER_COMMENT_REQUEST,
   GET_ALL_CHAPTER_COMMENT_SUCCESS,
+  GET_ALL_POST_COMMENT_REQUEST,
+  GET_ALL_POST_COMMENT_SUCCESS,
   GET_ALL_SENSITIVE_WORDS_FAILED,
   GET_ALL_SENSITIVE_WORDS_REQUEST,
   GET_ALL_SENSITIVE_WORDS_SUCCESS,
@@ -29,6 +35,7 @@ const initialState = {
   error: null,
   bookComments: [],
   chapterComments: [],
+  postComments: [],
   newComment: null,
   sensitiveWords: [],
   newSensitiveWord: null,
@@ -39,6 +46,7 @@ export const commentReducer = (state = initialState, action) => {
   switch (action.type) {
     case GET_ALL_BOOK_COMMENT_REQUEST:
     case GET_ALL_CHAPTER_COMMENT_REQUEST:
+    case GET_ALL_POST_COMMENT_REQUEST:
     case GET_ALL_SENSITIVE_WORDS_REQUEST:
     case CREATE_BOOK_COMMENT_REQUEST:
     case DELETE_COMMENT_REQUEST:
@@ -58,7 +66,12 @@ export const commentReducer = (state = initialState, action) => {
         chapterComments: action.payload,
         error: null,
       };
-
+    case GET_ALL_POST_COMMENT_SUCCESS:
+      return {
+        ...state,
+        postComments: action.payload,
+        error: null,
+      };
     case GET_ALL_SENSITIVE_WORDS_SUCCESS:
       return { ...state, error: null, sensitiveWords: action.payload };
 
@@ -66,13 +79,63 @@ export const commentReducer = (state = initialState, action) => {
       return {
         ...state,
         newComment: action.payload,
+        bookComments: [...state.bookComments, action.payload],
+        error: null,
+      };
+    case CREATE_CHAPTER_COMMENT_SUCCESS:
+      return {
+        ...state,
+        newComment: action.payload,
+        chapterComments: [...state.chapterComments, action.payload],
+        error: null,
+      };
+
+    case CREATE_POST_COMMENT_SUCCESS:
+      return {
+        ...state,
+        newComment: action.payload,
+        postComments: [...state.postComments, action.payload],
         error: null,
       };
     case CREATE_REPLY_BOOK_COMMENT_SUCCESS:
       return {
         ...state,
-        bookComments: state.bookComments.map((comment) =>
-          comment.id === action.payload.parentCommentId ? { ...comment, replies: [...comment.replies, action.payload] } : comment
+        bookComments: state.bookComments.map((comment) => {
+          if (comment.id === action.payload.parentCommentId) {
+            return {
+              ...comment,
+              replyComment: comment.replyComment ? [...comment.replyComment, action.payload.reply] : [action.payload.reply],
+            };
+          }
+          return comment;
+        }),
+        error: null,
+      };
+
+    case CREATE_REPLY_CHAPTER_COMMENT_SUCCESS:
+      return {
+        ...state,
+        chapterComments: state.chapterComments.map((comment) => {
+          if (comment.id === action.payload.parentCommentId) {
+            return {
+              ...comment,
+              replyComment: comment.replyComment ? [...comment.replyComment, action.payload.reply] : [action.payload.reply],
+            };
+          }
+          return comment;
+        }),
+        error: null,
+      };
+    case CREATE_REPLY_POST_COMMENT_SUCCESS:
+      return {
+        ...state,
+        postComments: state.postComments.map((comment) =>
+          comment.id === action.payload.parentCommentId
+            ? {
+                ...comment,
+                replyComment: comment.replyComment ? [...comment.replyComment, action.payload] : [action.payload],
+              }
+            : comment
         ),
         error: null,
       };
@@ -82,7 +145,7 @@ export const commentReducer = (state = initialState, action) => {
       return { ...state, error: null, newSensitiveWord: action.payload };
     case DELETE_SENSITIVE_WORD_SUCCESS:
     case DELETE_COMMENT_SUCCESS:
-      return { ...state, error: null };
+      return { ...state, error: null, postComments: state.postComments.filter((comment) => comment.id !== action.payload) };
 
     case GET_ALL_BOOK_COMMENT_FAILED:
     case GET_ALL_SENSITIVE_WORDS_FAILED:

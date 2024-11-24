@@ -38,7 +38,7 @@ export const loginUserAction = (loginData) => async (dispatch) => {
       if (error.response.status === 403) {
         dispatch({ type: LOGIN_FAILED, payload: error.response.data.message });
       } else {
-        dispatch({ type: LOGIN_FAILED, payload: error.message });
+        dispatch({ type: LOGIN_FAILED, payload: error.response.data });
       }
     } else {
       console.log("No response from server");
@@ -62,7 +62,7 @@ export const registerUserAction = (registerData) => async (dispatch) => {
       if (error.response.status === 406) {
         dispatch({ type: REGISTER_FAILED, payload: error.response.data.message });
       } else {
-        dispatch({ type: REGISTER_FAILED, payload: error.message });
+        dispatch({ type: REGISTER_FAILED, payload: error.response.data });
       }
     } else {
       console.log("No response from server");
@@ -87,7 +87,7 @@ export const getCurrentUserByJwt = (jwt) => async (dispatch) => {
       dispatch({ type: GET_PROFILE_FAILED, payload: "Session expired. Please sign in again." });
       return { error: "UNAUTHORIZED" };
     }
-    dispatch({ type: GET_PROFILE_FAILED, payload: error.message });
+    dispatch({ type: GET_PROFILE_FAILED, payload: error.response.data });
   }
 };
 
@@ -99,7 +99,7 @@ export const sendForgotPasswordMail = (email) => async (dispatch) => {
     dispatch({ type: FORGOT_PASSWORD_SUCCEED, payload: data.message });
   } catch (error) {
     console.log("Api error: ", error.message);
-    dispatch({ type: FORGOT_PASSWORD_FAILED, payload: error.message });
+    dispatch({ type: FORGOT_PASSWORD_FAILED, payload: error.response.data });
   }
 };
 
@@ -111,7 +111,7 @@ export const resetPasswordAction = (code, password) => async (dispatch) => {
     dispatch({ type: RESET_PASSWORD_SUCCEED, payload: data.message });
   } catch (error) {
     console.log("Api error: ", error.message);
-    dispatch({ type: RESET_PASSWORD_FAILED, payload: error.message });
+    dispatch({ type: RESET_PASSWORD_FAILED, payload: error.response.data });
   }
 };
 
@@ -124,6 +124,6 @@ export const updateUserProfile = (reqData) => async (dispatch) => {
     return { payload: data };
   } catch (error) {
     console.log("Api error: ", error.message);
-    dispatch({ type: UPDATE_PROFILE_FAILED, payload: error.message });
+    dispatch({ type: UPDATE_PROFILE_FAILED, payload: error.response.data });
   }
 };

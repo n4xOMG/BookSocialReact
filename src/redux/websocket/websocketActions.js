@@ -2,6 +2,7 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { receiveMessage } from "../chat/chat.action";
 import { receiveNotification } from "../notification/notification.action";
+import { API_BASE_URL } from "../../api/api";
 
 // Action to connect WebSocket
 export const connectWebSocket = () => (dispatch, getState) => {
@@ -15,7 +16,7 @@ export const connectWebSocket = () => (dispatch, getState) => {
   const token = localStorage.getItem("jwt");
   if (!user) return;
 
-  const socket = new SockJS("http://localhost:80/ws-chat");
+  const socket = new SockJS(`${API_BASE_URL}/ws-chat`);
   const stompClient = new Client({
     webSocketFactory: () => socket,
     connectHeaders: {

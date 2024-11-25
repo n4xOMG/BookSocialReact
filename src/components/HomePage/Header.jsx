@@ -49,12 +49,9 @@ const Header = () => {
               <SearchBar categories={categories} tags={tags} />
             </Box>
             <Stack direction="row" spacing={2} alignItems="center">
-              {/* Upload Button with Authentication Check */}
               <IconButton onClick={checkAuth(() => navigate("/upload-book"))}>
                 <Upload />
               </IconButton>
-
-              {/* Conditionally render MessageMenu and NotificationMenu if user is authenticated */}
               {user && (
                 <>
                   <MessageMenu chats={chats} />
@@ -67,8 +64,6 @@ const Header = () => {
           </Toolbar>
         </AppBar>
       )}
-
-      {/* Render AuthDialog */}
       <AuthDialog />
     </>
   );

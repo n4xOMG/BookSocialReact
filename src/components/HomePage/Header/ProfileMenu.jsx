@@ -1,5 +1,5 @@
-import { History, Logout, Settings, AdminPanelSettings } from "@mui/icons-material";
-import { Avatar, Box, IconButton, ListItemIcon, Menu, MenuItem, Tooltip } from "@mui/material";
+import { AccountBalanceWallet, History, Logout, Settings, AdminPanelSettings } from "@mui/icons-material";
+import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -90,6 +90,17 @@ export default function ProfileMenu() {
       >
         {user
           ? [
+              <MenuItem disabled key="credits">
+                <ListItemIcon>
+                  <AccountBalanceWallet fontSize="small" />
+                </ListItemIcon>
+                <Box>
+                  <Typography variant="body1" fontWeight="bold">
+                    Credits: {user.credits}
+                  </Typography>
+                </Box>
+              </MenuItem>,
+              <Divider key="divider-credits" />,
               <MenuItem divider onClick={() => navigate("/profile")} key="profile">
                 <Avatar src={user.avatarUrl} /> Profile
               </MenuItem>,

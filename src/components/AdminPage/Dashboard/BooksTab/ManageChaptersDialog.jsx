@@ -24,10 +24,12 @@ import { getAllChaptersByBookIdAction } from "../../../../redux/chapter/chapter.
 import AddChapterModal from "./ChapterModal/AddNovelChapterModal";
 import DeleteChapterModal from "./ChapterModal/DeleteChapterModal";
 import EditChapterModal from "./ChapterModal/EditChapterModal";
+import { isTokenExpired } from "../../../../utils/useAuthCheck";
 
 const ManageChaptersDialog = ({ open, handleClose, book }) => {
   const dispatch = useDispatch();
   const { chapters, loading, error } = useSelector((state) => state.chapter);
+  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -35,7 +37,7 @@ const ManageChaptersDialog = ({ open, handleClose, book }) => {
 
   useEffect(() => {
     if (open && book) {
-      dispatch(getAllChaptersByBookIdAction(book.id));
+      dispatch(getAllChaptersByBookIdAction(jwt, book.id));
     }
   }, [open, book, dispatch]);
 

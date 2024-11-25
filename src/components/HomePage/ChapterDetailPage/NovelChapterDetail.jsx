@@ -118,7 +118,7 @@ export default function NovelChapterDetail({
           >
             <Box
               sx={{ textAlign: "justify", color: themeMode === "light" ? "#242424" : "white" }}
-              dangerouslySetInnerHTML={{ __html: chapter.content }}
+              dangerouslySetInnerHTML={{ __html: chapter?.content }}
             />
           </Box>
           {isFloatingMenuVisible && (
@@ -140,7 +140,7 @@ export default function NovelChapterDetail({
                 <FloatingMenu
                   anchorEl={anchorEl}
                   bookId={bookId}
-                  currentChapterId={chapter.id}
+                  currentChapterId={chapter?.id}
                   chapters={chapters}
                   open={isFloatingMenuVisible}
                   themeMode={themeMode}

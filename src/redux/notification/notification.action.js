@@ -10,7 +10,7 @@ import {
 export const getNotifications = () => async (dispatch, getState) => {
   dispatch({ type: FETCH_NOTIFICATIONS_REQUEST });
   try {
-    const response = await api.get(`${API_BASE_URL}/api/notifications"`);
+    const response = await api.get(`${API_BASE_URL}/api/notifications`);
     dispatch({ type: FETCH_NOTIFICATIONS_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: FETCH_NOTIFICATIONS_FAILED, payload: error.message });

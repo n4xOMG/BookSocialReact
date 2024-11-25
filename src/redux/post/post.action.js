@@ -14,6 +14,9 @@ import {
   DELETE_POST_SUCCESS,
   DELETE_POST_FAILURE,
   LIKE_POST_SUCCESS,
+  FETCH_POSTS_BY_USER_REQUEST,
+  FETCH_POSTS_BY_USER_SUCCESS,
+  FETCH_POSTS_BY_USER_FAILURE,
 } from "./post.actionType";
 import { api, API_BASE_URL } from "../../api/api";
 import axios from "axios";
@@ -26,6 +29,17 @@ export const fetchPosts = () => async (dispatch) => {
     dispatch({ type: FETCH_POSTS_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: FETCH_POSTS_FAILURE, payload: error.message });
+  }
+};
+
+export const fetchPostsByUserId = (userId) => async (dispatch) => {
+  dispatch({ type: FETCH_POSTS_BY_USER_REQUEST });
+  try {
+    const response = await axios.get(`${API_BASE_URL}/posts/${userId}`);
+    dispatch({ type: FETCH_POSTS_BY_USER_SUCCESS, payload: response.data });
+    return response.data;
+  } catch (error) {
+    dispatch({ type: FETCH_POSTS_BY_USER_FAILURE, payload: error.message });
   }
 };
 

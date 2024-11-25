@@ -18,7 +18,7 @@ export const ChapterList = ({ progresses, onCalculateProgress, onNavigate, bookI
   const { chapters } = useSelector((store) => store.chapter);
   const theme = useTheme();
   const dispatch = useDispatch();
-
+  const jwt = localStorage.getItem("jwt");
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
@@ -30,14 +30,17 @@ export const ChapterList = ({ progresses, onCalculateProgress, onNavigate, bookI
   const fetchChapters = useCallback(async () => {
     setLoading(true);
     try {
-      await dispatch(getAllChaptersByBookIdAction(bookId));
+      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
     } catch (error) {
       console.error("Error fetching chapters:", error);
     } finally {
       setLoading(false);
     }
   }, [bookId, dispatch]);
-
+  useEffect(() => {
+    fetchChapters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     if (user) {
       onCalculateProgress(chapters, progresses);

@@ -1,18 +1,19 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { receiveMessage, sendMessageSuccess } from "../actions/chatActions";
-import { receiveNotification } from "../actions/notificationActions";
+import { receiveMessage } from "../chat/chat.action";
+import { receiveNotification } from "../notification/notification.action";
 
 // Action to connect WebSocket
 export const connectWebSocket = () => (dispatch, getState) => {
   const { user } = getState().auth;
+  const token = localStorage.getItem("jwt");
   if (!user) return;
 
-  const socket = new SockJS("http://localhost:8080/ws-chat");
+  const socket = new SockJS("http://localhost:80/ws-chat");
   const stompClient = new Client({
     webSocketFactory: () => socket,
     connectHeaders: {
-      Authorization: `Bearer ${user.token}`, // Adjust based on your auth setup
+      Authorization: `Bearer ${token}`, // Adjust based on your auth setup
     },
     debug: function (str) {
       console.log(str);

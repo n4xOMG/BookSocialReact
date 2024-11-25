@@ -14,10 +14,14 @@ import {
   DELETE_POST_SUCCESS,
   DELETE_POST_FAILURE,
   LIKE_POST_SUCCESS,
+  FETCH_POSTS_BY_USER_REQUEST,
+  FETCH_POSTS_BY_USER_SUCCESS,
+  FETCH_POSTS_BY_USER_FAILURE,
 } from "./post.actionType";
 
 const initialState = {
   posts: [],
+  postsByUser: [],
   loading: false,
   error: null,
 };
@@ -25,6 +29,7 @@ const initialState = {
 export const postReducer = (state = initialState, action) => {
   switch (action.type) {
     case FETCH_POSTS_REQUEST:
+    case FETCH_POSTS_BY_USER_REQUEST:
     case ADD_POST_REQUEST:
     case UPDATE_POST_REQUEST:
     case DELETE_POST_REQUEST:
@@ -38,6 +43,12 @@ export const postReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         posts: action.payload,
+      };
+    case FETCH_POSTS_BY_USER_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        postsByUser: action.payload,
       };
     case ADD_POST_SUCCESS:
       return {
@@ -63,6 +74,7 @@ export const postReducer = (state = initialState, action) => {
         posts: state.posts.map((post) => (post.id === action.payload.id ? action.payload : post)),
       };
     case FETCH_POSTS_FAILURE:
+    case FETCH_POSTS_BY_USER_FAILURE:
     case ADD_POST_FAILURE:
     case UPDATE_POST_FAILURE:
     case DELETE_POST_FAILURE:

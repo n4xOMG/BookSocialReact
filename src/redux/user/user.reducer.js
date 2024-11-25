@@ -8,6 +8,9 @@ import {
   GET_ALL_USERS_REQUEST,
   GET_ALL_USERS_SUCCESS,
   GET_READING_PROGRESS_BY_USER_SUCCESS,
+  GET_USER_BY_ID_FAILED,
+  GET_USER_BY_ID_REQUEST,
+  GET_USER_BY_ID_SUCCESS,
   SUSPEND_USER_FAILED,
   SUSPEND_USER_REQUEST,
   SUSPEND_USER_SUCCESS,
@@ -37,6 +40,7 @@ const initialState = {
 export const userReducer = (state = initialState, action) => {
   switch (action.type) {
     case GET_ALL_USERS_REQUEST:
+    case GET_USER_BY_ID_REQUEST:
     case UPDATE_USER_ROLE_REQUEST:
     case SUSPEND_USER_REQUEST:
     case UNSUSPEND_USER_REQUEST:
@@ -47,6 +51,8 @@ export const userReducer = (state = initialState, action) => {
       return { ...state, loading: true, error: null };
     case GET_ALL_USERS_SUCCESS:
       return { ...state, loading: false, error: null, users: action.payload };
+    case GET_USER_BY_ID_SUCCESS:
+      return { ...state, loading: false, error: null, user: action.payload };
     case GET_READING_PROGRESS_BY_USER_SUCCESS:
       return { ...state, loading: false, error: null, readingProgresses: action.payload };
     case UPDATE_USER_SUCCESS:
@@ -65,6 +71,7 @@ export const userReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null };
 
     case GET_ALL_USERS_FAILED:
+    case GET_USER_BY_ID_FAILED:
     case SUSPEND_USER_FAILED:
     case UNSUSPEND_USER_FAILED:
     case BAN_USER_FAILED:

@@ -4,6 +4,9 @@ import {
   CHAPTER_UPLOAD_FAILED,
   CHAPTER_UPLOAD_REQUEST,
   CHAPTER_UPLOAD_SUCCEED,
+  CREATE_PAYMENT_INTENT_FAILED,
+  CREATE_PAYMENT_INTENT_REQUEST,
+  CREATE_PAYMENT_INTENT_SUCCESS,
   DELETE_CHAPTER_FAILED,
   DELETE_CHAPTER_REQUEST,
   DELETE_CHAPTER_SUCCEED,
@@ -25,18 +28,25 @@ import {
   SAVE_PROGRESS_FAILED,
   SAVE_PROGRESS_REQUEST,
   SAVE_PROGRESS_SUCCESS,
+  UNLOCK_CHAPTER_FAILED,
+  UNLOCK_CHAPTER_REQUEST,
+  UNLOCK_CHAPTER_SUCCESS,
 } from "./chapter.actionType";
 
-export const getAllChaptersByBookIdAction = (bookId) => async (dispatch) => {
+export const getAllChaptersByBookIdAction = (jwt, bookId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
+
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/chapters`);
+    const apiClient = jwt ? api : axios; // Choose the API client based on `jwt`
+    const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}/chapters`);
+    console.log("Chapters: ", data);
     dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data });
     return { payload: data };
   } catch (error) {
     dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: error.message });
   }
 };
+
 export const getChaptersByBookAndLanguageAction = (bookId, languageId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_REQUEST });
   try {
@@ -47,13 +57,18 @@ export const getChaptersByBookAndLanguageAction = (bookId, languageId) => async 
     dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_FAILED, payload: error.message });
   }
 };
-export const getChapterById = (bookId, chapterId) => async (dispatch) => {
+export const getChapterById = (jwt, bookId, chapterId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTER_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`);
+    const apiClient = jwt ? api : axios; // Choose the API client based on `jwt`
+    const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`);
     dispatch({ type: GET_CHAPTER_SUCCESS, payload: data });
+    console.log("Chapter: ", data);
   } catch (error) {
-    console.log("Api error when trying to retreiving chapter: ", error);
+    console.log("Api error when trying to retreiving chapter: ", error.response?.status);
+    if (error.response?.status === 403) {
+      dispatch({ type: GET_CHAPTER_FAILED, payload: "You need to unlock this chapter to read it" });
+    }
     dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
   }
 };
@@ -105,5 +120,38 @@ export const getReadingProgressByUserAndChapter = (chapterId) => async (dispatch
     return { payload: data };
   } catch (error) {
     dispatch({ type: GET_PROGRESS_FAILED, payload: error.message });
+  }
+};
+export const unlockChapterAction = (chapterId) => async (dispatch) => {
+  dispatch({ type: UNLOCK_CHAPTER_REQUEST });
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/api/unlock/${chapterId}`);
+    dispatch({ type: UNLOCK_CHAPTER_SUCCESS, payload: data });
+    console.log("Chapter unlocked: ", data);
+  } catch (error) {
+    console.log("Api error when trying to unlock chapter: ", error.message);
+    dispatch({ type: UNLOCK_CHAPTER_FAILED, payload: error.message });
+  }
+};
+export const createPaymentIntent = (purchaseRequest) => async (dispatch) => {
+  dispatch({ type: CREATE_PAYMENT_INTENT_REQUEST });
+  try {
+    const response = await api.post(`${API_BASE_URL}/api/payments/create-payment-intent`, purchaseRequest);
+    dispatch({ type: CREATE_PAYMENT_INTENT_SUCCESS, payload: response.data });
+    return response.data;
+  } catch (error) {
+    dispatch({ type: CREATE_PAYMENT_INTENT_FAILED, payload: error.message });
+    throw error;
+  }
+};
+
+// Confirm Payment
+export const confirmPayment = (confirmPaymentRequest) => async (dispatch) => {
+  try {
+    const response = await api.post(`${API_BASE_URL}/api/payments/confirm-payment`, confirmPaymentRequest);
+
+    return response.data;
+  } catch (error) {
+    throw error;
   }
 };

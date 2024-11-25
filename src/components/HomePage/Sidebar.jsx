@@ -1,9 +1,9 @@
-import { Book, Bookmark, Chat, Person } from "@mui/icons-material";
+import { Book, Bookmark, Chat, Money, Person } from "@mui/icons-material";
 import { Box, Divider, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography } from "@mui/material";
-import ReadingHistoryCard from "./ReadingHistoryCard";
-import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import ReadingHistoryCard from "./ReadingHistoryCard";
 
 export const Sidebar = () => {
   const [readingHistory] = useState([
@@ -26,6 +26,7 @@ export const Sidebar = () => {
       ? [
           { text: "My Stories", icon: <Person />, link: "/stories" },
           { text: "Library", icon: <Bookmark />, link: "/library" },
+          { text: "Credit Packages", icon: <Money />, link: "/credit-packages" },
         ]
       : []),
     { text: "Book Clubs", icon: <Chat />, link: "/book-clubs" },

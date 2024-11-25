@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Box, Container, Typography, CircularProgress, Alert, Grid, Card, CardContent } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { getCurrentUserByJwt } from "../../redux/auth/auth.action";
-import PersonalInfo from "../../components/ProfilePage/PersonalInfo";
+import { Alert, Box, Card, CardContent, CircularProgress, Container, Grid, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import AccountInfo from "../../components/ProfilePage/AccountInfo";
+import PersonalInfo from "../../components/ProfilePage/PersonalInfo";
+import { getCurrentUserByJwt } from "../../redux/auth/auth.action";
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
-  const auth = useSelector((state) => state.auth);
 
   useEffect(() => {
     const fetchUserProfile = async () => {

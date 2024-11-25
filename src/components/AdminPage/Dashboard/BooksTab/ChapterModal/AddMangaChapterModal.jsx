@@ -7,9 +7,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { addChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
 import UploadToCloudinary from "../../../../../utils/uploadToCloudinary";
 import ViewImageModal from "../ChapterModal/ViewImageModal";
+import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function AddMangaChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const [selectedImage, setSelectedImage] = useState(null);
   const [chapter, setChapter] = useState({
     chapterNum: "",
@@ -68,7 +70,7 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
       };
 
       await dispatch(addChapterAction(bookId, { data: chapterData }));
-      await dispatch(getAllChaptersByBookIdAction(bookId));
+      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {

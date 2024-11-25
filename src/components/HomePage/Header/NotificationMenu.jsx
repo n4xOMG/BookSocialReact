@@ -51,7 +51,7 @@ export default function NotificationMenu({ notifications }) {
               }}
             >
               <Box sx={{ display: "flex", flexDirection: "column" }}>
-                <Typography variant="body2">{noti?.content}</Typography>
+                <Typography variant="body2">{noti?.message}</Typography>
                 <Typography variant="caption" sx={{ color: "text.secondary" }}>
                   {noti?.time}
                 </Typography>

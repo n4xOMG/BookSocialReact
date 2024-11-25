@@ -20,9 +20,11 @@ import { Element, Leaf } from "../ChapterModal/TextEditorUtils/Element";
 import { InsertImageButton, withImages } from "../ChapterModal/TextEditorUtils/InsertImageHandler";
 import { MarkButton, toggleMark } from "../ChapterModal/TextEditorUtils/MarkButton";
 import { HOTKEYS } from "../ChapterModal/TextEditorUtils/ToolbarFunctions";
+import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function AddChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const editor = useMemo(() => withImages(withHistory(withReact(createEditor()))), []);
   const [chapterData, setChapterData] = useState({
     chapterNum: "",
@@ -58,7 +60,7 @@ export default function AddChapterModal({ open, onClose, bookId }) {
     console.log("Form Data:", chapterData);
     try {
       await dispatch(addChapterAction(bookId, chapterData));
-      await dispatch(getAllChaptersByBookIdAction(bookId));
+      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {

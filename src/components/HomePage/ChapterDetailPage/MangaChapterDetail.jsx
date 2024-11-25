@@ -184,7 +184,7 @@ export default function MangaChapterDetail({
                 <FloatingMenu
                   anchorEl={anchorEl}
                   bookId={bookId}
-                  currentChapterId={chapter.id}
+                  currentChapterId={chapter?.id}
                   chapters={chapters}
                   open={isFloatingMenuVisible}
                   viewMode={viewMode}

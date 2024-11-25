@@ -1,32 +1,27 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CloseIcon from "@mui/icons-material/Close";
-import { Autocomplete, Box, Button, Checkbox, Dialog, FormControlLabel, Grid, IconButton, TextField } from "@mui/material";
+import { Box, Button, Checkbox, Dialog, FormControlLabel, Grid, IconButton, TextField } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllLanguages } from "../../../../../redux/book/book.action";
 import { editChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
 import UploadToCloudinary from "../../../../../utils/uploadToCloudinary";
 import LoadingSpinner from "../../../../LoadingSpinner";
-import ViewImageModal from "../../../ManageGalleryPageComponents/ViewImageModal";
+import ViewImageModal from "./ViewImageModal";
+import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function EditMangaChapterModal({ open, onClose, bookId, chapterDetails }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const [selectedImage, setSelectedImage] = useState(null);
   const { user } = useSelector((store) => store.auth);
-  const { languages } = useSelector((store) => store.book);
   const [chapter, setChapter] = useState({
     id: chapterDetails.id,
+    bookId: bookId,
     chapterNum: chapterDetails.chapterNum,
     title: chapterDetails.title,
-    language: chapterDetails.language,
-    translatorId: user?.id || "",
     content: chapterDetails.content,
-    adaptationSeason: {
-      season: chapterDetails.season,
-      episode: chapterDetails.episode,
-      part: chapterDetails.part,
-    },
-    showAdaptation: chapterDetails.season ? true : false,
+    locked: chapterDetails.locked,
+    price: chapterDetails.price,
   });
 
   const [images, setImages] = useState({
@@ -52,21 +47,10 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
     }
   }, [chapter.content]);
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setChapter((prev) => ({
       ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleAdaptationChange = (e) => {
-    const { name, value } = e.target;
-    setChapter((prev) => ({
-      ...prev,
-      adaptationSeason: {
-        ...prev.adaptationSeason,
-        [name]: value,
-      },
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -122,16 +106,8 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
         imageLinks: allImageLinks,
       };
 
-      if (chapter.showAdaptation) {
-        chapterData.adaptationSeason = {
-          season: chapter.adaptationSeason.season,
-          episode: chapter.adaptationSeason.episode,
-          part: chapter.adaptationSeason.part,
-        };
-      }
-
       await dispatch(editChapterAction(bookId, { data: chapterData }));
-      await dispatch(getAllChaptersByBookIdAction(bookId));
+      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -154,20 +130,6 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
     const prevIndex = (currentIndex - 1 + images.imagePreviews.length) % images.imagePreviews.length;
     setSelectedImage(images.imagePreviews[prevIndex]);
   };
-  useEffect(() => {
-    const fetchLanguages = async () => {
-      setLoading(true);
-      try {
-        await dispatch(getAllLanguages());
-      } catch (e) {
-        console.error("Error fetching tags: ", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLanguages();
-    setLoading(true);
-  }, [dispatch]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -186,60 +148,21 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
               onChange={handleInputChange}
             />
             <TextField margin="normal" fullWidth name="title" label="Chapter title" value={chapter.title} onChange={handleInputChange} />
-            <Autocomplete
-              limitTags={1}
-              id="language"
-              options={languages || []}
-              getOptionLabel={(option) => option?.name || ""}
-              value={chapter.language}
-              onChange={(event, newValue) => setChapter((prev) => ({ ...prev, language: newValue }))}
-              isOptionEqualToValue={(option, value) => option?.id === value?.id}
-              renderInput={(params) => <TextField {...params} label="Language" placeholder="Language" />}
-              sx={{ width: "500px" }}
+            <TextField
+              margin="normal"
+              label="Price"
+              name="price"
+              type="number"
+              min={0}
+              value={chapter.price}
+              onChange={handleInputChange}
+              fullWidth
+              required
             />
             <FormControlLabel
-              control={
-                <Checkbox
-                  checked={chapter.showAdaptation}
-                  onChange={(e) => setChapter((prev) => ({ ...prev, showAdaptation: e.target.checked }))}
-                  name="showAdaptation"
-                  color="primary"
-                />
-              }
-              label="Adapted Chapter"
+              control={<Checkbox checked={chapter.locked} onChange={handleInputChange} name="isLocked" color="primary" />}
+              label="Is Locked"
             />
-
-            {chapter.showAdaptation && (
-              <>
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  name="season"
-                  label="Season"
-                  value={chapter.adaptationSeason.season}
-                  onChange={handleAdaptationChange}
-                />
-                <TextField
-                  type="number"
-                  margin="normal"
-                  fullWidth
-                  name="episode"
-                  label="Episode"
-                  value={chapter.adaptationSeason.episode}
-                  onChange={handleAdaptationChange}
-                />
-                <TextField
-                  type="number"
-                  margin="normal"
-                  fullWidth
-                  name="part"
-                  label="Part"
-                  value={chapter.adaptationSeason.part}
-                  onChange={handleAdaptationChange}
-                />
-              </>
-            )}
-
             <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={6} sm={4} md={3} sx={{ position: "relative", cursor: "pointer" }}>
                 <Box

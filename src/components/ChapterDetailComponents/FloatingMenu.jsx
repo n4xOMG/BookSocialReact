@@ -1,12 +1,28 @@
 import { ChevronLeft, ChevronRight, Fullscreen, Layers, MenuBook } from "@mui/icons-material";
 import HomeIcon from "@mui/icons-material/Home";
 import ListIcon from "@mui/icons-material/List";
-import { Box, Fade, IconButton, Menu, MenuItem, Tooltip, useMediaQuery, useTheme } from "@mui/material";
+import {
+  Box,
+  Fade,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
+  useMediaQuery,
+  useTheme,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import HeightIcon from "@mui/icons-material/Height";
 import ChatIcon from "@mui/icons-material/Chat";
-import React from "react";
+import React, { useState } from "react";
 const viewModeIcon = {
   single: <Layers />,
   double: <MenuBook />,
@@ -34,6 +50,10 @@ export default function FloatingMenu({
 }) {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [targetChapter, setTargetChapter] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleFullScreen = () => {
     if (document.fullscreenElement) {
@@ -77,79 +97,130 @@ export default function FloatingMenu({
     </Tooltip>
   );
 
+  const handleChapterNavigation = (chapter) => {
+    if (chapter.isLocked && !chapter.isUnlockedByUser && chapter.price > 0) {
+      setTargetChapter(chapter);
+      setUnlockDialogOpen(true);
+    } else {
+      onChapterChange(chapter.id);
+    }
+  };
+
+  const handleUnlock = async () => {
+    if (!targetChapter) return;
+    try {
+      await onChapterChange(targetChapter.id);
+      setUnlockDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error.message || "Failed to unlock chapter.");
+    }
+  };
+
+  const handleCloseUnlockDialog = () => {
+    setUnlockDialogOpen(false);
+    setTargetChapter(null);
+    setErrorMessage("");
+  };
+
   return (
-    <Fade in={open}>
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: { xs: "20%", sm: "15%", md: "10%", lg: "5%" },
-          left: "50%",
-          transform: "translateX(-50%)",
-          bgcolor: "#050505",
-          backdropFilter: "blur(10px)",
-          borderRadius: 2,
-          boxShadow: 3,
-          p: { xs: 1, sm: 2 },
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          zIndex: (theme) => theme.zIndex.drawer + 2,
-          height: "auto",
-        }}
-      >
-        {renderIconButton(
-          "Previous chapter",
-          "Previous chapter",
-          () => onChapterChange(chapters[currentChapterIndex - 1].id),
-          <ChevronLeft />,
-          currentChapterIndex === 0
-        )}
-
-        {renderIconButton("Chapter List", "Chapters list", onChapterListOpen, <ListIcon />)}
-
-        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={onChapterListClose}>
-          {chapters.map((chapter) => (
-            <MenuItem
-              key={chapter.id}
-              onClick={() => {
-                onChapterChange(chapter.id);
-                onChapterListClose();
-              }}
-              sx={{ color: "black" }}
-            >
-              {chapter.chapterNum} {": " + chapter.title}
-            </MenuItem>
-          ))}
-        </Menu>
-
-        {viewMode &&
-          renderIconButton(
-            `Change view mode (Current: ${viewMode})`,
-            `Current view mode: ${viewMode}`,
-            handleViewModeChange,
-            viewModeIcon[viewMode]
+    <>
+      <Fade in={open}>
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: { xs: "20%", sm: "15%", md: "10%", lg: "5%" },
+            left: "50%",
+            transform: "translateX(-50%)",
+            bgcolor: "#050505",
+            backdropFilter: "blur(10px)",
+            borderRadius: 2,
+            boxShadow: 3,
+            p: { xs: 1, sm: 2 },
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            zIndex: (theme) => theme.zIndex.drawer + 2,
+            height: "auto",
+          }}
+        >
+          {renderIconButton(
+            "Previous chapter",
+            "Previous chapter",
+            () => handleChapterNavigation(chapters[currentChapterIndex - 1]),
+            <ChevronLeft />,
+            currentChapterIndex === 0
           )}
 
-        {themeMode &&
-          renderIconButton(
-            `Change theme mode (Current: ${themeMode})`,
-            `Current theme: ${themeMode}`,
-            handleThemeModeChange,
-            themeModeIcon[themeMode]
+          {renderIconButton("Chapter List", "Chapters list", onChapterListOpen, <ListIcon />)}
+
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={onChapterListClose}>
+            {chapters.map((chapter) => (
+              <MenuItem
+                key={chapter.id}
+                onClick={() => {
+                  handleChapterNavigation(chapter);
+                  onChapterListClose();
+                }}
+                sx={{ color: "black" }}
+              >
+                {chapter.chapterNum} {": " + chapter.title}
+              </MenuItem>
+            ))}
+          </Menu>
+
+          {viewMode &&
+            renderIconButton(
+              `Change view mode (Current: ${viewMode})`,
+              `Current view mode: ${viewMode}`,
+              handleViewModeChange,
+              viewModeIcon[viewMode]
+            )}
+
+          {themeMode &&
+            renderIconButton(
+              `Change theme mode (Current: ${themeMode})`,
+              `Current theme: ${themeMode}`,
+              handleThemeModeChange,
+              themeModeIcon[themeMode]
+            )}
+
+          {renderIconButton("Back to book detail page", "Back to Book Page", onNavigate, <HomeIcon />)}
+
+          {renderIconButton("Enter fullscreen mode", "Full Screen", handleFullScreen, <Fullscreen />)}
+          {renderIconButton("Comments", "Comments", onToggleSideDrawer, <ChatIcon />)}
+          {renderIconButton(
+            "Next chapter",
+            "Next chapter",
+            () => handleChapterNavigation(chapters[currentChapterIndex + 1]),
+            <ChevronRight />,
+            currentChapterIndex === chapters.length - 1
           )}
+        </Box>
+      </Fade>
 
-        {renderIconButton("Back to book detail page", "Back to Book Page", onNavigate, <HomeIcon />)}
-
-        {renderIconButton("Enter fullscreen mode", "Full Screen", handleFullScreen, <Fullscreen />)}
-        {renderIconButton("Comments", "Comments", onToggleSideDrawer, <ChatIcon />)}
-        {renderIconButton(
-          "Next chapter",
-          "Next chapter",
-          () => onChapterChange(chapters[currentChapterIndex + 1].id),
-          <ChevronRight />,
-          currentChapterIndex === chapters.length - 1
-        )}
-      </Box>
-    </Fade>
+      {/* Confirmation Dialog for Unlocking via Floating Menu */}
+      <Dialog open={unlockDialogOpen} onClose={handleCloseUnlockDialog}>
+        <DialogTitle>Unlock Chapter</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This chapter is locked and requires <strong>{targetChapter?.price} credits</strong> to unlock. Would you like to proceed?
+          </DialogContentText>
+          {errorMessage && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUnlockDialog} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleUnlock} color="primary" variant="contained">
+            Unlock
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

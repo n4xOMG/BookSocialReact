@@ -18,6 +18,9 @@ import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ProfilePage from "./pages/UserPages/ProfilePage";
 import { BookDetailPage } from "./pages/UserPages/BookDetailPage";
 import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
+import CreditPackages from "./pages/UserPages/CreditPackages";
+import OtherUserProfile from "./pages/UserPages/OtherUserProfile";
+import MessagePage from "./pages/UserPages/MessagesPage";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -51,11 +54,14 @@ function App() {
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/profile/:userId" element={<OtherUserProfile />} />
+        <Route path="/message/:chatId" element={user ? <MessagePage /> : <HomePage />} />
         <Route path="/profile" element={user ? <ProfilePage /> : <HomePage />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/library" element={user ? <UserBookshelf /> : <HomePage />} />
         <Route path="/book-clubs" element={<BookClubs />} />
+        <Route path="/credit-packages" element={<CreditPackages />} />
         <Route path="/stories" element={user ? <UserBooks /> : <HomePage />} />
         <Route path="/upload-book" element={<UserUploadBook />} />
         <Route path="/books/:bookId" element={<BookDetailPage />} />

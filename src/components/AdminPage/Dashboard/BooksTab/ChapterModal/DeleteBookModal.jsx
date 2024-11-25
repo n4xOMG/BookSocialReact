@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
 import { CircularProgress } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -7,18 +5,19 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { deleteChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
-import { isTokenExpired } from "../../../../../utils/useAuthCheck";
-export default function DeleteChapterModal({ open, onClose, bookId, deleteChapter }) {
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { deleteBookAction, getAllBookAction } from "../../../../../redux/book/book.action";
+export default function DeleteBookModal({ open, onClose, deleteBook }) {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
+
   const handleDelete = async (event) => {
     event.preventDefault();
-    console.log("bookId: ", deleteChapter.id);
+    console.log("bookId: ", deleteBook.id);
     setLoading(true);
-    await dispatch(deleteChapterAction(bookId, deleteChapter.id));
-    await dispatch(getAllChaptersByBookIdAction(bookId));
+    await dispatch(deleteBookAction(deleteBook.id));
+    await dispatch(getAllBookAction());
     setLoading(false);
     onClose();
   };
@@ -30,9 +29,9 @@ export default function DeleteChapterModal({ open, onClose, bookId, deleteChapte
         </div>
       ) : (
         <Dialog open={open} onClose={onClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
-          <DialogTitle id="alert-dialog-title">{"Delete this chapter?"}</DialogTitle>
+          <DialogTitle id="alert-dialog-title">{"Delete this book?"}</DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">Do you want to delete this chapter?</DialogContentText>
+            <DialogContentText id="alert-dialog-description">Do you want to delete this book?</DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose}>No</Button>

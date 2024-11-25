@@ -1,5 +1,3 @@
-// src/components/EditBookDialog.jsx
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -22,7 +20,7 @@ import { useDispatch } from "react-redux";
 import UploadToCloudinary from "../../../../utils/uploadToCloudinary";
 import { editBookAction } from "../../../../redux/book/book.action";
 
-const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, isSubmitting }) => {
+const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) => {
   const dispatch = useDispatch();
 
   // Local state for the form fields
@@ -35,15 +33,15 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, isSu
   const [bookCoverPreview, setBookCoverPreview] = useState("");
   const [coverFile, setCoverFile] = useState(null);
   const [error, setError] = useState("");
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (currentBook) {
       setTitle(currentBook.title || "");
       setDescription(currentBook.description || "");
       setLanguage(currentBook.language || "");
       setStatus(currentBook.status || "");
-      setCategory(currentBook.category?.id || "");
-      setSelectedTags(currentBook.tags ? currentBook.tags.map((tag) => tag.id) : []);
+      setCategory(currentBook.categoryId || "");
+      setSelectedTags(currentBook.tagIds || []);
       setBookCoverPreview(currentBook.bookCover || "");
       setCoverFile(null);
     }
@@ -59,7 +57,7 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, isSu
     setError("");
 
     let uploadedImageUrl = currentBook.bookCover;
-
+    setLoading(true);
     if (coverFile) {
       try {
         uploadedImageUrl = await UploadToCloudinary(coverFile, "books");
@@ -87,6 +85,8 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, isSu
     } catch (updateError) {
       console.error("Failed to update book:", updateError);
       setError("Failed to update the book. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,7 +188,7 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, isSu
               renderValue={(selected) => (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                   {selected.map((tagId) => {
-                    const tag = tags.find((t) => t.id === tagId);
+                    const tag = tags.find((t) => t.id === tagId); // Find the tag object by ID
                     return <Chip key={tagId} label={tag?.name || "Unknown"} size="small" />;
                   })}
                 </Box>
@@ -250,11 +250,11 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags, isSu
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" disabled={isSubmitting}>
+        <Button onClick={handleClose} color="secondary" disabled={loading}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save Changes"}
+        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
+          {loading ? "Saving..." : "Save Changes"}
         </Button>
       </DialogActions>
     </Dialog>

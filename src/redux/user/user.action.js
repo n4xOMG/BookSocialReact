@@ -1,3 +1,4 @@
+import axios from "axios";
 import { api, API_BASE_URL } from "../../api/api";
 import {
   BAN_USER_FAILED,
@@ -12,6 +13,9 @@ import {
   GET_READING_PROGRESS_BY_USER_FAILED,
   GET_READING_PROGRESS_BY_USER_REQUEST,
   GET_READING_PROGRESS_BY_USER_SUCCESS,
+  GET_USER_BY_ID_FAILED,
+  GET_USER_BY_ID_REQUEST,
+  GET_USER_BY_ID_SUCCESS,
   SUSPEND_USER_FAILED,
   SUSPEND_USER_REQUEST,
   SUSPEND_USER_SUCCESS,
@@ -42,6 +46,20 @@ export const getAllUsers = (page, size, searchTerm) => async (dispatch) => {
   } catch (error) {
     console.log("Api error: ", error);
     dispatch({ type: GET_ALL_USERS_FAILED, payload: error.message });
+  }
+};
+
+export const getUserById = (userId) => async (dispatch) => {
+  dispatch({ type: GET_USER_BY_ID_REQUEST });
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/user/profile/${userId}`);
+
+    console.log("User", data);
+    dispatch({ type: GET_USER_BY_ID_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error: ", error);
+    dispatch({ type: GET_USER_BY_ID_FAILED, payload: error.message });
   }
 };
 

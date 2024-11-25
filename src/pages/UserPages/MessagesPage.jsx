@@ -1,159 +1,201 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  Container,
-  Box,
-  Grid,
-  Typography,
-  TextField,
-  Button,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  IconButton,
-} from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
-import ImageIcon from "@mui/icons-material/Image";
+import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
-import { useParams } from "react-router-dom";
-import { fetchChatMessages, sendMessage } from "../../redux/chat/chat.action";
-import { UploadToCloudinary } from "../../utils/uploadToCloudinary";
-import { connectWebSocket } from "../../redux/websocket/websocketActions";
+import { fetchUserChats, fetchChatMessages, sendMessage } from "../../redux/chat/chat.action";
+import { connectWebSocket, subscribeToChat, unsubscribeFromChat } from "../../redux/websocket/websocketActions";
+import { List, ListItem, Typography, TextField, Button, Grid, Box, CircularProgress } from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom"; // Updated import
 
-const MessagePage = () => {
+const MessagesPage = () => {
   const { chatId } = useParams();
+  const navigate = useNavigate(); // Initialized useNavigate
   const dispatch = useDispatch();
-  const { messages, loading, error } = useSelector((state) => state.chat, shallowEqual);
-  const { stompClient } = useSelector((state) => state.websocket, shallowEqual);
-  const { user } = useSelector((state) => state.auth, shallowEqual);
-  const [message, setMessage] = useState("");
-  const [image, setImage] = useState(null);
+  const { chats, messages, loading, error } = useSelector((state) => state.chat, shallowEqual);
+  const { stompClient, user } = useSelector(
+    (state) => ({
+      stompClient: state.websocket.stompClient,
+      user: state.auth.user,
+    }),
+    shallowEqual
+  );
+  const [message, setMessage] = React.useState("");
   const messagesEndRef = useRef(null);
 
+  // Fetch user chats and establish WebSocket connection
   useEffect(() => {
-    dispatch(fetchChatMessages(chatId));
+    dispatch(fetchUserChats());
     if (!stompClient) {
       dispatch(connectWebSocket());
     }
-  }, [dispatch, chatId, stompClient]);
+  }, [dispatch, stompClient]);
 
+  // Subscribe to all chats after fetching them
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (stompClient && stompClient.connected && user) {
+      chats.forEach((chat) => {
+        dispatch(subscribeToChat(chat.id));
+      });
+    }
+  }, [chats, stompClient, dispatch, user]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Fetch chat messages whenever chatId changes
+  useEffect(() => {
+    if (chatId) {
+      dispatch(fetchChatMessages(chatId));
+      dispatch(subscribeToChat(chatId)); // Ensure subscription to the selected chat
+    }
+  }, [chatId, dispatch]);
 
-  const handleSendMessage = async () => {
-    if (message.trim() === "" && !image) return;
+  // Cleanup subscriptions when chatId changes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (chatId) {
+        dispatch(unsubscribeFromChat(chatId));
+      }
+    };
+  }, [chatId, dispatch]);
 
-    let imageUrl = "";
-    if (image) {
-      try {
-        imageUrl = await UploadToCloudinary(image, "chat_images");
-      } catch (err) {
-        console.error("Image upload failed:", err);
+  // Scroll to the latest message
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, chatId]);
+
+  const handleSendMessage = () => {
+    if (chatId && message.trim() !== "") {
+      const selectedChat = chats.find((chat) => chat.id.toString() === chatId);
+      if (!selectedChat) {
+        console.error("Selected chat not found");
         return;
       }
-    }
-
-    const msg = {
-      chatId,
-      content: imageUrl ? `${message} <image:${imageUrl}>` : message,
-      timestamp: new Date().toISOString(),
-      senderId: user.id,
-      receiverId: chatId, // Adjust based on your chat structure
-      isRead: false,
-    };
-
-    dispatch(sendMessage(chatId, msg));
-    setMessage("");
-    setImage(null);
-  };
-
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
+      const receiver = selectedChat.userOne.id === user.id ? selectedChat.userTwo : selectedChat.userOne;
+      const newMessage = {
+        content: message,
+        senderId: user.id,
+        receiverId: receiver.id,
+        chat: { id: parseInt(chatId) },
+      };
+      dispatch(sendMessage(chatId, newMessage));
+      setMessage("");
     }
   };
+
+  // Get messages for the current chatId
+  const chatMessages = messages[chatId] || [];
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4">Chat</Typography>
-      </Box>
-      <Grid container direction="column" spacing={2} sx={{ height: "70vh", overflowY: "auto" }}>
-        <Grid item>
-          {loading && <Typography>Loading messages...</Typography>}
-          {error && <Typography color="error">{error}</Typography>}
-          <List>
-            {messages &&
-              messages.map((msg) => (
-                <ListItem key={msg.id} alignItems="flex-start">
-                  <ListItemAvatar>
-                    <Avatar src={msg.sender.avatarUrl} alt={msg.sender.username} />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={msg.sender.username}
-                    secondary={
-                      <>
-                        <Typography variant="body2" color="text.primary">
-                          {msg.content.includes("<image:") ? (
-                            <>
-                              {msg.content.split("<image:")[0]}
-                              <img
-                                src={msg.content.split("<image:")[1].replace(">", "")}
-                                alt="sent"
-                                style={{ maxWidth: "200px", marginTop: "10px" }}
-                              />
-                            </>
-                          ) : (
-                            msg.content
+    <Grid container>
+      {/* Chats List */}
+      <Grid
+        item
+        xs={4}
+        style={{
+          borderRight: "1px solid #ccc",
+          height: "100vh",
+          overflowY: "auto",
+        }}
+      >
+        <List>
+          {chats.map((chat) => (
+            <ListItem
+              key={chat.id}
+              button
+              onClick={() => navigate(`/chats/${chat.id}`)} // Updated navigation
+              selected={chat.id.toString() === chatId}
+            >
+              <Typography variant="body1">{chat.userOne.id === user.id ? chat.userTwo.fullname : chat.userOne.fullname}</Typography>
+            </ListItem>
+          ))}
+        </List>
+      </Grid>
+
+      {/* Messages Display */}
+      <Grid
+        item
+        xs={8}
+        style={{
+          padding: "20px",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {chatId ? (
+          <>
+            {/* Messages List */}
+            <List style={{ flexGrow: 1, overflowY: "auto" }}>
+              {loading ? (
+                <Box display="flex" justifyContent="center" mt={2}>
+                  <CircularProgress />
+                </Box>
+              ) : chatMessages.length > 0 ? (
+                chatMessages.map((msg) => {
+                  const isSentByUser = msg.sender.id === user.id;
+                  return (
+                    <ListItem key={msg.id}>
+                      <Box display="flex" flexDirection="column" alignItems={isSentByUser ? "flex-end" : "flex-start"} width="100%">
+                        <Box
+                          bgcolor={isSentByUser ? "#1976d2" : "#e0e0e0"}
+                          color={isSentByUser ? "#fff" : "#000"}
+                          p={1}
+                          borderRadius={2}
+                          maxWidth="60%"
+                        >
+                          <Typography variant="body2">{msg.content}</Typography>
+                          {msg.imageUrl && (
+                            <img
+                              src={msg.imageUrl}
+                              alt="sent"
+                              style={{
+                                maxWidth: "200px",
+                                marginTop: "10px",
+                                borderRadius: "8px",
+                              }}
+                            />
                           )}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" style={{ marginTop: "5px" }}>
                           {new Date(msg.timestamp).toLocaleString()}
                         </Typography>
-                      </>
-                    }
-                  />
-                </ListItem>
-              ))}
-            <div ref={messagesEndRef} />
-          </List>
-        </Grid>
-      </Grid>
-      <Box sx={{ mt: 2 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={10}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Type your message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={2}>
-            <IconButton component="label" color="primary">
-              <ImageIcon />
-              <input type="file" hidden accept="image/*" onChange={handleImageChange} />
-            </IconButton>
-            <Button variant="contained" color="primary" endIcon={<SendIcon />} onClick={handleSendMessage} sx={{ ml: 1 }}>
-              Send
-            </Button>
-          </Grid>
-        </Grid>
-        {image && (
-          <Box sx={{ mt: 1 }}>
-            <Typography variant="body2">Image selected: {image.name}</Typography>
-          </Box>
+                      </Box>
+                    </ListItem>
+                  );
+                })
+              ) : (
+                <Typography variant="body2" color="text.secondary" align="center" mt={2}>
+                  No messages yet. Start the conversation!
+                </Typography>
+              )}
+              <div ref={messagesEndRef} />
+            </List>
+
+            {/* Message Input */}
+            <Box display="flex" marginTop="10px">
+              <TextField
+                variant="outlined"
+                fullWidth
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message..."
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <Button variant="contained" color="primary" onClick={handleSendMessage} style={{ marginLeft: "10px" }}>
+                Send
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Typography variant="h6" color="text.secondary" align="center" mt={10}>
+            Select a chat to start messaging
+          </Typography>
         )}
-      </Box>
-    </Container>
+      </Grid>
+    </Grid>
   );
 };
 
-export default MessagePage;
+export default MessagesPage;

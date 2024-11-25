@@ -3,24 +3,24 @@ import { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
-import { getCurrentUserByJwt } from "./redux/auth/auth.action";
-import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
-import HomePage from "./pages/UserPages/HomePage";
-import SignIn from "./pages/Authentication/SignIn";
-import SignUp from "./pages/Authentication/SignUp";
+import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
+import UserBookshelf from "./components/HomePage/UserBookshelf";
+import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
 import ResetPassword from "./pages/Authentication/ResetPassword";
-import UserBookshelf from "./components/HomePage/UserBookshelf";
+import SignIn from "./pages/Authentication/SignIn";
+import SignUp from "./pages/Authentication/SignUp";
 import BookClubs from "./pages/UserPages/BookClubs";
+import { BookDetailPage } from "./pages/UserPages/BookDetailPage";
+import CreditPackages from "./pages/UserPages/CreditPackages";
+import HomePage from "./pages/UserPages/HomePage";
+import MessagesPage from "./pages/UserPages/MessagesPage";
+import OtherUserProfile from "./pages/UserPages/OtherUserProfile";
+import ProfilePage from "./pages/UserPages/ProfilePage";
 import UserBooks from "./pages/UserPages/UserBooks";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
-import AdminDashboard from "./pages/AdminPages/AdminDashboard";
-import ProfilePage from "./pages/UserPages/ProfilePage";
-import { BookDetailPage } from "./pages/UserPages/BookDetailPage";
-import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
-import CreditPackages from "./pages/UserPages/CreditPackages";
-import OtherUserProfile from "./pages/UserPages/OtherUserProfile";
-import MessagePage from "./pages/UserPages/MessagesPage";
+import { getCurrentUserByJwt } from "./redux/auth/auth.action";
+import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -55,7 +55,7 @@ function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/profile/:userId" element={<OtherUserProfile />} />
-        <Route path="/message/:chatId" element={user ? <MessagePage /> : <HomePage />} />
+        <Route path="/chats/:chatId" element={user ? <MessagesPage /> : <HomePage />} />
         <Route path="/profile" element={user ? <ProfilePage /> : <HomePage />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
         <Route path="/reset-password" element={<ResetPassword />} />

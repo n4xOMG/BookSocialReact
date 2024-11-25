@@ -1,6 +1,5 @@
 const initialState = {
   stompClient: null,
-  user: null,
 };
 
 export const websocketReducer = (state = initialState, action) => {

@@ -1,9 +1,8 @@
 // UserInfo.jsx
+import { Avatar, Button, Card, CardContent, Grid, Typography } from "@mui/material";
 import React from "react";
-import { Card, CardContent, Avatar, Typography, Grid, Button } from "@mui/material";
-import { Link } from "react-router-dom";
 
-const UserInfo = ({ user }) => {
+const UserInfo = ({ user, handleMessageClick }) => {
   return (
     <Card>
       <CardContent>
@@ -14,7 +13,8 @@ const UserInfo = ({ user }) => {
           <Grid item>
             <Typography variant="h5">{user?.username}</Typography>
             <Typography variant="body1">{user?.bio}</Typography>
-            <Button variant="contained" color="primary" component={Link} to={`/message/${user.id}`} sx={{ mt: 2 }}>
+
+            <Button variant="contained" color="primary" onClick={handleMessageClick}>
               Message
             </Button>
           </Grid>

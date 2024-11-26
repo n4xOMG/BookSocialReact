@@ -63,11 +63,14 @@ export const getChapterById = (jwt, bookId, chapterId) => async (dispatch) => {
     const apiClient = jwt ? api : axios; // Choose the API client based on `jwt`
     const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`);
     dispatch({ type: GET_CHAPTER_SUCCESS, payload: data });
+
     console.log("Chapter: ", data);
+    return { payload: data };
   } catch (error) {
     console.log("Api error when trying to retreiving chapter: ", error.response?.status);
     if (error.response?.status === 403) {
       dispatch({ type: GET_CHAPTER_FAILED, payload: "You need to unlock this chapter to read it" });
+      return { payload: { error: "You need to unlock this chapter to read it" } };
     }
     dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
   }

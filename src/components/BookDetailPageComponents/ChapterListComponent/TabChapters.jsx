@@ -55,7 +55,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
         {chapters?.map((chapter) => {
           const progress = Array.isArray(progresses) ? progresses.find((p) => Number(p.chapterId) === Number(chapter.id)) : null;
 
-          const isLocked = chapter.isLocked && !chapter.isChapterUnlockedByUser && chapter.price > 0;
+          const isLocked = chapter?.isLocked && !chapter?.isChapterUnlockedByUser && chapter?.price > 0;
 
           return (
             <ListItem

@@ -12,11 +12,14 @@ import {
   CREATE_CHAT_FAILED,
   CREATE_CHAT_REQUEST,
   CREATE_CHAT_SUCCESS,
+  CREATE_MESSAGE_REQUEST,
+  CREATE_MESSAGE_SUCCESS,
 } from "./chat.actionType";
 
 const initialState = {
   chats: [],
-  messages: {},
+  messages: [],
+  message: null,
   loading: false,
   error: null,
   subscriptions: {}, // Add subscriptions to state
@@ -28,8 +31,11 @@ export const chatReducer = (state = initialState, action) => {
     case FETCH_CHAT_MESSAGES_REQUEST:
     case SEND_MESSAGE_REQUEST:
     case CREATE_CHAT_REQUEST:
+    case CREATE_MESSAGE_REQUEST:
       return { ...state, loading: true, error: null };
 
+    case CREATE_MESSAGE_SUCCESS:
+      return { ...state, message: action.payload };
     case FETCH_USER_CHATS_SUCCESS:
       return { ...state, loading: false, chats: action.payload };
 

@@ -11,6 +11,8 @@ import {
   GET_USER_BY_ID_FAILED,
   GET_USER_BY_ID_REQUEST,
   GET_USER_BY_ID_SUCCESS,
+  SEARCH_USER_REQUEST,
+  SEARCH_USER_SUCCESS,
   SUSPEND_USER_FAILED,
   SUSPEND_USER_REQUEST,
   SUSPEND_USER_SUCCESS,
@@ -33,6 +35,7 @@ const initialState = {
   error: null,
   user: null,
   users: [],
+  searchUsers: [],
   loading: false,
   readingProgresses: [],
 };
@@ -48,6 +51,7 @@ export const userReducer = (state = initialState, action) => {
     case UNBAN_USER_REQUEST:
     case UPDATE_USER_REQUEST:
     case DELETE_CHAPTER_REQUEST:
+    case SEARCH_USER_REQUEST:
       return { ...state, loading: true, error: null };
     case GET_ALL_USERS_SUCCESS:
       return { ...state, loading: false, error: null, users: action.payload };
@@ -67,6 +71,8 @@ export const userReducer = (state = initialState, action) => {
         error: null,
         users: state.users.map((user) => (user.id === action.payload.id ? action.payload : user)),
       };
+    case SEARCH_USER_SUCCESS:
+      return { ...state, loading: false, error: null, searchUsers: action.payload };
     case DELETE_USER_SUCCESS:
       return { ...state, loading: false, error: null };
 

@@ -8,7 +8,6 @@ import { tagReducer } from "./tag/tag.reducer";
 import { chapterReducer } from "./chapter/chapter.reducer";
 import { commentReducer } from "./comment/comment.reducer";
 import creditPackageReducer from "./creditpackage/creditpackage.reducer";
-import { websocketReducer } from "./websocket/websocketReducer";
 import { notificationReducer } from "./notification/notification.reducer";
 import { chatReducer } from "./chat/chat.reducer";
 import { postReducer } from "./post/post.reducer";
@@ -25,6 +24,5 @@ const rootReducers = combineReducers({
   post: postReducer,
   chat: chatReducer,
   notification: notificationReducer,
-  websocket: websocketReducer,
 });
 export const store = legacy_createStore(rootReducers, applyMiddleware(thunk));

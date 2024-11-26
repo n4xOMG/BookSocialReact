@@ -3,16 +3,15 @@ import {
   CREATE_CHAT_FAILED,
   CREATE_CHAT_REQUEST,
   CREATE_CHAT_SUCCESS,
+  CREATE_MESSAGE_FAILED,
+  CREATE_MESSAGE_REQUEST,
+  CREATE_MESSAGE_SUCCESS,
   FETCH_CHAT_MESSAGES_FAILED,
   FETCH_CHAT_MESSAGES_REQUEST,
   FETCH_CHAT_MESSAGES_SUCCESS,
   FETCH_USER_CHATS_FAILED,
   FETCH_USER_CHATS_REQUEST,
   FETCH_USER_CHATS_SUCCESS,
-  RECEIVE_MESSAGE,
-  SEND_MESSAGE_FAILED,
-  SEND_MESSAGE_REQUEST,
-  SEND_MESSAGE_SUCCESS,
 } from "./chat.actionType";
 
 // Fetch user's chat list
@@ -51,37 +50,18 @@ export const createChat = (otherUserId) => async (dispatch) => {
     throw error;
   }
 };
-// Receive message from WebSocket
-export const receiveMessage = (message) => ({
-  type: RECEIVE_MESSAGE,
-  payload: message,
-});
-
-// Send a message
-export const sendMessage = (chatId, message) => async (dispatch, getState) => {
-  dispatch({ type: SEND_MESSAGE_REQUEST });
+// Create a new message with another user
+export const createMessage = (reqData) => async (dispatch) => {
+  dispatch({ type: CREATE_MESSAGE_REQUEST });
+  console.log("Creating message", reqData.message);
   try {
-    const { stompClient } = getState().websocket;
-    if (stompClient && stompClient.connected) {
-      const messagePayload = {
-        chatId: chatId,
-        content: message.content,
-        imageUrl: message.imageUrl || "",
-        sender: { id: message.senderId },
-        receiver: { id: message.receiverId },
-        timestamp: new Date().toISOString(), // Include timestamp
-      };
-
-      stompClient.publish({
-        destination: "/app/chat.sendMessage",
-        body: JSON.stringify(messagePayload),
-      });
-
-      dispatch({ type: SEND_MESSAGE_SUCCESS, payload: { chatId, ...messagePayload } });
-    } else {
-      throw new Error("WebSocket is not connected.");
-    }
+    const { data } = await api.post(`${API_BASE_URL}/api/chats/create-message`, reqData.message);
+    console.log("Message created", data);
+    reqData.sendMessageToServer(data);
+    dispatch({ type: CREATE_MESSAGE_SUCCESS, payload: data });
+    return { payload: data };
   } catch (error) {
-    dispatch({ type: SEND_MESSAGE_FAILED, payload: error.message });
+    dispatch({ type: CREATE_MESSAGE_FAILED, payload: error.message });
+    throw error;
   }
 };

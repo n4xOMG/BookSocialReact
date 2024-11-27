@@ -1,5 +1,5 @@
 import { Alert, Box, Chip, CircularProgress, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Typography } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategories } from "../../redux/category/category.action";
 import { getTags } from "../../redux/tag/tag.action";
@@ -8,6 +8,7 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
   const dispatch = useDispatch();
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.category);
   const { tags, loading: tagsLoading, error: tagsError } = useSelector((state) => state.tag);
+  const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
     dispatch(getCategories());
@@ -18,17 +19,35 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
     const {
       target: { value },
     } = event;
+    const newTags = typeof value === "string" ? value.split(",") : value;
     setBookInfo((prev) => ({
       ...prev,
-      tags: typeof value === "string" ? value.split(",") : value,
+      tags: newTags,
     }));
+
+    // Check if either "novel" or "manga" tag is selected
+    const hasMandatoryTag = newTags.some((tag) => tag.name.toLowerCase() === "novel" || tag.name.toLowerCase() === "manga");
+    if (!hasMandatoryTag) {
+      setValidationError("You must select either 'novel' or 'manga' tag.");
+    } else {
+      setValidationError("");
+    }
   };
 
   const handleDeleteTag = (tagToDelete) => () => {
+    const newTags = bookInfo.tags.filter((tag) => tag.id !== tagToDelete.id);
     setBookInfo((prev) => ({
       ...prev,
-      tags: prev.tags.filter((tag) => tag.id !== tagToDelete.id),
+      tags: newTags,
     }));
+
+    // Check if either "novel" or "manga" tag is selected
+    const hasMandatoryTag = newTags.some((tag) => tag.name.toLowerCase() === "novel" || tag.name.toLowerCase() === "manga");
+    if (!hasMandatoryTag) {
+      setValidationError("You must select either 'novel' or 'manga' tag.");
+    } else {
+      setValidationError("");
+    }
   };
 
   return (
@@ -57,7 +76,7 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
 
       {/* Tags Section */}
       <Box>
-        <FormControl fullWidth>
+        <FormControl fullWidth error={!!validationError}>
           <InputLabel id="tags-label">Tags</InputLabel>
           <Select
             labelId="tags-label"
@@ -91,6 +110,7 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
               ))
             )}
           </Select>
+          {validationError && <Typography color="error">{validationError}</Typography>}
         </FormControl>
         {/* Display Selected Tags as Chips */}
         {bookInfo.tags.length > 0 && (

@@ -15,7 +15,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
   const [isLiked, setIsLiked] = useState(user ? isFavouredByReqUser(user, comment) : false);
   const [replyLikes, setReplyLikes] = useState(
     comment.replyComment.reduce((acc, reply) => {
-      acc[reply.id] = { likes: reply.likedUsers.length || 0, isLiked: user ? isFavouredByReqUser(user, reply) : false };
+      acc[reply?.id] = { likes: reply?.likedUsers.length || 0, isLiked: user ? isFavouredByReqUser(user, reply) : false };
       return acc;
     }, {})
   );
@@ -81,11 +81,11 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
         <LoadingSpinner />
       ) : (
         <Box>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center", textAlign: "left" }}>
             <Avatar sx={{ mb: 8 }} src={comment.user.avatarUrl || "/placeholder.svg"} alt="Avatar" />
             <Box sx={{ flex: 1, mx: 2, mt: 1 }}>
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography sx={{ fontSize: 15 }}>{comment.user.username || "Anonymous"}</Typography>
+                <Typography sx={{ fontSize: 15, fontWeight: "bold" }}>{comment.user.username || "Anonymous"}</Typography>
 
                 {(user?.id === comment.user.id || user?.role?.name === "ADMIN") && (
                   <>
@@ -99,7 +99,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                   </>
                 )}
               </Box>
-              <Typography variant="body1" sx={{ fontSize: 23 }} color="textPrimary">
+              <Typography variant="body1" sx={{ fontSize: 20 }} color="textPrimary">
                 {comment.content}
               </Typography>
               <Typography variant="body2" color="textSecondary" sx={{ fontSize: 10 }}>
@@ -121,23 +121,23 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
           </Box>
 
           {comment?.replyComment?.map((reply) => (
-            <Box key={reply.id} sx={{ ml: 5, mt: 2, borderLeft: "1px solid #ccc", pl: 2, pt: 2 }}>
+            <Box key={reply?.id} sx={{ ml: 5, mt: 2, borderLeft: "1px solid #ccc", pl: 2, pt: 2 }}>
               <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
                 <Avatar src={comment.user.avatarUrl || "/placeholder.svg"} alt="Avatar" />
                 <Box sx={{ flex: 1, ml: 1 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Typography variant="h6">{reply.user.username || "Anonymous"}</Typography>
+                    <Typography variant="h6">{reply?.user?.username || "Anonymous"}</Typography>
                     <Typography variant="body2" color="textSecondary" sx={{ fontSize: 10 }}>
                       {formatDate(comment.createdAt)}
                     </Typography>
                   </Box>
                   <Typography variant="body1" sx={{ fontSize: 23 }} color="textPrimary">
-                    {reply.content}
+                    {reply?.content}
                   </Typography>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                    <IconButton size="small" onClick={() => handleLikeReply(reply.id)} sx={{ gap: 1 }}>
-                      {replyLikes[reply.id]?.isLiked ? <ThumbUpIcon fontSize="small" /> : <ThumbUpOffAltIcon fontSize="small" />}
-                      <Typography variant="body2">{replyLikes[reply.id]?.likes || 0}</Typography>
+                    <IconButton size="small" onClick={() => handleLikeReply(reply?.id)} sx={{ gap: 1 }}>
+                      {replyLikes[reply?.id]?.isLiked ? <ThumbUpIcon fontSize="small" /> : <ThumbUpOffAltIcon fontSize="small" />}
+                      <Typography variant="body2">{replyLikes[reply?.id]?.likes || 0}</Typography>
                     </IconButton>
                     {!isReplying && (
                       <Button variant="outlined" size="small" onClick={handleReply}>
@@ -147,7 +147,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                   </Box>
                 </Box>
 
-                {(user?.id === reply.user.id || user?.role?.name === "ADMIN") && (
+                {(user?.id === reply?.user.id || user?.role?.name === "ADMIN") && (
                   <>
                     <IconButton onClick={(event) => handleMenuOpen(event, reply.id)}>
                       <MoreVertIcon />

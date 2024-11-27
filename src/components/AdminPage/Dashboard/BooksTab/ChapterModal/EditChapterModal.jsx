@@ -106,7 +106,17 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
           onChange={handleChange}
           value={chapterData.chapterNum}
         />
-        <TextField margin="normal" required fullWidth id="title" label="Chapter title" name="title" defaultValue={chapterDetails.title} />
+        <TextField
+          margin="normal"
+          value={chapterData.title}
+          required
+          fullWidth
+          id="title"
+          label="Chapter title"
+          name="title"
+          defaultValue={chapterData.title}
+          onChange={handleChange}
+        />
         <TextField
           margin="normal"
           label="Price"

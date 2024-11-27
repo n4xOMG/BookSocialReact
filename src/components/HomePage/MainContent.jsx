@@ -3,7 +3,7 @@ import React from "react";
 import { BookCard } from "./BookCard";
 import { CategorySection } from "./CategorySection";
 
-export const MainContent = ({ topCategories, featuredBooks, trendingBooks }) => {
+export const MainContent = ({ topCategories, featuredBooks, trendingBooks, categories, tags, checkAuth }) => {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "grey.100", textAlign: "left", position: "relative", py: 4 }}>
       {/* Main Content */}
@@ -15,7 +15,9 @@ export const MainContent = ({ topCategories, featuredBooks, trendingBooks }) => 
           </Typography>
           <Grid container spacing={4}>
             {featuredBooks.map((book) => (
-              <BookCard key={book.id} book={book} />
+              <Grid item key={book.id}>
+                <BookCard book={book} categories={categories} tags={tags} checkAuth={checkAuth} />
+              </Grid>
             ))}
           </Grid>
 
@@ -25,7 +27,14 @@ export const MainContent = ({ topCategories, featuredBooks, trendingBooks }) => 
           </Typography>
           <Grid container spacing={4}>
             {topCategories.map((category) => (
-              <CategorySection key={category.id} category={category.name} books={category.books} />
+              <CategorySection
+                key={category.id}
+                categories={categories}
+                tags={tags}
+                category={category.name}
+                books={category.books}
+                checkAuth={checkAuth}
+              />
             ))}
           </Grid>
 
@@ -35,7 +44,9 @@ export const MainContent = ({ topCategories, featuredBooks, trendingBooks }) => 
           </Typography>
           <Grid container spacing={4}>
             {trendingBooks.map((book) => (
-              <BookCard key={book.id} book={book} />
+              <Grid item key={book.id}>
+                <BookCard book={book} categories={categories} tags={tags} checkAuth={checkAuth} />
+              </Grid>
             ))}
           </Grid>
         </Box>

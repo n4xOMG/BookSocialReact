@@ -2,6 +2,7 @@ import {
   CHAPTER_UPLOAD_FAILED,
   CHAPTER_UPLOAD_REQUEST,
   CHAPTER_UPLOAD_SUCCEED,
+  CLEAR_CHAPTERS,
   CREATE_PAYMENT_INTENT_FAILED,
   CREATE_PAYMENT_INTENT_REQUEST,
   CREATE_PAYMENT_INTENT_SUCCESS,
@@ -98,6 +99,8 @@ export const chapterReducer = (state = initialState, action) => {
     case GET_ALL_CHAPTER_SUCCESS:
     case GET_CHAPTERS_BY_BOOK_SUCCESS:
       return { ...state, loading: false, error: null, chapters: action.payload };
+    case CLEAR_CHAPTERS:
+      return { ...state, chapters: [] };
     case UNLOCK_CHAPTER_FAILED:
       return { ...state, loading: false, unlockError: action.payload };
     case CHAPTER_UPLOAD_FAILED:

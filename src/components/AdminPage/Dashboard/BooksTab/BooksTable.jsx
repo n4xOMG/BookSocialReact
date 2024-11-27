@@ -98,11 +98,8 @@ const BooksTable = ({
                     </IconButton>
                   </Tooltip>
                   <Tooltip title={book.isSuggested ? "Remove from Editor's Choices" : "Add to Editor's Choices"}>
-                    <IconButton
-                      color={book.isSuggested ? "warning" : "success"}
-                      onClick={() => handleToggleIsSuggested(book.id, book.isSuggested)}
-                    >
-                      {book.isSuggested ? <Star /> : <StarBorder />}
+                    <IconButton color={book.suggested ? "warning" : "success"} onClick={() => handleToggleIsSuggested(book.id, book)}>
+                      {book.suggested ? <Star /> : <StarBorder />}
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Manage Chapters">

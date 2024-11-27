@@ -1,63 +1,35 @@
 import { Book, Bookmark, Search, Sort } from "@mui/icons-material";
 import { Avatar, Box, Card, CardContent, CardMedia, Fade, MenuItem, Rating, Select, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { Sidebar } from "./Sidebar";
-const user = {
-  name: "Jane Doe",
-  avatar: "/placeholder.svg?height=100&width=100",
-  booksRead: 42,
-  favoriteGenre: "Science Fiction",
-};
+import { Sidebar } from "../../components/HomePage/Sidebar";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { getUserFavouredBooksAction } from "../../redux/book/book.action";
 
-const books = [
-  {
-    id: 1,
-    title: "The Hitchhiker's Guide to the Galaxy",
-    author: "Douglas Adams",
-    rating: 5,
-    genre: "Science Fiction",
-    cover: "/placeholder.svg?height=300&width=200",
-  },
-  { id: 2, title: "1984", author: "George Orwell", rating: 4, genre: "Dystopian", cover: "/placeholder.svg?height=300&width=200" },
-  {
-    id: 3,
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    rating: 5,
-    genre: "Classic",
-    cover: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 4,
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-    rating: 5,
-    genre: "Fiction",
-    cover: "/placeholder.svg?height=300&width=200",
-  },
-  {
-    id: 5,
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    rating: 4,
-    genre: "Classic",
-    cover: "/placeholder.svg?height=300&width=200",
-  },
-  { id: 6, title: "Dune", author: "Frank Herbert", rating: 5, genre: "Science Fiction", cover: "/placeholder.svg?height=300&width=200" },
-];
 export default function UserBookshelf() {
+  const { user } = useSelector((store) => store.auth);
+  const { userFavouredBooks } = useSelector((store) => store.book);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    setLoading(true);
+    try {
+      dispatch(getUserFavouredBooksAction());
+    } catch (e) {
+      console.log("Error trying to get all books by user: ", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [dispatch]);
 
-  const filteredAndSortedBooks = books
-    .filter(
-      (book) => book.title.toLowerCase().includes(searchTerm.toLowerCase()) || book.author.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAndSortedBooks = userFavouredBooks
+    ?.filter(
+      (book) =>
+        book.title.toLowerCase().includes(searchTerm.toLowerCase()) || book.authorName.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => (sortOrder === "asc" ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title)));
 
@@ -67,19 +39,15 @@ export default function UserBookshelf() {
       <Box sx={{ width: "100%", px: 2, mx: "auto", py: 4, minHeight: "100vh", background: "linear-gradient(to right, #f7f7f7, #e0e0e0)" }}>
         <Box display="flex" flexDirection={{ xs: "column", md: "row" }} alignItems="center" justifyContent="space-between" mb={4} gap={3}>
           <Box display="flex" alignItems="center" gap={3}>
-            <Avatar src={user.avatar} alt={user.name} sx={{ width: 96, height: 96, border: 2, borderColor: "primary.main" }} />
+            <Avatar src={user?.avatarUrl} alt={user?.username} sx={{ width: 96, height: 96, border: 2, borderColor: "primary.main" }} />
             <Box>
               <Typography variant="h4" fontWeight="bold" color="text.primary">
-                {user.name}'s Bookshelf
+                {user?.username}'s Bookshelf
               </Typography>
               <Box display="flex" alignItems="center" gap={2} mt={1} color="text.secondary">
                 <Box display="flex" alignItems="center" gap={1}>
                   <Book color="primary" />
-                  {user.booksRead} books read
-                </Box>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Bookmark color="primary" />
-                  {user.favoriteGenre}
+                  {user?.book?.length} favourited books
                 </Box>
               </Box>
             </Box>
@@ -138,6 +106,7 @@ export default function UserBookshelf() {
             <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3}>
               {filteredAndSortedBooks.map((book) => (
                 <Card
+                  onClick={() => navigate(`/books/${book.id}`)}
                   key={book.id}
                   sx={{
                     display: "flex",
@@ -147,18 +116,20 @@ export default function UserBookshelf() {
                     "&:hover": { boxShadow: 6 },
                   }}
                 >
-                  <CardMedia component="img" image={book.cover} alt={`Cover of ${book.title}`} sx={{ height: 240, objectFit: "cover" }} />
+                  <CardMedia
+                    component="img"
+                    image={book.bookCover}
+                    alt={`Cover of ${book.title}`}
+                    sx={{ height: 240, objectFit: "cover" }}
+                  />
                   <CardContent>
                     <Typography variant="h6" fontWeight="medium" color="text.primary" gutterBottom>
                       {book.title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {book.author}
+                      {book.authorName}
                     </Typography>
-                    <Rating value={book.rating} readOnly size="small" sx={{ mb: 1 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      {book.genre}
-                    </Typography>
+                    <Rating value={book.avgRating} readOnly size="small" sx={{ mb: 1 }} />
                   </CardContent>
                 </Card>
               ))}

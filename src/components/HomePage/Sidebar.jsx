@@ -1,19 +1,15 @@
 import { Book, Bookmark, Chat, Money, Person } from "@mui/icons-material";
 import { Box, Divider, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography } from "@mui/material";
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getReadingProgressByUser } from "../../redux/user/user.action";
 import ReadingHistoryCard from "./ReadingHistoryCard";
 
 export const Sidebar = () => {
-  const [readingHistory] = useState([
-    { id: 1, title: "1984", author: "George Orwell", lastRead: "2 days ago" },
-    { id: 2, title: "The Catcher in the Rye", author: "J.D. Salinger", lastRead: "1 week ago" },
-    { id: 3, title: "Pride and Prejudice", author: "Jane Austen", lastRead: "2 weeks ago" },
-    { id: 4, title: "The Hobbit", author: "J.R.R. Tolkien", lastRead: "1 month ago" },
-  ]);
-
+  const { readingProgresses = [] } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
 
   // Access authentication state from Redux store
@@ -31,7 +27,13 @@ export const Sidebar = () => {
       : []),
     { text: "Book Clubs", icon: <Chat />, link: "/book-clubs" },
   ];
-
+  useEffect(() => {
+    try {
+      dispatch(getReadingProgressByUser());
+    } catch (error) {
+      console.log("Error trying to get reading progress: ", error);
+    }
+  }, [dispatch]);
   return (
     <Drawer
       variant="permanent"
@@ -61,7 +63,7 @@ export const Sidebar = () => {
       <Divider />
 
       {/* Reading History Section */}
-      <ReadingHistoryCard readingHistory={readingHistory} />
+      <ReadingHistoryCard readingProgresses={readingProgresses} />
     </Drawer>
   );
 };

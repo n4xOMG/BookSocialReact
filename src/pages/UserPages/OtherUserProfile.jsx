@@ -10,6 +10,7 @@ import { getBooksByAuthorAction } from "../../redux/book/book.action";
 import { fetchPostsByUserId } from "../../redux/post/post.action";
 import { getUserById } from "../../redux/user/user.action";
 import { createChat } from "../../redux/chat/chat.action";
+import Sidebar from "../../components/HomePage/Sidebar";
 const OtherUserProfile = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
@@ -78,19 +79,22 @@ const OtherUserProfile = () => {
   }
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <UserInfo user={user} handleMessageClick={handleMessageClick} />
-      </Box>
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={8}>
-          <UserPosts posts={postsByUser} />
+    <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
+      <Sidebar />
+      <Container sx={{ width: "100%" }}>
+        <Box sx={{ my: 4 }}>
+          <UserInfo user={user} handleMessageClick={handleMessageClick} />
+        </Box>
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={8}>
+            <UserPosts posts={postsByUser} />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <UserBooks books={booksByAuthor} />
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <UserBooks books={booksByAuthor} />
-        </Grid>
-      </Grid>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

@@ -11,6 +11,7 @@ import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api/api";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
@@ -48,7 +49,7 @@ export default function MessagesPage() {
       chat: { id: currentChat.id },
       chatId: currentChat.id,
       sender: { id: user.id },
-      receiver: { id: currentChat.userOne === user.id ? user.id : currentChat.userTwo.id },
+      receiver: { id: currentChat.userOne.id === user.id ? user.id : currentChat.userTwo.id },
       content: value,
       imageUrl: imgUrl,
     };
@@ -60,7 +61,7 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    const socket = new SockJS("http://localhost:80/ws");
+    const socket = new SockJS(`${API_BASE_URL}/ws`);
     const stomp = Stomp.over(socket);
     setStompClient(stomp);
     stomp.connect({}, onConnect, onErr);
@@ -140,7 +141,7 @@ export default function MessagesPage() {
         {currentChat ? (
           <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
             <Box sx={{ display: "flex", alignItems: "center", p: 2, borderBottom: "1px solid #ddd" }}>
-              <Avatar src="https://www.w3schools.com/howto/img_avatar.png" />
+              <Avatar src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl} />
               <Typography sx={{ ml: 2 }}>{currentChat.name}</Typography>
             </Box>
             <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>

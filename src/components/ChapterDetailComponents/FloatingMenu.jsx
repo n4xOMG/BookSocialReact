@@ -98,12 +98,7 @@ export default function FloatingMenu({
   );
 
   const handleChapterNavigation = (chapter) => {
-    if (chapter.isLocked && !chapter.isUnlockedByUser && chapter.price > 0) {
-      setTargetChapter(chapter);
-      setUnlockDialogOpen(true);
-    } else {
-      onChapterChange(chapter.id);
-    }
+    onChapterChange(chapter.id);
   };
 
   const handleUnlock = async () => {

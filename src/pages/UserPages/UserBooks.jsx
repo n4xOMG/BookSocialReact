@@ -2,22 +2,21 @@ import { Backdrop, Box, Button, CircularProgress, Grid, Typography } from "@mui/
 import { debounce } from "lodash";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getBookByIdAction, getBooksByAuthorAction } from "../../redux/book/book.action";
-import { getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
 import { useNavigate } from "react-router-dom";
-import { UserBookChapterList } from "../../components/UserBooks/UserBookChapterList";
-import EditChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditChapterModal";
-import EditMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditMangaChapterModal";
-import DeleteChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/DeleteChapterModal";
 import AddMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/AddMangaChapterModal";
 import AddChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/AddNovelChapterModal";
 import DeleteBookModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/DeleteBookModal";
+import DeleteChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/DeleteChapterModal";
+import EditChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditChapterModal";
+import EditMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditMangaChapterModal";
 import EditBookDialog from "../../components/AdminPage/Dashboard/BooksTab/EditBookDialog";
-import { getCategories } from "../../redux/category/category.action";
-import { getTags } from "../../redux/tag/tag.action";
-import { BookList } from "../../components/UserBooks/BookList";
 import Sidebar from "../../components/HomePage/Sidebar";
-import { isTokenExpired } from "../../utils/useAuthCheck";
+import { BookList } from "../../components/UserBooks/BookList";
+import { UserBookChapterList } from "../../components/UserBooks/UserBookChapterList";
+import { getBookByIdAction, getBooksByAuthorAction } from "../../redux/book/book.action";
+import { getCategories } from "../../redux/category/category.action";
+import { clearChapters, manageChapterByBookId } from "../../redux/chapter/chapter.action";
+import { getTags } from "../../redux/tag/tag.action";
 
 const UserBooks = () => {
   const dispatch = useDispatch();
@@ -25,7 +24,6 @@ const UserBooks = () => {
   const { booksByAuthor, book } = useSelector((store) => store.book);
   const { chapters } = useSelector((store) => store.chapter);
   const { user } = useSelector((store) => store.auth);
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const { tags } = useSelector((store) => store.tag);
   const { categories } = useSelector((store) => store.category);
   const [openModal, setOpenModal] = useState({ type: null, data: null });
@@ -37,6 +35,10 @@ const UserBooks = () => {
     setOpenModal({ type, data });
   };
   const handleCloseModal = () => setOpenModal({ type: null, data: null });
+
+  useEffect(() => {
+    dispatch(clearChapters());
+  }, [dispatch]);
   useEffect(() => {
     const fetchBookInfo = async () => {
       setLoading(true);
@@ -67,7 +69,7 @@ const UserBooks = () => {
       const fetchChapterById = async () => {
         setLoading(true);
         try {
-          await dispatch(getAllChaptersByBookIdAction(jwt, selectedBookId));
+          await dispatch(manageChapterByBookId(selectedBookId));
         } catch (e) {
           console.log("Error trying to get all chapters in manage book page: ", e);
         } finally {

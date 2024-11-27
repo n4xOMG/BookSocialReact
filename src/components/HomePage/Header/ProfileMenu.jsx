@@ -1,4 +1,4 @@
-import { AccountBalanceWallet, History, Logout, Settings, AdminPanelSettings } from "@mui/icons-material";
+import { AccountBalanceWallet, AdminPanelSettings, Logout } from "@mui/icons-material";
 import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -104,12 +104,7 @@ export default function ProfileMenu() {
               <MenuItem divider onClick={() => navigate("/profile")} key="profile">
                 <Avatar src={user.avatarUrl} /> Profile
               </MenuItem>,
-              <MenuItem onClick={handleClose} key="reading-history">
-                <ListItemIcon>
-                  <History fontSize="small" />
-                </ListItemIcon>
-                Reading History
-              </MenuItem>,
+
               user.role && user.role.name === "ADMIN" && (
                 <MenuItem onClick={navigateToAdmin} key="admin-dashboard">
                   <ListItemIcon>
@@ -118,12 +113,7 @@ export default function ProfileMenu() {
                   Admin Dashboard
                 </MenuItem>
               ),
-              <MenuItem onClick={handleClose} key="settings">
-                <ListItemIcon>
-                  <Settings fontSize="small" />
-                </ListItemIcon>
-                Settings
-              </MenuItem>,
+
               <MenuItem onClick={handleLogout} key="logout">
                 <ListItemIcon>
                   <Logout fontSize="small" />

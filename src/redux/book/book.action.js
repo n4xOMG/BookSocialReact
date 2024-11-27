@@ -53,6 +53,9 @@ import {
   SEARCH_BOOK_FAILED,
   SEARCH_BOOK_REQUEST,
   SEARCH_BOOK_SUCCESS,
+  SET_EDIT_CHOICE_FAILED,
+  SET_EDIT_CHOICE_REQUEST,
+  SET_EDIT_CHOICE_SUCCESS,
 } from "./book.actionType";
 
 export const getAllBookAction = () => async (dispatch) => {
@@ -261,5 +264,16 @@ export const getAllReadingProgressesByBook = (bookId) => async (dispatch) => {
   } catch (error) {
     console.log("Api error when trying to get book progresses: ", error);
     dispatch({ type: GET_READING_PROGRESSES_BY_BOOK_FAILED, payload: error.message });
+  }
+};
+export const setEditorChoice = (bookId, bookData) => async (dispatch) => {
+  dispatch({ type: SET_EDIT_CHOICE_REQUEST });
+  console.log("bookData", bookData);
+  try {
+    const response = await api.put(`${API_BASE_URL}/api/books/${bookId}/editor-choice`, bookData);
+    dispatch({ type: SET_EDIT_CHOICE_SUCCESS, payload: response.data });
+  } catch (error) {
+    console.log("Api error when trying to edit book: ", error.message);
+    dispatch({ type: SET_EDIT_CHOICE_FAILED, payload: error.message });
   }
 };

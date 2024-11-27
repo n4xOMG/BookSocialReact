@@ -4,7 +4,6 @@ import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
 import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
-import UserBookshelf from "./components/HomePage/UserBookshelf";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
 import ResetPassword from "./pages/Authentication/ResetPassword";
@@ -21,6 +20,7 @@ import UserBooks from "./pages/UserPages/UserBooks";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import { getCurrentUserByJwt } from "./redux/auth/auth.action";
 import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
+import UserBookshelf from "./pages/UserPages/UserBookshelf";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);

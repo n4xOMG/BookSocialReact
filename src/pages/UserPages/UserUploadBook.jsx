@@ -60,6 +60,17 @@ export default function UserUploadBook() {
           return false;
         }
         break;
+      case 3:
+        if (!bookInfo.category) {
+          setSnackbarMessage("Please select a category.");
+          return false;
+        }
+        const hasMandatoryTag = bookInfo.tags.some((tag) => tag.name.toLowerCase() === "novel" || tag.name.toLowerCase() === "manga");
+        if (!hasMandatoryTag) {
+          setSnackbarMessage("You must select either 'novel' or 'manga' tag.");
+          return false;
+        }
+        break;
       default:
         return true;
     }

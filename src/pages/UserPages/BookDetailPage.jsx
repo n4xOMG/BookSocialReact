@@ -20,6 +20,7 @@ import {
 } from "../../redux/book/book.action";
 import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
 import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
+import { clearChapters } from "../../redux/chapter/chapter.action";
 
 export const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -98,7 +99,11 @@ export const BookDetailPage = () => {
   useEffect(() => {
     calculateOverallProgress();
   }, [calculateOverallProgress]);
-
+  useEffect(() => {
+    return () => {
+      dispatch(clearChapters());
+    };
+  }, [dispatch]);
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
       <Sidebar />

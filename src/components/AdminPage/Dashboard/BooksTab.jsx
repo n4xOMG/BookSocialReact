@@ -1,7 +1,7 @@
 import { Alert, Box, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteBookAction, editBookAction, getAllBookAction } from "../../../redux/book/book.action";
+import { deleteBookAction, editBookAction, getAllBookAction, setEditorChoice } from "../../../redux/book/book.action";
 import { getCategories } from "../../../redux/category/category.action";
 import { getTags } from "../../../redux/tag/tag.action";
 import UploadToCloudinary from "../../../utils/uploadToCloudinary";
@@ -61,10 +61,9 @@ const BooksTab = () => {
     }
   };
 
-  const handleToggleIsSuggested = async (id, currentStatus) => {
+  const handleToggleIsSuggested = async (id, book) => {
     try {
-      // Implement the toggle logic, e.g., dispatch an action
-      // await toggleIsSuggestedStatus(id, !currentStatus);
+      await dispatch(setEditorChoice(id, book));
     } catch (error) {
       console.error("Error toggling isSuggested status:", error);
     }

@@ -19,7 +19,7 @@ import { isTokenExpired } from "../../../utils/useAuthCheck";
 export default function ChapterDetailPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { chapter, chapters, readingProgress } = useSelector((store) => store.chapter);
+  const { chapter, chapters, readingProgress, unlockError } = useSelector((store) => store.chapter);
   const { user } = useSelector((store) => store.auth);
   const { book } = useSelector((store) => store.book);
   const { tags } = useSelector((store) => store.tag);
@@ -34,28 +34,24 @@ export default function ChapterDetailPage() {
   const [loading, setLoading] = useState(true);
 
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [insufficientCreditsDialogOpen, setInsufficientCreditsDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [generalError, setGeneralError] = useState("");
   const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
+
   const fetchChapterDetail = useCallback(async () => {
     setLoading(true);
     try {
       const response = await dispatch(getChapterById(jwt, bookId, chapterId));
-      console.log("Chapter detail response: ", response);
+
       if (response.payload.error) {
         setGeneralError(response.payload.error);
         setUnlockDialogOpen(true);
       }
-      if (chapters.length === 0) {
-        await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
-      }
-      if (tags.length === 0) {
-        await dispatch(getTags());
-      }
-      if (!book) {
-        await dispatch(getBookByIdAction(bookId));
-      }
+      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+      await dispatch(getTags());
+      await dispatch(getBookByIdAction(bookId));
       if (user) {
         await dispatch(getReadingProgressByUserAndChapter(chapterId));
       }
@@ -64,7 +60,7 @@ export default function ChapterDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [dispatch, bookId, chapterId, book, user]);
+  }, [dispatch, chapterId]);
 
   useEffect(() => {
     fetchChapterDetail();
@@ -115,13 +111,15 @@ export default function ChapterDetailPage() {
       setUnlockDialogOpen(true);
       setSelectedChapter(chapter);
     }
+    if (unlockError) {
+      setInsufficientCreditsDialogOpen(true);
+    }
   }, [isLocked, chapter]);
 
   const handleUnlock = async () => {
     try {
       if (user && !isTokenExpired(jwt)) {
         await dispatch(unlockChapterAction(chapter.id));
-        alert("Chapter unlocked successfully.");
         setUnlockDialogOpen(false);
         // Refresh chapter detail
         fetchChapterDetail();
@@ -130,13 +128,22 @@ export default function ChapterDetailPage() {
         navigate("/sign-in");
       }
     } catch (error) {
-      console.error(error);
-      setErrorMessage(error.message || "Failed to unlock chapter.");
+      console.error("Error credit: ", error);
+      if (error.response?.status === 400) {
+        setInsufficientCreditsDialogOpen(true);
+      } else {
+        setErrorMessage(error.message || "Failed to unlock chapter.");
+      }
     }
   };
 
   const handleCloseUnlockDialog = () => {
     setUnlockDialogOpen(false);
+    navigate(`/books/${bookId}`);
+  };
+
+  const handleCloseInsufficientCreditsDialog = () => {
+    setInsufficientCreditsDialogOpen(false);
     navigate(`/books/${bookId}`);
   };
 
@@ -169,6 +176,22 @@ export default function ChapterDetailPage() {
                 </Button>
                 <Button onClick={handleUnlock} color="primary" variant="contained">
                   Unlock
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+
+          {insufficientCreditsDialogOpen && (
+            <Dialog open={insufficientCreditsDialogOpen} onClose={handleCloseInsufficientCreditsDialog}>
+              <DialogTitle>Insufficient Credits</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  You do not have enough credits to unlock this chapter. Please purchase more credits to proceed.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseInsufficientCreditsDialog} color="primary" autoFocus>
+                  Close
                 </Button>
               </DialogActions>
             </Dialog>

@@ -39,7 +39,18 @@ export const getAllChaptersByBookIdAction = (jwt, bookId) => async (dispatch) =>
   try {
     const apiClient = jwt ? api : axios; // Choose the API client based on `jwt`
     const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}/chapters`);
-    console.log("Chapters: ", data);
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: error.message });
+  }
+};
+
+export const manageChapterByBookId = (bookId) => async (dispatch) => {
+  dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
+
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/api/books/${bookId}/chapters`);
     dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data });
     return { payload: data };
   } catch (error) {
@@ -158,3 +169,6 @@ export const confirmPayment = (confirmPaymentRequest) => async (dispatch) => {
     throw error;
   }
 };
+export const clearChapters = () => ({
+  type: "CLEAR_CHAPTERS",
+});

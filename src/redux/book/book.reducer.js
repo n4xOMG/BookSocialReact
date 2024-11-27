@@ -43,6 +43,9 @@ import {
   SEARCH_BOOK_FAILED,
   SEARCH_BOOK_REQUEST,
   SEARCH_BOOK_SUCCESS,
+  SET_EDIT_CHOICE_FAILED,
+  SET_EDIT_CHOICE_REQUEST,
+  SET_EDIT_CHOICE_SUCCESS,
 } from "./book.actionType";
 
 const initialState = {
@@ -79,6 +82,7 @@ export const bookReducer = (state = initialState, action) => {
     case GET_LATEST_UPDATE_BOOK_REQUEST:
     case GET_FEATURED_BOOKS_REQUEST:
     case GET_TRENDING_BOOKS_REQUEST:
+    case SET_EDIT_CHOICE_REQUEST:
       return { ...state, loading: true, error: null };
 
     case GET_FEATURED_BOOKS_SUCCESS:
@@ -92,13 +96,17 @@ export const bookReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null, book: action.payload, books: [...state.books, action.payload] };
 
     case BOOK_DELETE_SUCCEED:
-      return { ...state, loading: false, error: null, loading: null, books: state.books.filter((book) => book.id !== action.payload) };
+      return { ...state, loading: false, error: null, books: state.books.filter((book) => book.id !== action.payload) };
     case BOOK_EDIT_SUCCEED:
+    case SET_EDIT_CHOICE_SUCCESS:
       return {
         ...state,
         error: null,
+        loading: false,
         book: action.payload,
         books: state.books.map((book) => (book.id === action.payload.id ? action.payload : book)),
+        trendingBooks: state.books.map((book) => (book.id === action.payload.id ? action.payload : book)),
+        featuredBooks: state.books.map((book) => (book.id === action.payload.id ? action.payload : book)),
       };
     case GET_LATEST_UPDATE_BOOK_SUCCESS:
       return { ...state, loading: false, latestUpdateBooks: action.payload };
@@ -140,6 +148,7 @@ export const bookReducer = (state = initialState, action) => {
     case GET_BOOKS_BY_AUTHOR_FAILED:
     case GET_FEATURED_BOOKS_FAILED:
     case GET_TRENDING_BOOKS_FAILED:
+    case SET_EDIT_CHOICE_FAILED:
       return { ...state, loading: false, error: action.payload };
 
     default:

@@ -1,60 +1,82 @@
-import { Favorite, Share } from "@mui/icons-material";
-import { Button, Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
-import React from "react";
+import { Favorite, Star } from "@mui/icons-material";
+import { Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Typography } from "@mui/material";
+import React, { useCallback, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
+import { followBookAction } from "../../redux/book/book.action";
 
-export function BookCard({ book }) {
+export function BookCard({ book, categories, tags, checkAuth }) {
   const navigate = useNavigate();
+  const { user } = useSelector((store) => store.auth);
+  const [isFollowed, setIsFollowed] = useState(user ? isFavouredByReqUser(user, book) : false);
+  const dispatch = useDispatch();
+  const getCategoryById = (categoryId) => {
+    return categories.find((category) => categoryId === category.id);
+  };
+
+  const getTagsByIds = (tagIds) => {
+    return tags.filter((tag) => tagIds.includes(tag.id));
+  };
+
+  const category = getCategoryById(book.categoryId);
+  const bookTags = getTagsByIds(book.tagIds);
+  const handleFollowBook = useCallback(
+    checkAuth(async () => {
+      try {
+        setTimeout(() => {
+          dispatch(followBookAction(book.id));
+          setIsFollowed((prev) => !prev);
+        }, 300);
+      } catch (e) {
+        console.log("Error follow book: ", e);
+      }
+    }),
+    [dispatch, isFollowed]
+  );
   return (
-    <Card
-      sx={{
-        width: 300,
-        height: 450,
-        bgcolor: "rgba(255, 255, 255, 0.1)",
-        backdropFilter: "blur(10px)",
-        border: "1px solid rgba(255, 255, 255, 0.3)",
-        boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
-        borderRadius: "16px",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        transition: "transform 0.3s",
-        "&:hover": {
-          transform: "scale(1.05)",
-        },
-      }}
-      onClick={() => navigate(`/books/${book.id}`)}
-    >
-      <CardMedia
-        component="img"
-        height="250"
-        image={book.bookCover}
-        alt={book.title}
-        sx={{
-          objectFit: "cover",
-          width: "100%",
-          height: "250px",
-        }}
-      />
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography gutterBottom variant="h6" component="div" sx={{ color: "black" }}>
+    <Card sx={{ width: 300, overflow: "hidden", m: 2 }}>
+      <Box sx={{ position: "relative", height: 400 }} onClick={() => navigate(`/books/${book.id}`)}>
+        <CardMedia
+          component="img"
+          image={book.bookCover}
+          alt={`Cover of ${book.title}`}
+          sx={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </Box>
+      <CardContent sx={{ p: 4, textAlign: "left" }}>
+        <Typography variant="h6" component="h2" sx={{ fontWeight: "bold", mb: 2 }} onClick={() => navigate(`/books/${book.id}`)}>
           {book.title}
         </Typography>
-        <Typography variant="body2" sx={{ color: "gray" }}>
-          {book.authorName}
+        <Typography
+          variant="body2"
+          sx={{ color: "black", mb: 2, cursor: "pointer" }}
+          onClick={() => navigate(`/profile/${book.author.id}`)}
+        >
+          by <strong>{book.authorName}</strong>
         </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Star sx={{ width: 20, height: 20, color: "#faaf00", mr: 1 }} />
+          <Typography variant="body2">{book.avgRating ? book.avgRating.toFixed(1) : 5.0}</Typography>
+        </Box>
+        {category && (
+          <Typography variant="body2" sx={{ color: "gray", mb: 2 }}>
+            Category: {category.name}
+          </Typography>
+        )}
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+          {bookTags.map((tag) => (
+            <Chip key={tag.id} label={tag.name} size="small" sx={{ bgcolor: "#f6f6f7", color: "black" }} />
+          ))}
+        </Box>
       </CardContent>
-      <CardActions>
-        <Button size="small" variant="contained" color="primary">
-          Read More
+      <CardActions sx={{ p: 4 }}>
+        <Button variant="outlined" size="large" sx={{ width: "100%", color: isFollowed ? "red" : "gray" }} onClick={handleFollowBook}>
+          <Favorite sx={{ width: 20, height: 20, fill: isFollowed ? "red" : "gray" }} />
+          <Typography variant="body2" sx={{ ml: 1 }}>
+            {isFollowed ? "Remove from favorites" : "Add to favorites"}
+          </Typography>
         </Button>
-        <IconButton aria-label="add to favorites">
-          <Favorite sx={{ color: "red" }} />
-        </IconButton>
-        <IconButton aria-label="share">
-          <Share sx={{ color: "black" }} />
-        </IconButton>
       </CardActions>
     </Card>
   );

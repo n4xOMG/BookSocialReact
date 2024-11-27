@@ -1,16 +1,20 @@
 export const isFavouredByReqUser = (user, data) => {
-  if (user) {
+  if (user && data) {
     // Check in book list
-    for (let book of user.book) {
-      if (data.id === book.id) {
-        return true;
+    if (Array.isArray(user.book)) {
+      for (let book of user.book) {
+        if (data.id === book.id) {
+          return true;
+        }
       }
     }
 
     // Check in comment list
-    for (let comment of user.comment) {
-      if (data.id === comment.id) {
-        return true;
+    if (Array.isArray(user.comment)) {
+      for (let comment of user.comment) {
+        if (data.id === comment.id) {
+          return true;
+        }
       }
     }
   }

@@ -49,7 +49,7 @@ export default function MessageMenu() {
             aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
           >
-            <Badge badgeContent={4} color="primary">
+            <Badge badgeContent={chats?.length} color="primary">
               <Inbox />
             </Badge>
           </IconButton>

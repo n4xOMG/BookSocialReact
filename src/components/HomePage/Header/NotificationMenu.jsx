@@ -40,7 +40,7 @@ export default function NotificationMenu() {
             aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
           >
-            <Badge badgeContent={4} color="primary">
+            <Badge badgeContent={notifications?.length} color="primary">
               <Notifications />
             </Badge>
           </IconButton>

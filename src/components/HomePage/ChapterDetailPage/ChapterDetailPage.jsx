@@ -19,7 +19,7 @@ import { isTokenExpired } from "../../../utils/useAuthCheck";
 export default function ChapterDetailPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { chapter, chapters, readingProgress, error } = useSelector((store) => store.chapter);
+  const { chapter, chapters, readingProgress } = useSelector((store) => store.chapter);
   const { user } = useSelector((store) => store.auth);
   const { book } = useSelector((store) => store.book);
   const { tags } = useSelector((store) => store.tag);
@@ -41,7 +41,12 @@ export default function ChapterDetailPage() {
   const fetchChapterDetail = useCallback(async () => {
     setLoading(true);
     try {
-      await dispatch(getChapterById(jwt, bookId, chapterId));
+      const response = await dispatch(getChapterById(jwt, bookId, chapterId));
+      console.log("Chapter detail response: ", response);
+      if (response.payload.error) {
+        setGeneralError(response.payload.error);
+        setUnlockDialogOpen(true);
+      }
       if (chapters.length === 0) {
         await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
       }
@@ -56,11 +61,6 @@ export default function ChapterDetailPage() {
       }
     } catch (e) {
       console.log("Error in chapter detail: ", e);
-      if (error) {
-        console.log("Error in chapter detail: ", error);
-        setGeneralError(error);
-        setUnlockDialogOpen(true);
-      }
     } finally {
       setLoading(false);
     }

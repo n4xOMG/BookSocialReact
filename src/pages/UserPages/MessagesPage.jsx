@@ -1,201 +1,199 @@
-import React, { useEffect, useRef } from "react";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
-import { fetchUserChats, fetchChatMessages, sendMessage } from "../../redux/chat/chat.action";
-import { connectWebSocket, subscribeToChat, unsubscribeFromChat } from "../../redux/websocket/websocketActions";
-import { List, ListItem, Typography, TextField, Button, Grid, Box, CircularProgress } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom"; // Updated import
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import WestIcon from "@mui/icons-material/West";
+import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography } from "@mui/material";
+import React, { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import ChatMessage from "../../components/MessagePage/ChatMessage";
+import SearchUser from "../../components/MessagePage/SearchUser";
+import UserChatCard from "../../components/MessagePage/UserChatCard";
+import { createMessage, fetchUserChats } from "../../redux/chat/chat.action";
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
+import UploadToCloudinary from "../../utils/uploadToCloudinary";
+import { useNavigate } from "react-router-dom";
 
-const MessagesPage = () => {
-  const { chatId } = useParams();
-  const navigate = useNavigate(); // Initialized useNavigate
+export default function MessagesPage() {
   const dispatch = useDispatch();
-  const { chats, messages, loading, error } = useSelector((state) => state.chat, shallowEqual);
-  const { stompClient, user } = useSelector(
-    (state) => ({
-      stompClient: state.websocket.stompClient,
-      user: state.auth.user,
-    }),
-    shallowEqual
-  );
-  const [message, setMessage] = React.useState("");
+  const navigate = useNavigate();
+  const { chats } = useSelector((state) => state.chat);
+  const { user } = useSelector((state) => state.auth);
+  const [currentChat, setCurrentChat] = useState();
+  const [messages, setMessages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [stompClient, setStompClient] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Fetch user chats and establish WebSocket connection
   useEffect(() => {
     dispatch(fetchUserChats());
-    if (!stompClient) {
-      dispatch(connectWebSocket());
-    }
-  }, [dispatch, stompClient]);
+  }, [dispatch]);
 
-  // Subscribe to all chats after fetching them
-  useEffect(() => {
-    if (stompClient && stompClient.connected && user) {
-      chats.forEach((chat) => {
-        dispatch(subscribeToChat(chat.id));
-      });
-    }
-  }, [chats, stompClient, dispatch, user]);
+  const handleSelectImage = (e) => {
+    const file = e.target.files[0];
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
-  // Fetch chat messages whenever chatId changes
-  useEffect(() => {
-    if (chatId) {
-      dispatch(fetchChatMessages(chatId));
-      dispatch(subscribeToChat(chatId)); // Ensure subscription to the selected chat
+  const handleCreateMessage = async (value) => {
+    if (isSending) return;
+    setIsSending(true);
+    setLoading(true);
+    let imgUrl = null;
+    if (selectedImage) {
+      imgUrl = await UploadToCloudinary(selectedImage, `chat/chat_images/${currentChat.id}`);
     }
-  }, [chatId, dispatch]);
-
-  // Cleanup subscriptions when chatId changes or component unmounts
-  useEffect(() => {
-    return () => {
-      if (chatId) {
-        dispatch(unsubscribeFromChat(chatId));
-      }
+    const message = {
+      chat: { id: currentChat.id },
+      chatId: currentChat.id,
+      sender: { id: user.id },
+      receiver: { id: currentChat.userOne === user.id ? user.id : currentChat.userTwo.id },
+      content: value,
+      imageUrl: imgUrl,
     };
-  }, [chatId, dispatch]);
+    dispatch(createMessage({ message, sendMessageToServer }));
+    setSelectedImage(null);
+    setImagePreview(null);
+    setLoading(false);
+    setIsSending(false);
+  };
 
-  // Scroll to the latest message
+  useEffect(() => {
+    const socket = new SockJS("http://localhost:80/ws");
+    const stomp = Stomp.over(socket);
+    setStompClient(stomp);
+    stomp.connect({}, onConnect, onErr);
+  }, []);
+
+  const onConnect = () => {
+    console.log("Connected to WebSocket");
+    if (stompClient && user && currentChat) {
+      console.log(`Subscribing to group: /group/${currentChat.id}/private`);
+      stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
+    }
+  };
+
+  const onErr = (err) => {
+    console.log("Websocket error: ", err);
+  };
+
+  const sendMessageToServer = (newMessage) => {
+    if (stompClient && newMessage) {
+      stompClient.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
+    }
+  };
+
+  const onMessageReceived = (payload) => {
+    console.log("Message received from WebSocket:", payload.body);
+    const receivedMessage = JSON.parse(payload.body);
+    setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+  };
+
+  useEffect(() => {
+    if (stompClient && user && currentChat) {
+      const subscription = stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
+      return () => subscription.unsubscribe();
+    }
+  }, [stompClient, user, currentChat]);
+
+  useEffect(() => {
+    if (currentChat) {
+      setMessages(currentChat.messages);
+    }
+  }, [currentChat]);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, chatId]);
-
-  const handleSendMessage = () => {
-    if (chatId && message.trim() !== "") {
-      const selectedChat = chats.find((chat) => chat.id.toString() === chatId);
-      if (!selectedChat) {
-        console.error("Selected chat not found");
-        return;
-      }
-      const receiver = selectedChat.userOne.id === user.id ? selectedChat.userTwo : selectedChat.userOne;
-      const newMessage = {
-        content: message,
-        senderId: user.id,
-        receiverId: receiver.id,
-        chat: { id: parseInt(chatId) },
-      };
-      dispatch(sendMessage(chatId, newMessage));
-      setMessage("");
-    }
-  };
-
-  // Get messages for the current chatId
-  const chatMessages = messages[chatId] || [];
+  }, [messages]);
 
   return (
-    <Grid container>
-      {/* Chats List */}
-      <Grid
-        item
-        xs={4}
-        style={{
-          borderRight: "1px solid #ccc",
-          height: "100vh",
-          overflowY: "auto",
-        }}
-      >
-        <List>
-          {chats.map((chat) => (
-            <ListItem
-              key={chat.id}
-              button
-              onClick={() => navigate(`/chats/${chat.id}`)} // Updated navigation
-              selected={chat.id.toString() === chatId}
-            >
-              <Typography variant="body1">{chat.userOne.id === user.id ? chat.userTwo.fullname : chat.userOne.fullname}</Typography>
-            </ListItem>
-          ))}
-        </List>
-      </Grid>
-
-      {/* Messages Display */}
-      <Grid
-        item
-        xs={8}
-        style={{
-          padding: "20px",
-          height: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {chatId ? (
-          <>
-            {/* Messages List */}
-            <List style={{ flexGrow: 1, overflowY: "auto" }}>
-              {loading ? (
-                <Box display="flex" justifyContent="center" mt={2}>
-                  <CircularProgress />
-                </Box>
-              ) : chatMessages.length > 0 ? (
-                chatMessages.map((msg) => {
-                  const isSentByUser = msg.sender.id === user.id;
-                  return (
-                    <ListItem key={msg.id}>
-                      <Box display="flex" flexDirection="column" alignItems={isSentByUser ? "flex-end" : "flex-start"} width="100%">
-                        <Box
-                          bgcolor={isSentByUser ? "#1976d2" : "#e0e0e0"}
-                          color={isSentByUser ? "#fff" : "#000"}
-                          p={1}
-                          borderRadius={2}
-                          maxWidth="60%"
-                        >
-                          <Typography variant="body2">{msg.content}</Typography>
-                          {msg.imageUrl && (
-                            <img
-                              src={msg.imageUrl}
-                              alt="sent"
-                              style={{
-                                maxWidth: "200px",
-                                marginTop: "10px",
-                                borderRadius: "8px",
-                              }}
-                            />
-                          )}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary" style={{ marginTop: "5px" }}>
-                          {new Date(msg.timestamp).toLocaleString()}
-                        </Typography>
-                      </Box>
-                    </ListItem>
-                  );
-                })
-              ) : (
-                <Typography variant="body2" color="text.secondary" align="center" mt={2}>
-                  No messages yet. Start the conversation!
-                </Typography>
-              )}
-              <div ref={messagesEndRef} />
-            </List>
-
-            {/* Message Input */}
-            <Box display="flex" marginTop="10px">
-              <TextField
-                variant="outlined"
-                fullWidth
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message..."
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleSendMessage();
-                  }
-                }}
-              />
-              <Button variant="contained" color="primary" onClick={handleSendMessage} style={{ marginLeft: "10px" }}>
-                Send
-              </Button>
+    <Grid container sx={{ height: "100vh", overflow: "hidden" }}>
+      <Grid item xs={3} sx={{ px: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #ddd" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <Box sx={{ display: "flex", alignItems: "center", py: 2 }} onClick={() => navigate("/")}>
+            <IconButton>
+              <WestIcon />
+            </IconButton>
+            <Typography sx={{ fontSize: 20, fontWeight: "bold", ml: 1 }}>Home</Typography>
+          </Box>
+          <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
+            <SearchUser />
+            <Box sx={{ mt: 2 }}>
+              {chats.map((chat) => (
+                <div
+                  key={chat.id}
+                  onClick={() => {
+                    setCurrentChat(chat);
+                  }}
+                >
+                  <UserChatCard chat={chat} />
+                </div>
+              ))}
             </Box>
-          </>
+          </Box>
+        </Box>
+      </Grid>
+      <Grid item xs={9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        {currentChat ? (
+          <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            <Box sx={{ display: "flex", alignItems: "center", p: 2, borderBottom: "1px solid #ddd" }}>
+              <Avatar src="https://www.w3schools.com/howto/img_avatar.png" />
+              <Typography sx={{ ml: 2 }}>{currentChat.name}</Typography>
+            </Box>
+            <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
+              {messages?.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))}
+              <div ref={messagesEndRef} />
+            </Box>
+            <Box sx={{ p: 2, borderTop: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
+              {imagePreview && (
+                <Box sx={{ mb: 2 }}>
+                  <img src={imagePreview} alt="Preview" style={{ maxWidth: "100px", borderRadius: 8 }} />
+                </Box>
+              )}
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <TextField
+                  placeholder="Type a message"
+                  sx={{ flexGrow: 1, mr: 2 }}
+                  variant="outlined"
+                  onKeyPress={async (e) => {
+                    if (e.key === "Enter" && e.target.value) {
+                      await handleCreateMessage(e.target.value);
+                      e.target.value = "";
+                    }
+                  }}
+                />
+                <input type="file" accept="image/*" onChange={handleSelectImage} hidden id="image-input" />
+                <label htmlFor="image-input">
+                  <IconButton component="span">
+                    <AddPhotoAlternateIcon />
+                  </IconButton>
+                </label>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                  onClick={async () => {
+                    const input = document.querySelector('input[placeholder="Type a message"]');
+                    if (input.value) {
+                      await handleCreateMessage(input.value);
+                      input.value = "";
+                    }
+                  }}
+                >
+                  {loading ? <CircularProgress size={24} /> : "Send"}
+                </Button>
+              </Box>
+            </Box>
+          </Box>
         ) : (
-          <Typography variant="h6" color="text.secondary" align="center" mt={10}>
-            Select a chat to start messaging
-          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: 1 }}>No chat selected</Box>
         )}
       </Grid>
     </Grid>
   );
-};
-
-export default MessagesPage;
+}

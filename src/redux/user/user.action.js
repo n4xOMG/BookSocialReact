@@ -16,6 +16,9 @@ import {
   GET_USER_BY_ID_FAILED,
   GET_USER_BY_ID_REQUEST,
   GET_USER_BY_ID_SUCCESS,
+  SEARCH_USER_FAILED,
+  SEARCH_USER_REQUEST,
+  SEARCH_USER_SUCCESS,
   SUSPEND_USER_FAILED,
   SUSPEND_USER_REQUEST,
   SUSPEND_USER_SUCCESS,
@@ -170,5 +173,18 @@ export const updateUserRoleAction = (userId, roleName) => async (dispatch) => {
   } catch (error) {
     console.log("Api error: ", error);
     dispatch({ type: UPDATE_USER_ROLE_FAILED, payload: error.response?.data || error.message });
+  }
+};
+export const searchUser = (query) => async (dispatch) => {
+  dispatch({ type: SEARCH_USER_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/api/user/search?query=${query}`);
+
+    console.log("User", data);
+    dispatch({ type: SEARCH_USER_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error: ", error);
+    dispatch({ type: SEARCH_USER_FAILED, payload: error.message });
   }
 };

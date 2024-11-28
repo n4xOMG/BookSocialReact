@@ -7,6 +7,7 @@ import {
   DELETE_USER_FAILED,
   DELETE_USER_REQUEST,
   DELETE_USER_SUCCESS,
+  FOLLOW_AUTHOR_SUCCESS,
   GET_ALL_USERS_FAILED,
   GET_ALL_USERS_REQUEST,
   GET_ALL_USERS_SUCCESS,
@@ -25,6 +26,7 @@ import {
   UNBAN_USER_FAILED,
   UNBAN_USER_REQUEST,
   UNBAN_USER_SUCCESS,
+  UNFOLLOW_AUTHOR_SUCCESS,
   UNSUSPEND_USER_FAILED,
   UNSUSPEND_USER_REQUEST,
   UNSUSPEND_USER_SUCCESS,
@@ -52,10 +54,11 @@ export const getAllUsers = (page, size, searchTerm) => async (dispatch) => {
   }
 };
 
-export const getUserById = (userId) => async (dispatch) => {
+export const getUserById = (jwt, userId) => async (dispatch) => {
   dispatch({ type: GET_USER_BY_ID_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/user/profile/${userId}`);
+    const apiClient = jwt ? api : axios;
+    const { data } = await apiClient.get(`${API_BASE_URL}/user/profile/${userId}`);
 
     console.log("User", data);
     dispatch({ type: GET_USER_BY_ID_SUCCESS, payload: data });
@@ -186,5 +189,24 @@ export const searchUser = (query) => async (dispatch) => {
   } catch (error) {
     console.log("Api error: ", error);
     dispatch({ type: SEARCH_USER_FAILED, payload: error.message });
+  }
+};
+export const followAuthorAction = (authorId) => async (dispatch) => {
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/follow/${authorId}`);
+    dispatch({ type: FOLLOW_AUTHOR_SUCCESS, payload: data });
+  } catch (error) {
+    console.error("Error following author:", error);
+    // Handle error
+  }
+};
+
+export const unfollowAuthorAction = (authorId) => async (dispatch) => {
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/unfollow/${authorId}`);
+    dispatch({ type: UNFOLLOW_AUTHOR_SUCCESS, payload: data });
+  } catch (error) {
+    console.error("Error unfollowing author:", error);
+    // Handle error
   }
 };

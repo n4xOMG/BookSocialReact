@@ -21,6 +21,7 @@ import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import { getCurrentUserByJwt } from "./redux/auth/auth.action";
 import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
 import UserBookshelf from "./pages/UserPages/UserBookshelf";
+import BookSearchResults from "./pages/UserPages/BookSearchResults";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -59,6 +60,7 @@ function App() {
         <Route path="/profile" element={user ? <ProfilePage /> : <HomePage />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/search-results" element={<BookSearchResults />} />
         <Route path="/library" element={user ? <UserBookshelf /> : <HomePage />} />
         <Route path="/book-clubs" element={<BookClubs />} />
         <Route path="/credit-packages" element={<CreditPackages />} />

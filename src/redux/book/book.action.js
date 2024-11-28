@@ -199,21 +199,16 @@ export const followBookAction = (bookId) => async (dispatch) => {
   }
 };
 
-export const searchBookAction = (title, categoryId, tagIds) => async (dispatch) => {
+export const searchBookAction = (params) => async (dispatch) => {
   dispatch({ type: SEARCH_BOOK_REQUEST });
   try {
-    const params = {};
-
-    if (title) params.title = title;
-    if (categoryId) params.categoryId = categoryId;
-    if (tagIds && tagIds.length > 0) params.tagIds = tagIds;
-
+    console.log("Params", params);
     const { data } = await api.get(`${API_BASE_URL}/books/search`, { params });
     dispatch({ type: SEARCH_BOOK_SUCCESS, payload: data });
     return { payload: data };
   } catch (error) {
     console.log("Error searching books:", error.message);
-    dispatch({ type: SEARCH_BOOK_FAILED, payload: error });
+    dispatch({ type: SEARCH_BOOK_FAILED, payload: error.message });
   }
 };
 

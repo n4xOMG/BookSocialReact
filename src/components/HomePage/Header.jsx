@@ -11,7 +11,7 @@ import MessageMenu from "./Header/MessageMenu";
 import NotificationMenu from "./Header/NotificationMenu";
 import ProfileMenu from "./Header/ProfileMenu";
 import SearchBar from "./SearchBar";
-
+import { searchBookAction } from "../../redux/book/book.action";
 const Header = () => {
   const navigate = useNavigate();
   const { checkAuth, AuthDialog } = useAuthCheck();
@@ -21,6 +21,9 @@ const Header = () => {
   const { tags } = useSelector((state) => state.tag);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [title, setTitle] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   useEffect(() => {
     setLoading(true);
     try {
@@ -32,7 +35,10 @@ const Header = () => {
       setLoading(false);
     }
   }, [dispatch]);
-
+  const handleSearch = () => {
+    const tagIds = selectedTags.map((tag) => tag.id);
+    dispatch(searchBookAction(title.trim(), categoryId || null, tagIds));
+  };
   return (
     <>
       {loading ? (
@@ -41,7 +47,17 @@ const Header = () => {
         <AppBar position="sticky" color="default">
           <Toolbar>
             <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
-              <SearchBar categories={categories} tags={tags} />
+              <SearchBar
+                categories={categories}
+                tags={tags}
+                selectedTags={selectedTags}
+                setSelectedTags={setSelectedTags}
+                selectedCategory={categoryId}
+                setSelectedCategory={setCategoryId}
+                searchTitle={title}
+                setSearchTitle={setTitle}
+                onSearch={handleSearch}
+              />
             </Box>
             <Stack direction="row" spacing={2} alignItems="center">
               <IconButton onClick={checkAuth(() => navigate("/upload-book"))}>

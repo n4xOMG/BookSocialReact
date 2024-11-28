@@ -1,17 +1,30 @@
 import { Delete, Edit, Favorite, Message, Share } from "@mui/icons-material";
 import { Avatar, Box, Card, CardContent, CardHeader, Grid, IconButton, Typography } from "@mui/material";
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { deletePost, likePost } from "../../redux/post/post.action";
 import CommentSection from "./CommentSection";
+import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
 
-const PostItem = ({ post, onEdit }) => {
+const PostItem = ({ post, onEdit, checkAuth }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const [isLiked, setIsLiked] = useState(user ? isFavouredByReqUser(user, post) : false);
 
-  const handleLike = () => {
-    dispatch(likePost(post.id));
-  };
+  const handleLike = useCallback(
+    checkAuth(async () => {
+      try {
+        setTimeout(() => {
+          dispatch(likePost(post.id));
+          setIsLiked((prev) => !prev);
+        }, 300);
+      } catch (e) {
+        setIsLiked((prev) => !prev);
+        console.log("Error follow book: ", e);
+      }
+    }),
+    [dispatch, isLiked]
+  );
 
   const handleDelete = () => {
     dispatch(deletePost(post.id));
@@ -71,7 +84,7 @@ const PostItem = ({ post, onEdit }) => {
       </CardContent>
       <Box sx={{ display: "flex", justifyContent: "space-between", p: 2 }}>
         <IconButton onClick={handleLike}>
-          <Favorite color={post.likes > 0 ? "error" : "inherit"} />
+          <Favorite color={isLiked ? "error" : "inherit"} />
           {post.likes}
         </IconButton>
         <IconButton>

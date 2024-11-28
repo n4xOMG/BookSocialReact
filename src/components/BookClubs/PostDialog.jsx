@@ -99,7 +99,7 @@ const PostDialog = ({ open, onClose, onSubmit, editingPost, user }) => {
             <Typography variant="subtitle1" gutterBottom>
               Attach Images
             </Typography>
-            <IconButton component="label" color="primary">
+            <IconButton component="label" color="primary" disabled={isSubmitting}>
               <ImageIcon />
               <input type="file" hidden multiple accept="image/*" onChange={handleImageChange} />
             </IconButton>

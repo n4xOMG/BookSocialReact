@@ -4,15 +4,16 @@ import ImageIcon from "@mui/icons-material/Image";
 import SendIcon from "@mui/icons-material/Send";
 import { useDispatch, useSelector } from "react-redux";
 import { addPost, fetchPosts } from "../../redux/post/post.action";
-import UploadToCloudinary from "../../utils/uploadToCloudinary"; // Adjust the path as necessary
+import UploadToCloudinary from "../../utils/uploadToCloudinary";
 import Sidebar from "../../components/HomePage/Sidebar";
 import PostList from "../../components/BookClubs/PostList";
+import { useAuthCheck } from "../../utils/useAuthCheck";
 
 const BookClubs = () => {
   const dispatch = useDispatch();
   const { posts, loading, error } = useSelector((state) => state.post);
   const { user } = useSelector((state) => state.auth);
-
+  const { checkAuth, AuthDialog } = useAuthCheck();
   const [postContent, setPostContent] = useState("");
   const [selectedImages, setSelectedImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,7 +34,7 @@ const BookClubs = () => {
     setSelectedImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
-  const handleSubmitPost = async () => {
+  const handleSubmitPost = checkAuth(async () => {
     if (isSubmitting) return;
 
     if (!postContent.trim() && selectedImages.length === 0) {
@@ -63,13 +64,12 @@ const BookClubs = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  });
 
   return (
     <Box sx={{ display: "flex", overscrollBehavior: "contain" }}>
       <Sidebar />
       <Box sx={{ width: "100%", mx: "auto", p: 3 }}>
-        {/* Enhanced "What are you reading?" Box */}
         <Paper
           elevation={3}
           sx={{
@@ -80,9 +80,7 @@ const BookClubs = () => {
           }}
         >
           <Stack direction="row" spacing={2} alignItems="flex-start">
-            {/* User Avatar */}
             <Avatar alt={user?.username || "User"} src={user?.profilePicture || ""} />
-            {/* Post Input Field */}
             <Box sx={{ flexGrow: 1 }}>
               <TextField
                 label={`What are you reading, ${user?.username || "User"}?`}
@@ -172,8 +170,9 @@ const BookClubs = () => {
         </Paper>
 
         {/* Posts List */}
-        <PostList posts={posts} loading={loading} error={error} />
+        <PostList posts={posts} loading={loading} error={error} checkAuth={checkAuth} />
       </Box>
+      <AuthDialog />
     </Box>
   );
 };

@@ -4,6 +4,7 @@ import {
   BAN_USER_REQUEST,
   BAN_USER_SUCCESS,
   DELETE_USER_SUCCESS,
+  FOLLOW_AUTHOR_SUCCESS,
   GET_ALL_USERS_FAILED,
   GET_ALL_USERS_REQUEST,
   GET_ALL_USERS_SUCCESS,
@@ -19,6 +20,7 @@ import {
   UNBAN_USER_FAILED,
   UNBAN_USER_REQUEST,
   UNBAN_USER_SUCCESS,
+  UNFOLLOW_AUTHOR_SUCCESS,
   UNSUSPEND_USER_FAILED,
   UNSUSPEND_USER_REQUEST,
   UNSUSPEND_USER_SUCCESS,
@@ -75,7 +77,22 @@ export const userReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null, searchUsers: action.payload };
     case DELETE_USER_SUCCESS:
       return { ...state, loading: false, error: null };
-
+    case FOLLOW_AUTHOR_SUCCESS:
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          followedByCurrentUser: action.payload.followedByCurrentUser,
+        },
+      };
+    case UNFOLLOW_AUTHOR_SUCCESS:
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          followedByCurrentUser: action.payload.followedByCurrentUser,
+        },
+      };
     case GET_ALL_USERS_FAILED:
     case GET_USER_BY_ID_FAILED:
     case SUSPEND_USER_FAILED:

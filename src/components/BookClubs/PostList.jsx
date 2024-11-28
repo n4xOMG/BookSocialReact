@@ -2,7 +2,7 @@ import React from "react";
 import { Typography, CircularProgress, Box } from "@mui/material";
 import PostItem from "./PostItem";
 
-const PostList = ({ posts, loading, error, onEdit }) => {
+const PostList = ({ posts, loading, error, onEdit, checkAuth }) => {
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -22,7 +22,7 @@ const PostList = ({ posts, loading, error, onEdit }) => {
   return (
     <Box>
       {posts.map((post) => (
-        <PostItem key={post.id} post={post} onEdit={onEdit} />
+        <PostItem key={post.id} post={post} onEdit={onEdit} checkAuth={checkAuth} />
       ))}
     </Box>
   );

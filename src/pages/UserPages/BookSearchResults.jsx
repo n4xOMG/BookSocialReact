@@ -1,71 +1,76 @@
-import React, { useState, useEffect } from "react";
+import { FilterList as FilterListIcon, Search as SearchIcon } from "@mui/icons-material";
 import {
+  Alert,
   Box,
-  Grid,
+  Button,
   Card,
   CardContent,
   CardMedia,
-  Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Chip,
-  OutlinedInput,
-  Button,
   CircularProgress,
-  Alert,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Select,
+  Typography,
 } from "@mui/material";
-import { Search as SearchIcon, FilterList as FilterListIcon } from "@mui/icons-material";
-import SearchBar from "../../components/HomePage/SearchBar";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import Header from "../../components/HomePage/Header";
+import { searchBookAction } from "../../redux/book/book.action";
 import { getCategories } from "../../redux/category/category.action";
 import { getTags } from "../../redux/tag/tag.action";
-import { searchBookAction } from "../../redux/book/book.action";
+import Sidebar from "../../components/HomePage/Sidebar";
 
 const BookSearchResults = () => {
-  // State variables for search parameters
-  const [title, setTitle] = useState("");
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const queryParams = new URLSearchParams(location.search);
+  const { categories } = useSelector((state) => state.category);
+  const { tags } = useSelector((state) => state.tag);
+  const { searchResults } = useSelector((state) => state.book);
+
   const [categoryId, setCategoryId] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
-
-  // State variables for filters and results
-  const [categories, setCategories] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [books, setBooks] = useState([]);
 
   // State variables for UI states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const getCategoryById = (categoryId) => {
+    return categories.find((category) => categoryId === category.id);
+  };
+
+  const getTagsByIds = (tagIds) => {
+    return tags.filter((tag) => tagIds.includes(tag.id));
+  };
   useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const [fetchedCategories, fetchedTags] = await Promise.all([getCategories(), getTags()]);
-        setCategories(fetchedCategories);
-        setTags(fetchedTags);
-      } catch (err) {
-        console.error("Error fetching filters:", err);
-        setError("Failed to load filters.");
-      }
-    };
-
-    fetchFilters();
-  }, []);
-
-  // Handle search action
-  const handleSearch = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const results = await searchBookAction(title.trim(), categoryId || null, selectedTags.length > 0 ? selectedTags : null);
-      setBooks(results);
-    } catch (err) {
-      console.error("Error searching books:", err);
-      setError("Error occurred while searching for books.");
+      dispatch(getCategories());
+      dispatch(getTags());
+    } catch (e) {
+      console.log(e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [dispatch]);
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      setLoading(true);
+      try {
+        await dispatch(searchBookAction(queryParams));
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSearchResults();
+  }, [location.search]);
 
   // Handle category change
   const handleCategoryChange = (event) => {
@@ -80,89 +85,12 @@ const BookSearchResults = () => {
     setSelectedTags(typeof value === "string" ? value.split(",") : value);
   };
 
-  useEffect(() => {
-    handleSearch();
-  }, [categoryId, selectedTags]);
-
   return (
-    <Box sx={{ padding: 4 }}>
-      {/* Search Bar */}
-      <SearchBar
-        title={title}
-        setTitle={setTitle}
-        categoryId={categoryId}
-        setCategoryId={setCategoryId}
-        selectedTags={selectedTags}
-        setSelectedTags={setSelectedTags}
-        onSearch={handleSearch}
-        categories={categories}
-        tags={tags}
-      />
+    <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
+      <Sidebar />
 
-      {/* Filters */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          marginTop: 2,
-          marginBottom: 4,
-        }}
-      >
-        {/* Category Filter */}
-        <FormControl sx={{ minWidth: 200 }} variant="outlined">
-          <InputLabel id="category-filter-label">Category</InputLabel>
-          <Select
-            labelId="category-filter-label"
-            value={categoryId}
-            onChange={handleCategoryChange}
-            label="Category"
-            startAdornment={<FilterListIcon sx={{ marginRight: 1 }} />}
-          >
-            <MenuItem value="">
-              <em>All</em>
-            </MenuItem>
-            {categories.map((category) => (
-              <MenuItem key={category.id} value={category.id}>
-                {category.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Tags Filter */}
-        <FormControl sx={{ minWidth: 300 }} variant="outlined">
-          <InputLabel id="tags-filter-label">Tags</InputLabel>
-          <Select
-            labelId="tags-filter-label"
-            multiple
-            value={selectedTags}
-            onChange={handleTagsChange}
-            input={<OutlinedInput id="select-tags" label="Tags" />}
-            renderValue={(selected) => (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {selected.map((id) => {
-                  const tag = tags.find((t) => t.id === id);
-                  return tag ? <Chip key={id} label={tag.name} /> : null;
-                })}
-              </Box>
-            )}
-            startAdornment={<FilterListIcon sx={{ marginRight: 1, marginTop: 1 }} />}
-          >
-            {tags.map((tag) => (
-              <MenuItem key={tag.id} value={tag.id}>
-                {tag.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Button variant="contained" color="primary" onClick={handleSearch} startIcon={<SearchIcon />} sx={{ height: 56 }}>
-          Search
-        </Button>
-      </Box>
-
-      <Box>
+      <Box sx={{ width: "100%" }}>
+        <Header />
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", marginY: 4 }}>
             <CircularProgress />
@@ -175,14 +103,14 @@ const BookSearchResults = () => {
           </Alert>
         )}
 
-        {!loading && books.length === 0 && !error && (
+        {!loading && searchResults.length === 0 && !error && (
           <Alert severity="info" sx={{ marginY: 2 }}>
             No books found matching your criteria.
           </Alert>
         )}
 
-        <Grid container spacing={4}>
-          {books.map((book) => (
+        <Grid container spacing={4} padding={3}>
+          {searchResults?.map((book) => (
             <Grid item key={book.id} xs={12} sm={6} md={4}>
               <Card
                 sx={{
@@ -205,13 +133,13 @@ const BookSearchResults = () => {
                     Author: {book.authorName || "Unknown"}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Category: {book.categoryName || "N/A"}
+                    Category: {getCategoryById(book.categoryId).name || "N/A"}
                   </Typography>
                   <Box sx={{ marginTop: 1 }}>
-                    {book.tagNames && book.tagNames.length > 0 && (
+                    {book.tagIds && book.tagIds.length > 0 && (
                       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                        {book.tagNames.map((tag) => (
-                          <Chip key={tag} label={tag} size="small" color="primary" />
+                        {getTagsByIds(book.tagIds).map((tag) => (
+                          <Chip key={tag.id} label={tag.name} size="small" color="primary" />
                         ))}
                       </Box>
                     )}

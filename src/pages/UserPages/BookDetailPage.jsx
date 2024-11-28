@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import BookCommentSection from "../../components/BookDetailPageComponents/BookCommentSection";
 import { BookDetails } from "../../components/BookDetailPageComponents/BookDetails";
+import AuthorCard from "../../components/BookDetailPageComponents/AuthorCard";
 import { ChapterList } from "../../components/BookDetailPageComponents/ChapterList";
 import { ProgressBar } from "../../components/BookDetailPageComponents/ProgressBar";
 import Sidebar from "../../components/HomePage/Sidebar";
@@ -26,7 +27,21 @@ export const BookDetailPage = () => {
   const navigate = useNavigate();
   const { bookId } = useParams();
   const dispatch = useDispatch();
-  const { book, rating, progresses = [], chapterCounts } = useSelector((store) => store.book);
+  const {
+    book,
+    rating,
+    progresses = [],
+    chapterCounts,
+    categories,
+    tags,
+  } = useSelector((store) => ({
+    book: store.book.book,
+    rating: store.book.rating,
+    progresses: store.book.progresses,
+    chapterCounts: store.book.chapterCounts,
+    categories: store.category.categories,
+    tags: store.tag.tags,
+  }));
   const { user } = useSelector((store) => store.auth);
   const jwt = localStorage.getItem("jwt");
   const { checkAuth, AuthDialog } = useAuthCheck();
@@ -46,25 +61,28 @@ export const BookDetailPage = () => {
     setLoading(false);
   }, [user, bookId, jwt, dispatch]);
 
-  const calculateOverallProgress = useCallback((chapters, progresses, selectedLanguageId) => {
-    const filteredChapters = chapters?.filter((chapter) => chapter.languageId === selectedLanguageId);
-    const filteredProgresses = progresses?.filter((progress) => filteredChapters.some((chap) => chap.id === progress.chapterId));
-    if (filteredProgresses?.length > 0 && filteredChapters?.length > 0) {
+  const calculateOverallProgress = useCallback(() => {
+    if (!book || !book.chapters) {
+      setOverallProgress(0);
+      return;
+    }
+    const selectedLanguageId = user?.preferredLanguageId || book.defaultLanguageId;
+    const filteredChapters = book.chapters.filter((chapter) => chapter.languageId === selectedLanguageId);
+    const filteredProgresses = progresses.filter((progress) => filteredChapters.some((chap) => chap.id === progress.chapterId));
+    if (filteredProgresses.length > 0 && filteredChapters.length > 0) {
       const totalProgress = filteredProgresses.reduce((acc, progress) => acc + (progress.progress || 0), 0);
       const averageProgress = Math.floor(totalProgress / filteredChapters.length);
       setOverallProgress(averageProgress > 100 ? 100 : averageProgress);
     } else {
       setOverallProgress(0);
     }
-  }, []);
+  }, [book, progresses, user]);
 
   const handleFollowBook = checkAuth(async () => {
     try {
       setLoading(true);
-      setTimeout(() => {
-        dispatch(followBookAction(bookId));
-        setIsFavorite(!isFavorite);
-      }, 300);
+      await dispatch(followBookAction(bookId));
+      setIsFavorite(!isFavorite);
     } catch (error) {
       console.error("Error following book:", error);
     } finally {
@@ -75,9 +93,7 @@ export const BookDetailPage = () => {
   const handleRating = checkAuth(async (value) => {
     try {
       setLoading(true);
-      setTimeout(() => {
-        dispatch(ratingBookAction(bookId, value));
-      }, 300);
+      await dispatch(ratingBookAction(bookId, value));
     } catch (error) {
       console.error("Error rating book:", error);
     } finally {
@@ -99,102 +115,128 @@ export const BookDetailPage = () => {
   useEffect(() => {
     calculateOverallProgress();
   }, [calculateOverallProgress]);
+
   useEffect(() => {
     return () => {
       dispatch(clearChapters());
     };
   }, [dispatch]);
+
+  if (loading || !book) {
+    return (
+      <Box sx={{ display: "flex", height: "100vh" }}>
+        <Sidebar />
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <LoadingSpinner />
+        </Box>
+        <AuthDialog />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
       <Sidebar />
-      <Box container="true" sx={{ width: "100%", mx: "auto", px: 2, py: 3, backgroundColor: "#f9fafb" }}>
-        {loading || !book ? (
-          <LoadingSpinner />
-        ) : (
-          <Grid container spacing={5} sx={{ backgroundColor: "#f9fafb" }}>
-            <Grid item md={3}>
-              <Box
-                component="img"
-                src={book.bookCover}
-                alt={`Cover of ${book.title}`}
-                sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
-              />
-              <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Rating
-                    name="simple-controlled"
-                    value={rating ? rating.rating : 0}
-                    onChange={(event, newValue) => handleRating(newValue)}
-                  />
-                  <Typography sx={{ ml: 2, color: "gray.600" }}>{rating ? rating.rating : 0}</Typography>
-                </Box>
-                <IconButton
-                  onClick={handleFollowBook}
-                  sx={{
-                    backgroundColor: "white",
-                    border: "1px solid",
-                    borderColor: "grey.300",
-                    height: 40,
-                    width: 40,
-                    "&:hover": {
-                      backgroundColor: "grey.100",
-                    },
-                  }}
-                >
-                  {isFavorite ? (
-                    <FavoriteIcon
-                      sx={{
-                        width: 16,
-                        height: 16,
-                        color: "red",
-                      }}
-                    />
-                  ) : (
-                    <FavoriteBorder
-                      sx={{
-                        width: 16,
-                        height: 16,
-                        color: "black",
-                      }}
-                    />
-                  )}
-                </IconButton>
+      <Box
+        container="true"
+        sx={{
+          width: "100%",
+          mx: "auto",
+          px: { xs: 2, md: 4 },
+          py: 3,
+          backgroundColor: "#f9fafb",
+          overflowY: "auto",
+        }}
+      >
+        <Grid container spacing={5} sx={{ backgroundColor: "#f9fafb" }}>
+          <Grid item md={3}>
+            <Box
+              component="img"
+              src={book.bookCover}
+              alt={`Cover of ${book.title}`}
+              sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
+            />
+            <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Rating
+                  name="simple-controlled"
+                  value={rating ? rating.rating : 0}
+                  onChange={(event, newValue) => handleRating(newValue)}
+                />
+                <Typography sx={{ ml: 2, color: "gray.600" }}>{rating ? rating.rating : 0}</Typography>
               </Box>
-              <Button
-                fullWidth
-                onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
+              <IconButton
+                onClick={handleFollowBook}
                 sx={{
-                  mt: 4,
-                  backgroundColor: "black",
-                  color: "white",
-                  height: 50,
-                  borderRadius: 2,
+                  backgroundColor: "white",
+                  border: "1px solid",
+                  borderColor: "grey.300",
+                  height: 40,
+                  width: 40,
                   "&:hover": {
-                    backgroundColor: "darkgray",
+                    backgroundColor: "grey.100",
                   },
                 }}
               >
-                <MenuBook sx={{ mr: 2, width: 16, height: 16 }} /> Start Reading
-              </Button>
-            </Grid>
-            <Grid item md={8}>
-              <BookDetails book={book} />
-              <ProgressBar progress={overallProgress} />
-              <ChapterList
-                chapterCounts={chapterCounts}
-                progresses={progresses}
-                onCalculateProgress={calculateOverallProgress}
-                onNavigate={navigate}
-                bookId={bookId}
-                user={user ? user : null}
-                onFirstChapterId={setFirstChapterId}
-              />
-              <BookCommentSection bookId={book?.id} user={user} />
-            </Grid>
+                {isFavorite ? (
+                  <FavoriteIcon
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      color: "red",
+                    }}
+                  />
+                ) : (
+                  <FavoriteBorder
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      color: "black",
+                    }}
+                  />
+                )}
+              </IconButton>
+            </Box>
+            <Button
+              fullWidth
+              onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
+              sx={{
+                mt: 4,
+                backgroundColor: "black",
+                color: "white",
+                height: 50,
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                "&:hover": {
+                  backgroundColor: "darkgray",
+                },
+              }}
+            >
+              <MenuBook sx={{ mr: 2, width: 20, height: 20 }} /> Start Reading
+            </Button>
           </Grid>
-        )}
+          <Grid item md={8}>
+            <BookDetails book={book} categories={categories} tags={tags} />
+            <AuthorCard author={book.author} checkAuth={checkAuth} />
+            <ProgressBar progress={overallProgress} />
+            <ChapterList
+              chapterCounts={chapterCounts}
+              progresses={progresses}
+              onCalculateProgress={calculateOverallProgress}
+              onNavigate={navigate}
+              bookId={bookId}
+              user={user ? user : null}
+              onFirstChapterId={setFirstChapterId}
+            />
+            <BookCommentSection bookId={book.id} user={user} />
+          </Grid>
+        </Grid>
       </Box>
       <AuthDialog />
     </Box>
   );
 };
+
+export default BookDetailPage;

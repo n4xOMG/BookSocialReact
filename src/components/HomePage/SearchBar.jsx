@@ -1,12 +1,28 @@
-import React, { useState } from "react";
-import { TextField, Autocomplete, Checkbox, Chip, Popover, Typography, Box } from "@mui/material";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import { Autocomplete, Box, Button, Checkbox, Chip, Popover, TextField, Typography } from "@mui/material";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const SearchBar = ({ tags, categories, onSearch }) => {
+const SearchBar = ({ tags, categories }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchTitle, setSearchTitle] = useState("");
+
+  const handleSearch = () => {
+    const tagIds = selectedTags.map((tag) => tag.id);
+    const categoryId = selectedCategory ? selectedCategory.id : null;
+    console.log("Tag ids", tagIds);
+    const params = new URLSearchParams();
+
+    if (searchTitle) params.append("title", searchTitle);
+    if (categoryId) params.append("categoryId", categoryId);
+    if (tagIds && tagIds.length > 0) tagIds.forEach((id) => params.append("tagIds", id));
+    navigate(`/search-results?${params}`);
+    handleClose();
+  };
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -20,12 +36,10 @@ const SearchBar = ({ tags, categories, onSearch }) => {
 
   const handleTagChange = (event, values) => {
     setSelectedTags(values);
-    onSearch({ tags: values, categories: selectedCategories });
   };
 
-  const handleCategoryChange = (event, values) => {
-    setSelectedCategories(values);
-    onSearch({ tags: selectedTags, categories: values });
+  const handleCategoryChange = (event, value) => {
+    setSelectedCategory(value);
   };
 
   const popoverContentStyle = {
@@ -45,6 +59,8 @@ const SearchBar = ({ tags, categories, onSearch }) => {
       <TextField
         variant="outlined"
         label="Search"
+        value={searchTitle}
+        onChange={(e) => setSearchTitle(e.target.value)}
         onClick={handleClick}
         fullWidth
         InputProps={{
@@ -87,36 +103,24 @@ const SearchBar = ({ tags, categories, onSearch }) => {
             renderInput={(params) => <TextField {...params} variant="standard" placeholder="Select Tags" />}
           />
           <Typography variant="h6" style={{ marginTop: 16 }}>
-            Filter by Categories
+            Filter by Category
           </Typography>
           <Autocomplete
-            multiple
             options={categories}
             getOptionLabel={(option) => option.name}
-            value={selectedCategories}
+            value={selectedCategory}
             onChange={handleCategoryChange}
-            disableCloseOnSelect
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox
-                  icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                  checkedIcon={<CheckBoxIcon fontSize="small" />}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
-                />
-                {option.name}
-              </li>
-            )}
-            renderInput={(params) => <TextField {...params} variant="standard" placeholder="Select Categories" />}
+            renderInput={(params) => <TextField {...params} variant="standard" placeholder="Select Category" />}
           />
           <Box style={chipContainerStyle}>
             {selectedTags.map((tag) => (
               <Chip key={tag.id} label={tag.name} />
             ))}
-            {selectedCategories.map((category) => (
-              <Chip key={category.id} label={category.name} />
-            ))}
+            {selectedCategory && <Chip key={selectedCategory.id} label={selectedCategory.name} />}
           </Box>
+          <Button variant="contained" color="primary" onClick={handleSearch} sx={{ mt: 2 }}>
+            Search
+          </Button>
         </Box>
       </Popover>
     </div>

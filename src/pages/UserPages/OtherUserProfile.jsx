@@ -11,6 +11,7 @@ import { fetchPostsByUserId } from "../../redux/post/post.action";
 import { getUserById } from "../../redux/user/user.action";
 import { createChat } from "../../redux/chat/chat.action";
 import Sidebar from "../../components/HomePage/Sidebar";
+import { isTokenExpired } from "../../utils/useAuthCheck";
 const OtherUserProfile = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
@@ -18,7 +19,7 @@ const OtherUserProfile = () => {
   // Local state for loading and error
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   // Selectors to retrieve data from Redux store
   const { user } = useSelector((state) => state.user, shallowEqual);
   const { booksByAuthor } = useSelector((state) => state.book, shallowEqual);
@@ -40,7 +41,7 @@ const OtherUserProfile = () => {
         setLoading(true);
         setError(null);
         try {
-          await dispatch(getUserById(userId));
+          await dispatch(getUserById(jwt, userId));
           await dispatch(fetchPostsByUserId(userId));
           await dispatch(getBooksByAuthorAction(userId));
         } catch (err) {

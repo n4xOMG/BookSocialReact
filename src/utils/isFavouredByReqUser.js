@@ -9,6 +9,15 @@ export const isFavouredByReqUser = (user, data) => {
       }
     }
 
+    // Check in post list
+    if (Array.isArray(user.post)) {
+      for (let post of user.post) {
+        if (data.id === post.id) {
+          return true;
+        }
+      }
+    }
+
     // Check in comment list
     if (Array.isArray(user.comment)) {
       for (let comment of user.comment) {

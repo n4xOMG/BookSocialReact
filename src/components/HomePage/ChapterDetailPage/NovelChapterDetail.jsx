@@ -149,6 +149,7 @@ export default function NovelChapterDetail({
                   onChapterListOpen={handleChapterListOpen}
                   onChapterListClose={handleChapterListClose}
                   onChapterChange={handleChapterChange}
+                  onToggleSideDrawer={onToggleSideDrawer}
                 />
                 <LinearProgress
                   variant="determinate"

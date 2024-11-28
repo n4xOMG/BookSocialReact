@@ -1,6 +1,6 @@
 import { Favorite, Star } from "@mui/icons-material";
 import { Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Typography } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
@@ -34,6 +34,7 @@ export function BookCard({ book, categories, tags, checkAuth }) {
     }),
     [dispatch, isFollowed]
   );
+
   return (
     <Card sx={{ width: 300, overflow: "hidden", m: 2 }}>
       <Box sx={{ position: "relative", height: 400 }} onClick={() => navigate(`/books/${book.id}`)}>

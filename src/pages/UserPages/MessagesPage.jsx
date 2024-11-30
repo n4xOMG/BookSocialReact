@@ -12,6 +12,7 @@ import { Stomp } from "@stomp/stompjs";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/api";
+import LoadingSpinner from "../../components/LoadingSpinner"; // Import LoadingSpinner
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
@@ -25,10 +26,16 @@ export default function MessagesPage() {
   const [stompClient, setStompClient] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true); // State for WebSocket connection
+  const [isFetchingChats, setIsFetchingChats] = useState(true); // State for fetching chats
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    dispatch(fetchUserChats());
+    const fetchChats = async () => {
+      await dispatch(fetchUserChats());
+      setIsFetchingChats(false);
+    };
+    fetchChats();
   }, [dispatch]);
 
   const handleSelectImage = (e) => {
@@ -69,6 +76,7 @@ export default function MessagesPage() {
 
   const onConnect = () => {
     console.log("Connected to WebSocket");
+    setIsConnecting(false); // Update connection state
     if (stompClient && user && currentChat) {
       console.log(`Subscribing to group: /group/${currentChat.id}/private`);
       stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
@@ -77,6 +85,7 @@ export default function MessagesPage() {
 
   const onErr = (err) => {
     console.log("Websocket error: ", err);
+    setIsConnecting(false); // Ensure loading stops on error
   };
 
   const sendMessageToServer = (newMessage) => {
@@ -109,6 +118,11 @@ export default function MessagesPage() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  // Show LoadingSpinner while connecting or fetching chats
+  if (isConnecting || isFetchingChats) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <Grid container sx={{ height: "100vh", overflow: "hidden" }}>

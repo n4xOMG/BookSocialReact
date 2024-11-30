@@ -3,9 +3,11 @@ import { Box, Typography, Avatar, Button, Stack } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { followAuthorAction, getUserById, unfollowAuthorAction } from "../../redux/user/user.action";
 import { isTokenExpired } from "../../utils/useAuthCheck";
-
+import { useNavigate } from "react-router-dom";
+import { createChat } from "../../redux/chat/chat.action";
 const AuthorCard = ({ author, checkAuth }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((store) => store.user);
   const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const handleFollow = checkAuth(() => {
@@ -15,6 +17,16 @@ const AuthorCard = ({ author, checkAuth }) => {
       dispatch(followAuthorAction(author.id));
     }
   });
+  const handleMessageClick = async () => {
+    try {
+      // Dispatch createChat action and get the chatId
+      const chatId = await dispatch(createChat(author.id));
+      // Navigate to the chat messages page
+      navigate(`/chats/${chatId}`);
+    } catch (error) {
+      console.error("Failed to create or retrieve chat:", error);
+    }
+  };
   useEffect(() => {
     dispatch(getUserById(jwt, author.id));
   }, [dispatch]);
@@ -42,7 +54,7 @@ const AuthorCard = ({ author, checkAuth }) => {
         </Typography>
       </Box>
       <Stack direction="column" spacing={1}>
-        <Button variant="outlined" color="primary" onClick={() => alert("Message functionality to be implemented")}>
+        <Button variant="outlined" color="primary" onClick={handleMessageClick}>
           Message
         </Button>
         <Button variant={user?.followedByCurrentUser ? "contained" : "outlined"} color="primary" onClick={handleFollow}>

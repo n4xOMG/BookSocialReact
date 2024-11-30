@@ -34,6 +34,9 @@ import {
   GET_READING_PROGRESSES_BY_BOOK_FAILED,
   GET_READING_PROGRESSES_BY_BOOK_REQUEST,
   GET_READING_PROGRESSES_BY_BOOK_SUCCESS,
+  GET_RELATED_BOOKS_FAILED,
+  GET_RELATED_BOOKS_REQUEST,
+  GET_RELATED_BOOKS_SUCCESS,
   GET_TRENDING_BOOKS_FAILED,
   GET_TRENDING_BOOKS_REQUEST,
   GET_TRENDING_BOOKS_SUCCESS,
@@ -60,6 +63,7 @@ const initialState = {
   featuredBooks: [],
   trendingBooks: [],
   searchResults: [],
+  relatedBooks: [],
   avgRating: null,
   progresses: [],
   rating: null,
@@ -82,6 +86,7 @@ export const bookReducer = (state = initialState, action) => {
     case GET_LATEST_UPDATE_BOOK_REQUEST:
     case GET_FEATURED_BOOKS_REQUEST:
     case GET_TRENDING_BOOKS_REQUEST:
+    case GET_RELATED_BOOKS_REQUEST:
     case SET_EDIT_CHOICE_REQUEST:
       return { ...state, loading: true, error: null };
 
@@ -90,7 +95,8 @@ export const bookReducer = (state = initialState, action) => {
 
     case GET_TRENDING_BOOKS_SUCCESS:
       return { ...state, loading: false, error: null, trendingBooks: action.payload };
-
+    case GET_RELATED_BOOKS_SUCCESS:
+      return { ...state, loading: false, relatedBooks: action.payload };
     case GET_BOOK_SUCCESS:
     case BOOK_UPLOAD_SUCCEED:
       return { ...state, loading: false, error: null, book: action.payload, books: [...state.books, action.payload] };
@@ -149,6 +155,7 @@ export const bookReducer = (state = initialState, action) => {
     case GET_FEATURED_BOOKS_FAILED:
     case GET_TRENDING_BOOKS_FAILED:
     case SET_EDIT_CHOICE_FAILED:
+    case GET_RELATED_BOOKS_FAILED:
       return { ...state, loading: false, error: action.payload };
 
     default:

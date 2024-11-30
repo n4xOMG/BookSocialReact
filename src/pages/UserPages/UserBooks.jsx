@@ -98,7 +98,7 @@ const UserBooks = () => {
     return tags.filter((tag) => tagIds.includes(tag.id));
   };
 
-  const isManga = getTagsByIds(book?.tags || []).some((tag) => tag.name.toLowerCase() === "manga");
+  const isManga = getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "manga");
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
       <Sidebar />
@@ -182,8 +182,12 @@ const UserBooks = () => {
             <EditBookDialog open={true} handleClose={handleCloseModal} currentBook={openModal.data} categories={categories} tags={tags} />
           )}
           {openModal.type === "deleteBook" && <DeleteBookModal open={true} onClose={handleCloseModal} deleteBook={openModal.data} />}
-          {openModal.type === "addNovelChapter" && <AddChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />}
-          {openModal.type === "addMangaChapter" && <AddMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />}
+          {!isManga && openModal.type === "addNovelChapter" && (
+            <AddChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
+          )}
+          {isManga && openModal.type === "addMangaChapter" && (
+            <AddMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
+          )}
           {!isManga && openModal.type === "editChapter" && (
             <EditChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />
           )}

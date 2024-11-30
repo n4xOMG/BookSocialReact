@@ -56,7 +56,6 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
         });
       }
       try {
-        console.log("Chapter content: ", chapterDetails.content);
         const html = chapterDetails.content;
         const document = new DOMParser().parseFromString(html, "text/html");
         setContent(deserializeContent(document.body));

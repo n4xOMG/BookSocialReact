@@ -17,11 +17,13 @@ import {
   getAvgBookRating,
   getBookByIdAction,
   getBookRatingByUserAction,
+  getRelatedBooksAction,
   ratingBookAction,
 } from "../../redux/book/book.action";
 import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
 import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
 import { clearChapters } from "../../redux/chapter/chapter.action";
+import RelatedBooks from "../../components/BookDetailPageComponents/RelatedBooks";
 
 export const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ export const BookDetailPage = () => {
   const dispatch = useDispatch();
   const {
     book,
+    relatedBooks,
     rating,
     progresses = [],
     chapterCounts,
@@ -36,6 +39,7 @@ export const BookDetailPage = () => {
     tags,
   } = useSelector((store) => ({
     book: store.book.book,
+    relatedBooks: store.book.relatedBooks,
     rating: store.book.rating,
     progresses: store.book.progresses,
     chapterCounts: store.book.chapterCounts,
@@ -57,6 +61,9 @@ export const BookDetailPage = () => {
     if (user && !isTokenExpired(jwt)) {
       await dispatch(getAllReadingProgressesByBook(bookId));
       await dispatch(getBookRatingByUserAction(bookId));
+    }
+    if (book) {
+      dispatch(getRelatedBooksAction(bookId, book.categoryId, book.tagIds));
     }
     setLoading(false);
   }, [user, bookId, jwt, dispatch]);
@@ -231,6 +238,7 @@ export const BookDetailPage = () => {
               onFirstChapterId={setFirstChapterId}
             />
             <BookCommentSection bookId={book.id} user={user} />
+            <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
           </Grid>
         </Grid>
       </Box>

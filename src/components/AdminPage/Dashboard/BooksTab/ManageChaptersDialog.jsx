@@ -20,55 +20,47 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllChaptersByBookIdAction } from "../../../../redux/chapter/chapter.action";
+import { getAllChaptersByBookIdAction, manageChapterByBookId } from "../../../../redux/chapter/chapter.action";
 import AddChapterModal from "./ChapterModal/AddNovelChapterModal";
 import DeleteChapterModal from "./ChapterModal/DeleteChapterModal";
 import EditChapterModal from "./ChapterModal/EditChapterModal";
 import { isTokenExpired } from "../../../../utils/useAuthCheck";
+import EditMangaChapterModal from "./ChapterModal/EditMangaChapterModal";
+import AddMangaChapterModal from "./ChapterModal/AddMangaChapterModal";
+import { getTags } from "../../../../redux/tag/tag.action";
 
 const ManageChaptersDialog = ({ open, handleClose, book }) => {
   const dispatch = useDispatch();
-  const { chapters, loading, error } = useSelector((state) => state.chapter);
+  const { chapters, error } = useSelector((state) => state.chapter);
+  const { tags } = useSelector((state) => state.tag);
   const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedChapter, setSelectedChapter] = useState(null);
-
+  const [openModal, setOpenModal] = useState({ type: null, data: null });
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
+    setLoading(true);
     if (open && book) {
-      dispatch(getAllChaptersByBookIdAction(jwt, book.id));
+      dispatch(manageChapterByBookId(book.id));
     }
+    if (tags.length === 0) {
+      dispatch(getTags());
+    }
+    setLoading(false);
   }, [open, book, dispatch]);
 
-  const handleAddChapter = () => {
-    setAddModalOpen(true);
+  const handleOpenModal = (type, data = null) => {
+    setLoading(false);
+    setOpenModal({ type, data });
   };
+  const handleCloseModal = () => setOpenModal({ type: null, data: null });
 
-  const handleEditChapter = (chapter) => {
-    setSelectedChapter(chapter);
-    setEditModalOpen(true);
+  const getTagsByIds = (tagIds = []) => {
+    if (!Array.isArray(tagIds)) {
+      console.warn("Expected tagIds to be an array, but got:", tagIds);
+      return [];
+    }
+    return tags.filter((tag) => tagIds.includes(tag.id));
   };
-
-  const handleDeleteChapter = (chapter) => {
-    setSelectedChapter(chapter);
-    setDeleteModalOpen(true);
-  };
-
-  const handleAddModalClose = () => {
-    setAddModalOpen(false);
-  };
-
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setSelectedChapter(null);
-  };
-
-  const handleDeleteModalClose = () => {
-    setDeleteModalOpen(false);
-    setSelectedChapter(null);
-  };
-
+  const isManga = getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "manga");
   return (
     <>
       <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
@@ -105,12 +97,12 @@ const ManageChaptersDialog = ({ open, handleClose, book }) => {
                       <TableCell>{chapter.isLocked ? "Yes" : "No"}</TableCell>
                       <TableCell align="right">
                         <Tooltip title="Edit Chapter">
-                          <IconButton onClick={() => handleEditChapter(chapter)}>
+                          <IconButton onClick={() => handleOpenModal("editChapter", chapter)}>
                             <Edit />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Delete Chapter">
-                          <IconButton color="error" onClick={() => handleDeleteChapter(chapter)}>
+                          <IconButton color="error" onClick={() => handleOpenModal("deleteChapter", chapter)}>
                             <Delete />
                           </IconButton>
                         </Tooltip>
@@ -123,9 +115,19 @@ const ManageChaptersDialog = ({ open, handleClose, book }) => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleAddChapter} variant="contained" color="primary" startIcon={<Add />}>
-            Add Chapter
-          </Button>
+          {book ? (
+            isManga ? (
+              <Button size="small" onClick={() => handleOpenModal("addMangaChapter")}>
+                Add Manga Chapter
+              </Button>
+            ) : (
+              <Button size="small" onClick={() => handleOpenModal("addNovelChapter")}>
+                Add Chapter
+              </Button>
+            )
+          ) : (
+            <div>No book selected</div>
+          )}
           <Button onClick={handleClose} variant="outlined">
             Close
           </Button>
@@ -133,16 +135,20 @@ const ManageChaptersDialog = ({ open, handleClose, book }) => {
       </Dialog>
 
       {/* Add Chapter Modal */}
-      {addModalOpen && <AddChapterModal open={addModalOpen} onClose={handleAddModalClose} bookId={book.id} />}
+      {openModal.type === "addNovelChapter" && <AddChapterModal open={true} onClose={handleCloseModal} bookId={book.id} />}
+      {openModal.type === "addMangaChapter" && <AddMangaChapterModal open={true} onClose={handleCloseModal} bookId={book.id} />}
 
       {/* Edit Chapter Modal */}
-      {editModalOpen && selectedChapter && (
-        <EditChapterModal open={editModalOpen} onClose={handleEditModalClose} bookId={book.id} chapterDetails={selectedChapter} />
+      {!isManga && openModal.type === "editChapter" && (
+        <EditChapterModal open={true} onClose={handleCloseModal} bookId={book.id} chapterDetails={openModal.data} />
+      )}
+      {isManga && openModal.type === "editChapter" && (
+        <EditMangaChapterModal open={true} onClose={handleCloseModal} bookId={book.id} chapterDetails={openModal.data} />
       )}
 
       {/* Delete Chapter Modal */}
-      {deleteModalOpen && selectedChapter && (
-        <DeleteChapterModal open={deleteModalOpen} onClose={handleDeleteModalClose} bookId={book.id} deleteChapter={selectedChapter} />
+      {openModal.type === "deleteChapter" && (
+        <DeleteChapterModal open={true} onClose={handleCloseModal} bookId={book.id} deleteChapter={openModal.data} />
       )}
     </>
   );

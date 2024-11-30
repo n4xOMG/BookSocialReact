@@ -41,6 +41,9 @@ import {
   GET_READING_PROGRESSES_BY_BOOK_FAILED,
   GET_READING_PROGRESSES_BY_BOOK_REQUEST,
   GET_READING_PROGRESSES_BY_BOOK_SUCCESS,
+  GET_RELATED_BOOKS_FAILED,
+  GET_RELATED_BOOKS_REQUEST,
+  GET_RELATED_BOOKS_SUCCESS,
   GET_TRENDING_BOOKS_FAILED,
   GET_TRENDING_BOOKS_REQUEST,
   GET_TRENDING_BOOKS_SUCCESS,
@@ -270,5 +273,18 @@ export const setEditorChoice = (bookId, bookData) => async (dispatch) => {
   } catch (error) {
     console.log("Api error when trying to edit book: ", error.message);
     dispatch({ type: SET_EDIT_CHOICE_FAILED, payload: error.message });
+  }
+};
+export const getRelatedBooksAction = (bookId, categoryId, tagIds) => async (dispatch) => {
+  dispatch({ type: GET_RELATED_BOOKS_REQUEST });
+  try {
+    const params = new URLSearchParams();
+    if (categoryId) params.append("categoryId", categoryId);
+    if (tagIds && tagIds.length > 0) tagIds.forEach((id) => params.append("tagIds", id));
+    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/related`, { params });
+    dispatch({ type: GET_RELATED_BOOKS_SUCCESS, payload: data });
+  } catch (error) {
+    console.log("Error fetching related books:", error.message);
+    dispatch({ type: GET_RELATED_BOOKS_FAILED, payload: error.message });
   }
 };

@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import AccountInfo from "../../components/ProfilePage/AccountInfo";
 import PersonalInfo from "../../components/ProfilePage/PersonalInfo";
 import { getCurrentUserByJwt } from "../../redux/auth/auth.action";
+import UserPreferences from "./UserPreferences";
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -44,6 +45,7 @@ const ProfilePage = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 5 }}>
+      <UserPreferences />
       <Card>
         <CardContent>
           <Typography variant="h4" gutterBottom>

@@ -12,6 +12,9 @@ import {
   GET_USER_BY_ID_FAILED,
   GET_USER_BY_ID_REQUEST,
   GET_USER_BY_ID_SUCCESS,
+  GET_USER_PREFERENCES_FAILURE,
+  GET_USER_PREFERENCES_REQUEST,
+  GET_USER_PREFERENCES_SUCCESS,
   SEARCH_USER_REQUEST,
   SEARCH_USER_SUCCESS,
   SUSPEND_USER_FAILED,
@@ -40,6 +43,8 @@ const initialState = {
   searchUsers: [],
   loading: false,
   readingProgresses: [],
+  preferredCategories: [],
+  preferredTags: [],
 };
 
 export const userReducer = (state = initialState, action) => {
@@ -54,6 +59,7 @@ export const userReducer = (state = initialState, action) => {
     case UPDATE_USER_REQUEST:
     case DELETE_CHAPTER_REQUEST:
     case SEARCH_USER_REQUEST:
+    case GET_USER_PREFERENCES_REQUEST:
       return { ...state, loading: true, error: null };
     case GET_ALL_USERS_SUCCESS:
       return { ...state, loading: false, error: null, users: action.payload };
@@ -72,6 +78,13 @@ export const userReducer = (state = initialState, action) => {
         loading: false,
         error: null,
         users: state.users.map((user) => (user.id === action.payload.id ? action.payload : user)),
+      };
+    case GET_USER_PREFERENCES_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        preferredCategories: action.payload.preferredCategories,
+        preferredTags: action.payload.preferredTags,
       };
     case SEARCH_USER_SUCCESS:
       return { ...state, loading: false, error: null, searchUsers: action.payload };
@@ -102,6 +115,7 @@ export const userReducer = (state = initialState, action) => {
     case UPDATE_USER_FAILED:
     case DELETE_CHAPTER_FAILED:
     case UPDATE_USER_ROLE_FAILED:
+    case GET_USER_PREFERENCES_FAILURE:
       return { ...state, loading: true, error: action.payload };
     default:
       return state;

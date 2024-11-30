@@ -17,6 +17,9 @@ import {
   GET_USER_BY_ID_FAILED,
   GET_USER_BY_ID_REQUEST,
   GET_USER_BY_ID_SUCCESS,
+  GET_USER_PREFERENCES_FAILURE,
+  GET_USER_PREFERENCES_REQUEST,
+  GET_USER_PREFERENCES_SUCCESS,
   SEARCH_USER_FAILED,
   SEARCH_USER_REQUEST,
   SEARCH_USER_SUCCESS,
@@ -208,5 +211,14 @@ export const unfollowAuthorAction = (authorId) => async (dispatch) => {
   } catch (error) {
     console.error("Error unfollowing author:", error);
     // Handle error
+  }
+};
+export const getUserPreferences = () => async (dispatch) => {
+  dispatch({ type: GET_USER_PREFERENCES_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/user/preferences`);
+    dispatch({ type: GET_USER_PREFERENCES_SUCCESS, payload: data });
+  } catch (error) {
+    dispatch({ type: GET_USER_PREFERENCES_FAILURE, payload: error.message });
   }
 };

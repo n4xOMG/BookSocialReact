@@ -1,33 +1,17 @@
-import { FilterList as FilterListIcon, Search as SearchIcon } from "@mui/icons-material";
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardMedia,
-  Chip,
-  CircularProgress,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  OutlinedInput,
-  Select,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Card, CardContent, CardMedia, Chip, CircularProgress, Grid, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/HomePage/Header";
+import Sidebar from "../../components/HomePage/Sidebar";
 import { searchBookAction } from "../../redux/book/book.action";
 import { getCategories } from "../../redux/category/category.action";
 import { getTags } from "../../redux/tag/tag.action";
-import Sidebar from "../../components/HomePage/Sidebar";
 
 const BookSearchResults = () => {
   const location = useLocation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const { categories } = useSelector((state) => state.category);
   const { tags } = useSelector((state) => state.tag);
@@ -72,19 +56,6 @@ const BookSearchResults = () => {
     fetchSearchResults();
   }, [location.search]);
 
-  // Handle category change
-  const handleCategoryChange = (event) => {
-    setCategoryId(event.target.value);
-  };
-
-  // Handle tags change
-  const handleTagsChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedTags(typeof value === "string" ? value.split(",") : value);
-  };
-
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
       <Sidebar />
@@ -113,6 +84,7 @@ const BookSearchResults = () => {
           {searchResults?.map((book) => (
             <Grid item key={book.id} xs={12} sm={6} md={4}>
               <Card
+                onClick={() => navigate(`/books/${book.id}`)}
                 sx={{
                   height: "100%",
                   display: "flex",

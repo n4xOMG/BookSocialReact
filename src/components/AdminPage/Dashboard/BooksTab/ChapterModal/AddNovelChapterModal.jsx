@@ -21,8 +21,11 @@ import { InsertImageButton, withImages } from "../ChapterModal/TextEditorUtils/I
 import { MarkButton, toggleMark } from "../ChapterModal/TextEditorUtils/MarkButton";
 import { HOTKEYS } from "../ChapterModal/TextEditorUtils/ToolbarFunctions";
 import { isTokenExpired } from "../../../../../utils/useAuthCheck";
+import { useNavigate } from "react-router-dom";
+
 export default function AddChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const editor = useMemo(() => withImages(withHistory(withReact(createEditor()))), []);
@@ -59,13 +62,13 @@ export default function AddChapterModal({ open, onClose, bookId }) {
 
     console.log("Form Data:", chapterData);
     try {
-      await dispatch(addChapterAction(bookId, chapterData));
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    } finally {
+      const savedChapter = await dispatch(addChapterAction(bookId, chapterData));
       setLoading(false);
-      onClose();
+      // Redirect to collaborative editor page with roomId
+      navigate(`/edit-chapter/${savedChapter.payload.roomId}`);
+    } catch (error) {
+      setLoading(false);
+      console.error(error);
     }
   };
 

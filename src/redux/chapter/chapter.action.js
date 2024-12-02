@@ -86,12 +86,26 @@ export const getChapterById = (jwt, bookId, chapterId) => async (dispatch) => {
     dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
   }
 };
+export const getChapterByRoomId = (roomId) => async (dispatch) => {
+  dispatch({ type: GET_CHAPTER_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/api/chapters/room/${roomId}`);
+    dispatch({ type: GET_CHAPTER_SUCCESS, payload: data });
 
+    console.log("Chapter: ", data);
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error when trying to retreiving chapter: ", error.response?.status);
+
+    dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
+  }
+};
 export const addChapterAction = (bookId, chapterData) => async (dispatch) => {
   dispatch({ type: CHAPTER_UPLOAD_REQUEST });
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters`, chapterData);
+    const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters/draft`, chapterData);
     dispatch({ type: CHAPTER_UPLOAD_SUCCEED, payload: data });
+    return { payload: data };
   } catch (error) {
     console.log("Api error when trying to add new chapter: ", error);
     dispatch({ type: CHAPTER_UPLOAD_FAILED, payload: error.message });
@@ -99,6 +113,7 @@ export const addChapterAction = (bookId, chapterData) => async (dispatch) => {
 };
 export const editChapterAction = (bookId, chapterData) => async (dispatch) => {
   dispatch({ type: EDIT_CHAPTER_REQUEST });
+  console.log("Edit Chapter Data: ", chapterData);
   try {
     const { data } = await api.put(`${API_BASE_URL}/api/books/${bookId}/chapters/${chapterData.id}`, chapterData);
     dispatch({ type: EDIT_CHAPTER_SUCCEED, payload: data });

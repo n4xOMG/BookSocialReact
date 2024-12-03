@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
 import { CircularProgress } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -7,12 +5,12 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { deleteChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
-import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function DeleteChapterModal({ open, onClose, bookId, deleteChapter }) {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const handleDelete = async (event) => {
     event.preventDefault();
     console.log("bookId: ", deleteChapter.id);

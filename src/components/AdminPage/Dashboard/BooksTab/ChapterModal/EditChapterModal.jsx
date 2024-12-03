@@ -1,40 +1,32 @@
-import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
-import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
-import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
-import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
-import FormatBoldIcon from "@mui/icons-material/FormatBold";
-import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
-import { Backdrop, Box, Button, Checkbox, CircularProgress, Dialog, FormControlLabel, TextField, Toolbar } from "@mui/material";
-import DOMPurify from "dompurify";
-import isHotkey from "is-hotkey";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Backdrop,
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  FormControlLabel,
+  TextField,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { createEditor } from "slate";
-import { withHistory } from "slate-history";
-import { Editable, Slate, withReact } from "slate-react";
-import { editChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
-import { deserializeContent, serializeContent } from "../../../../../utils/HtmlSerialize";
-import { BlockButton } from "../ChapterModal/TextEditorUtils/BlockButton";
-import { Element, Leaf } from "../ChapterModal/TextEditorUtils/Element";
-import { InsertImageButton, withImages } from "../ChapterModal/TextEditorUtils/InsertImageHandler";
-import { MarkButton, toggleMark } from "../ChapterModal/TextEditorUtils/MarkButton";
-import { HOTKEYS } from "../ChapterModal/TextEditorUtils/ToolbarFunctions";
-import { isTokenExpired } from "../../../../../utils/useAuthCheck";
+import { useNavigate } from "react-router-dom";
+import { editChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
 
 export default function EditChapterModal({ open, onClose, bookId, chapterDetails }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
-  const editor = useMemo(() => withImages(withHistory(withReact(createEditor()))), []);
   const [chapterData, setChapterData] = useState({
     chapterNum: "",
     title: "",
     price: 0,
     locked: false,
-    content: "",
+    contentPreview: "",
   });
-  const [content, setContent] = useState("");
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setChapterData((prev) => ({
@@ -42,46 +34,51 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+
+  // Utility function to strip HTML tags
+  const stripHtml = (html) => {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
+
+  // Utility function to truncate text to a specified word limit
+  const truncateText = (text, wordLimit) => {
+    const words = text.split(" ");
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(" ") + "...";
+  };
+
   useEffect(() => {
     console.log("EditChapterModal Props:", { open, onClose, bookId, chapterDetails });
     const fetchChapterContent = async () => {
       setLoading(true);
       if (chapterDetails) {
+        const plainText = stripHtml(chapterDetails.content || "");
+        const truncatedText = truncateText(plainText, 50);
         setChapterData({
           id: chapterDetails.id || "",
           chapterNum: chapterDetails.chapterNum || "",
           title: chapterDetails.title || "",
           price: chapterDetails.price || 0,
           locked: chapterDetails.locked || false,
+          contentPreview: truncatedText,
         });
       }
-      try {
-        const html = chapterDetails.content;
-        const document = new DOMParser().parseFromString(html, "text/html");
-        setContent(deserializeContent(document.body));
-        console.log("Chapter content:", content);
-      } catch (error) {
-        console.error("Error fetching chapter content:", error);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
     };
 
     if (chapterDetails.id) {
       fetchChapterContent();
     }
-  }, [dispatch, chapterDetails.content, chapterDetails.id]);
+  }, [dispatch, chapterDetails.id, chapterDetails.content]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    const serializedContent = serializeContent(content);
-    chapterData.id = chapterDetails.id;
-    chapterData.content = DOMPurify.sanitize(serializedContent);
     console.log("Form Data:", chapterData);
     try {
       await dispatch(editChapterAction(bookId, chapterData));
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -90,18 +87,23 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
     }
   };
 
-  const renderElement = useCallback((props) => <Element {...props} />, []);
-  const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
+  const handleNavigateToWriting = () => {
+    dispatch(getChapterByRoomId(chapterDetails.roomId)).then(() => {
+      navigate(`/edit-chapter/${chapterDetails.roomId}`);
+    });
+  };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <Box component="form" onSubmit={handleSubmit} noValidate className="rounded-lg border-stone-950 px-3">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle sx={{ fontWeight: "bold" }}>Edit Chapter</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2, p: 2 }}>
         <TextField
           margin="normal"
           required
           fullWidth
+          variant="outlined"
           id="chapterNum"
-          label="Chapter number"
+          label="Chapter Number"
           name="chapterNum"
           onChange={handleChange}
           value={chapterData.chapterNum}
@@ -110,11 +112,11 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
           margin="normal"
           value={chapterData.title}
           required
+          variant="outlined"
           fullWidth
           id="title"
-          label="Chapter title"
+          label="Chapter Title"
           name="title"
-          defaultValue={chapterData.title}
           onChange={handleChange}
         />
         <TextField
@@ -122,7 +124,7 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
           label="Price"
           name="price"
           type="number"
-          min={0}
+          InputProps={{ inputProps: { min: 0 } }}
           value={chapterData.price}
           onChange={handleChange}
           fullWidth
@@ -132,50 +134,37 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
           control={<Checkbox checked={chapterData.locked} onChange={handleChange} name="locked" color="primary" />}
           label="Is Locked"
         />
-        <input type="hidden" name="content" value={JSON.stringify(content)} />
-        {content && (
-          <Slate
-            editor={editor}
-            value={content}
-            initialValue={content}
-            onChange={(value) => {
-              setContent(value);
-              const isAstChange = editor.operations.some((op) => "set_selection" !== op.type);
-              if (isAstChange) {
-                const content = JSON.stringify(value);
-                localStorage.setItem("content", content);
-              }
-            }}
-          >
-            <Toolbar>
-              <MarkButton format={"bold"} icon={<FormatBoldIcon />} />
-              <MarkButton format={"italic"} icon={<FormatItalicIcon />} />
-              <MarkButton format={"underline"} icon={<FormatUnderlinedIcon />} />
-              <BlockButton format={"left"} icon={<FormatAlignLeftIcon />} />
-              <BlockButton format={"center"} icon={<FormatAlignCenterIcon />} />
-              <BlockButton format={"right"} icon={<FormatAlignRightIcon />} />
-              <BlockButton format={"justify"} icon={<FormatAlignJustifyIcon />} />
-              <InsertImageButton />
-            </Toolbar>
-            <Editable
-              renderElement={renderElement}
-              renderLeaf={renderLeaf}
-              placeholder="Enter some text..."
-              onKeyDown={(event) => {
-                for (const hotkey in HOTKEYS) {
-                  if (isHotkey(hotkey, event)) {
-                    event.preventDefault();
-                    const mark = HOTKEYS[hotkey];
-                    toggleMark(editor, mark);
-                  }
-                }
-              }}
-            />
-          </Slate>
-        )}
-        <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-          Upload
-        </Button>
+        <TextField
+          margin="normal"
+          label="Content Preview"
+          name="contentPreview"
+          multiline
+          rows={4}
+          value={chapterData.contentPreview}
+          InputProps={{
+            readOnly: true,
+          }}
+          fullWidth
+          variant="outlined"
+          sx={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "pre-wrap",
+          }}
+        />
+        <DialogActions sx={{ px: 3, pb: 2, display: "flex", justifyContent: "space-between" }}>
+          <Button onClick={onClose} variant="outlined" color="secondary">
+            Cancel
+          </Button>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button type="submit" variant="contained" color="primary">
+              Update Chapter
+            </Button>
+            <Button type="button" variant="contained" color="secondary" onClick={handleNavigateToWriting}>
+              Continue Writing
+            </Button>
+          </Box>
+        </DialogActions>
       </Box>
       <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
         <CircularProgress color="inherit" />

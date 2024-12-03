@@ -18,7 +18,14 @@ export const deserializeContent = (el, markAttributes = {}) => {
     case "STRONG":
       nodeAttributes.bold = true;
       break;
-    // Add more cases as needed
+    case "EM":
+      nodeAttributes.italic = true;
+      break;
+    case "U":
+      nodeAttributes.underline = true;
+      break;
+    default:
+      break;
   }
 
   const children = Array.from(el.childNodes)
@@ -35,9 +42,9 @@ export const deserializeContent = (el, markAttributes = {}) => {
     case "BR":
       return "\n";
     case "BLOCKQUOTE":
-      return jsx("element", { type: "quote" }, children);
+      return jsx("element", { type: "quote", align: getTextAlign(el) }, children);
     case "P":
-      return jsx("element", { type: "paragraph" }, children);
+      return jsx("element", { type: "paragraph", align: getTextAlign(el) }, children);
     case "A":
       return jsx("element", { type: "link", url: el.getAttribute("href") }, children);
     case "IMG":
@@ -47,8 +54,18 @@ export const deserializeContent = (el, markAttributes = {}) => {
         children
       );
     default:
-      return children;
+      return jsx("element", { type: "paragraph", align: getTextAlign(el) }, children);
   }
+};
+const getTextAlign = (el) => {
+  const style = el.getAttribute("style");
+  if (style) {
+    const match = style.match(/text-align:\s*(left|center|right|justify)/i);
+    if (match) {
+      return match[1].toLowerCase();
+    }
+  }
+  return "left"; // Default alignment
 };
 const serialize = (node) => {
   if (Text.isText(node)) {
@@ -66,17 +83,17 @@ const serialize = (node) => {
   }
 
   const children = node.children.map((n) => serialize(n)).join("");
-
+  const alignmentStyle = node.align ? ` style="text-align: ${node.align};"` : "";
   switch (node.type) {
     case "quote":
-      return `<blockquote><p>${children}</p></blockquote>`;
+      return `<blockquote${alignmentStyle}><p>${children}</p></blockquote>`;
     case "paragraph":
-      return `<p>${children}</p>`;
+      return `<p${alignmentStyle}>${children}</p>`;
     case "link":
       return `<a href="${escapeHTML(node.url)}">${children}</a>`;
     case "image":
       return `<img src="${escapeHTML(node.url)}" alt="${escapeHTML(node.alt)}" style="width: 100%; height: 100%; object-fit: contain;" />`;
     default:
-      return children;
+      return `<p${alignmentStyle}>${children}</p>`;
   }
 };

@@ -106,7 +106,7 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
         imageLinks: allImageLinks,
       };
 
-      await dispatch(editChapterAction(bookId, { data: chapterData }));
+      await dispatch(editChapterAction(bookId, chapterData));
       await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -233,7 +233,7 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
           {selectedImage && (
             <ViewImageModal
               open={true}
-              image={{ imageUrl: selectedImage }}
+              image={selectedImage}
               onClose={() => setSelectedImage(null)}
               onNext={handleNextImage}
               onPrev={handlePrevImage}

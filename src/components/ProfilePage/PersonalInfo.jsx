@@ -1,8 +1,7 @@
+import { Alert, Box, Button, Card, CardContent, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import React, { useState } from "react";
-import { Box, TextField, Button, Grid, MenuItem, Typography, Alert, Card, CardContent } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
-
 const genders = [
   { value: "Male", label: "Male" },
   { value: "Female", label: "Female" },
@@ -11,7 +10,8 @@ const genders = [
 ];
 
 const PersonalInfo = ({ user, setUser }) => {
-  const [birthdate, setBirthdate] = useState(user.birthdate || "");
+  const initialBirthdate = user.birthdate ? user.birthdate.split("T")[0] : "";
+  const [birthdate, setBirthdate] = useState(initialBirthdate);
   const [gender, setGender] = useState(user.gender || "");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -25,8 +25,9 @@ const PersonalInfo = ({ user, setUser }) => {
     setMessage(null);
 
     try {
+      const formattedBirthdate = birthdate ? new Date(birthdate).toISOString().slice(0, 19) : null;
       const updatedData = {
-        birthdate: birthdate || null,
+        birthdate: formattedBirthdate,
         gender,
       };
       const updatedUser = await dispatch(updateUserProfile(updatedData));

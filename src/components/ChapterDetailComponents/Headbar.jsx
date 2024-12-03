@@ -1,15 +1,11 @@
 import { ArrowBack } from "@mui/icons-material";
 import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
 import React from "react";
-import { useNavigate } from "react-router-dom";
 
 export default function Headbar({ chapter, onNavigate }) {
-  const navigate = useNavigate();
-  const menuItems = [
-    { name: "Books", href: "/books" },
-    { name: "Gallery", href: "/gallery" },
-  ];
-
+  const handleLikeChapter = () => {
+    console.log("Like chapter");
+  };
   return (
     <AppBar
       position="static"
@@ -28,11 +24,9 @@ export default function Headbar({ chapter, onNavigate }) {
           Ch.{chapter.chapterNum}: {chapter.title}
         </Typography>
         <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2 }}>
-          {menuItems.map((item) => (
-            <Button key={item.name} onClick={() => navigate(item.href)} sx={{ color: "white" }}>
-              {item.name}
-            </Button>
-          ))}
+          <Button onClick={handleLikeChapter} sx={{ color: "white" }}>
+            Like chapter
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>

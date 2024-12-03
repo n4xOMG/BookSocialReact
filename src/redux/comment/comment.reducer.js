@@ -17,6 +17,7 @@ import {
   DELETE_SENSITIVE_WORD_FAILED,
   DELETE_SENSITIVE_WORD_REQUEST,
   DELETE_SENSITIVE_WORD_SUCCESS,
+  EDIT_COMMENT_SUCCESS,
   GET_ALL_BOOK_COMMENT_FAILED,
   GET_ALL_BOOK_COMMENT_REQUEST,
   GET_ALL_BOOK_COMMENT_SUCCESS,
@@ -143,6 +144,14 @@ export const commentReducer = (state = initialState, action) => {
       return { ...state, error: null, likedComment: action.payload };
     case ADD_SENSITIVE_WORD_SUCCESS:
       return { ...state, error: null, newSensitiveWord: action.payload };
+    case EDIT_COMMENT_SUCCESS:
+      return {
+        ...state,
+        error: null,
+        bookComments: state.bookComments.map((comment) => (comment.id === action.payload.id ? action.payload : comment)),
+        chapterComments: state.chapterComments.map((comment) => (comment.id === action.payload.id ? action.payload : comment)),
+        postComments: state.postComments.map((comment) => (comment.id === action.payload.id ? action.payload : comment)),
+      };
     case DELETE_SENSITIVE_WORD_SUCCESS:
     case DELETE_COMMENT_SUCCESS:
       return { ...state, error: null, postComments: state.postComments.filter((comment) => comment.id !== action.payload) };

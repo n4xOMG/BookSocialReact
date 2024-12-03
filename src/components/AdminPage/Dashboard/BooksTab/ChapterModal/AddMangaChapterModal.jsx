@@ -3,15 +3,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Backdrop, Box, Button, CircularProgress, Dialog, Grid, IconButton, TextField } from "@mui/material";
 import DOMPurify from "dompurify";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { addChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
+import { useDispatch } from "react-redux";
+import { addChapterAction, manageChapterByBookId } from "../../../../../redux/chapter/chapter.action";
 import UploadToCloudinary from "../../../../../utils/uploadToCloudinary";
 import ViewImageModal from "../ChapterModal/ViewImageModal";
-import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function AddMangaChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const [selectedImage, setSelectedImage] = useState(null);
   const [chapter, setChapter] = useState({
     chapterNum: "",
@@ -69,8 +67,8 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
         imageLinks: uploadedImageLinks,
       };
 
-      await dispatch(addChapterAction(bookId, { data: chapterData }));
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+      await dispatch(addChapterAction(bookId, chapterData));
+      await dispatch(manageChapterByBookId(bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {

@@ -25,6 +25,9 @@ import {
   DELETE_COMMENT_FAILED,
   DELETE_COMMENT_REQUEST,
   DELETE_COMMENT_SUCCESS,
+  EDIT_COMMENT_FAILED,
+  EDIT_COMMENT_REQUEST,
+  EDIT_COMMENT_SUCCESS,
   GET_ALL_BOOK_COMMENT_FAILED,
   GET_ALL_BOOK_COMMENT_REQUEST,
   GET_ALL_BOOK_COMMENT_SUCCESS,
@@ -218,6 +221,18 @@ export const deleteCommentAction = (commentId) => async (dispatch) => {
   } catch (error) {
     console.log("error", error);
     dispatch({ type: DELETE_COMMENT_FAILED, payload: error });
+  }
+};
+
+export const editCommentAction = (commentId, comment) => async (dispatch) => {
+  console.log("Edit comment with id: ", commentId);
+  dispatch({ type: EDIT_COMMENT_REQUEST });
+  try {
+    const { data } = await api.put(`${API_BASE_URL}/api/comments/${commentId}`, comment);
+    dispatch({ type: EDIT_COMMENT_SUCCESS, payload: data });
+  } catch (error) {
+    console.log("error", error);
+    dispatch({ type: EDIT_COMMENT_FAILED, payload: error });
   }
 };
 

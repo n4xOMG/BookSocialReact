@@ -102,6 +102,7 @@ export const getChapterByRoomId = (roomId) => async (dispatch) => {
 };
 export const addChapterAction = (bookId, chapterData) => async (dispatch) => {
   dispatch({ type: CHAPTER_UPLOAD_REQUEST });
+  console.log("Chapter Data: ", chapterData);
   try {
     const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters/draft`, chapterData);
     dispatch({ type: CHAPTER_UPLOAD_SUCCEED, payload: data });

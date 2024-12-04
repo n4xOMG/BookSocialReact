@@ -1,11 +1,17 @@
 import { ArrowBack, Favorite, FavoriteBorder } from "@mui/icons-material";
 import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import { likeChapterAction, unlikeChapterAction } from "../../redux/chapter/chapter.action";
 import { useDispatch } from "react-redux";
+import ReportIcon from "@mui/icons-material/Report";
+import { createReportAction } from "../../redux/report/report.action";
+import ReportModal from "../BookClubs/ReportModal";
 
 export default function Headbar({ chapter, onNavigate, checkAuth }) {
   const dispatch = useDispatch();
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
   const handleLikeChapter = checkAuth(() => {
     if (chapter?.likedByCurrentUser) {
       dispatch(unlikeChapterAction(chapter.id));
@@ -13,6 +19,38 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
       dispatch(likeChapterAction(chapter.id));
     }
   });
+
+  const handleOpenReportModal = () => {
+    setIsReportModalOpen(true);
+  };
+
+  const handleCloseReportModal = () => {
+    setIsReportModalOpen(false);
+    setReportReason("");
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReason.trim()) {
+      alert("Please enter a reason for reporting.");
+      return;
+    }
+
+    const reportData = {
+      reason: reportReason,
+      chapter: { id: chapter.id }, // Ensure 'id' is lowercase
+    };
+
+    try {
+      console.log("Report data:", reportData);
+      await dispatch(createReportAction(reportData));
+      alert("Report submitted successfully.");
+      handleCloseReportModal();
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+      alert("Failed to submit report.");
+    }
+  };
+
   return (
     <AppBar
       position="static"
@@ -34,8 +72,23 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
           <Button onClick={handleLikeChapter} sx={{ color: "white" }}>
             {chapter?.likedByCurrentUser ? <Favorite /> : <FavoriteBorder />}
           </Button>
+          <Button
+            variant="outlined"
+            startIcon={<ReportIcon />}
+            sx={{ color: "white", borderColor: "white" }}
+            onClick={handleOpenReportModal}
+          >
+            Report
+          </Button>
         </Box>
       </Toolbar>
+      <ReportModal
+        open={isReportModalOpen}
+        onClose={handleCloseReportModal}
+        reportReason={reportReason}
+        setReportReason={setReportReason}
+        handleSubmitReport={handleSubmitReport}
+      />
     </AppBar>
   );
 }

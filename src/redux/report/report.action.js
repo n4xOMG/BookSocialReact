@@ -6,6 +6,9 @@ import {
   DELETE_REPORT_FAILED,
   DELETE_REPORT_REQUEST,
   DELETE_REPORT_SUCCESS,
+  DELETE_REPORTED_OBJECT_FAILED,
+  DELETE_REPORTED_OBJECT_REQUEST,
+  DELETE_REPORTED_OBJECT_SUCCESS,
   GET_ALL_REPORTS_FAILED,
   GET_ALL_REPORTS_REQUEST,
   GET_ALL_REPORTS_SUCCESS,
@@ -57,5 +60,14 @@ export const deleteReportAction = (reportId) => async (dispatch) => {
     dispatch({ type: DELETE_REPORT_SUCCESS, payload: reportId });
   } catch (error) {
     dispatch({ type: DELETE_REPORT_FAILED, payload: error.response?.data || error.message });
+  }
+};
+export const deleteReportedObjectAction = (reportId) => async (dispatch) => {
+  dispatch({ type: DELETE_REPORTED_OBJECT_REQUEST });
+  try {
+    await api.delete(`${API_BASE_URL}/api/reports/${reportId}/delete-object`);
+    dispatch({ type: DELETE_REPORTED_OBJECT_SUCCESS, payload: reportId });
+  } catch (error) {
+    dispatch({ type: DELETE_REPORTED_OBJECT_FAILED, payload: error.response?.data || error.message });
   }
 };

@@ -110,12 +110,11 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
 
     const reportData = {
       reason: reportReason,
-      commentId: selectedCommentId, // This will be either parent comment or reply comment
-      bookId: comment.bookId,
-      chapterId: comment.chapterId,
+      comment: { id: selectedCommentId }, // This will be either parent comment or reply comment
     };
 
     try {
+      console.log("Report data:", reportData);
       await dispatch(createReportAction(reportData));
       alert("Report submitted successfully.");
       handleCloseReportModal();

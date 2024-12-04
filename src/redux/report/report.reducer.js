@@ -12,6 +12,7 @@ import {
   DELETE_REPORT_REQUEST,
   DELETE_REPORT_SUCCESS,
   DELETE_REPORT_FAILED,
+  DELETE_REPORTED_OBJECT_SUCCESS,
 } from "./report.actionType";
 
 const initialState = {
@@ -80,6 +81,7 @@ export const reportReducer = (state = initialState, action) => {
       };
 
     case DELETE_REPORT_SUCCESS:
+    case DELETE_REPORTED_OBJECT_SUCCESS:
       return {
         ...state,
         loading: false,

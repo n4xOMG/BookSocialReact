@@ -119,7 +119,7 @@ const BooksTab = () => {
   };
 
   const filteredBooks = books.filter((book) => {
-    const matchesCategory = filters.category ? book.categoryIds.includes(parseInt(filters.category)) : true;
+    const matchesCategory = filters.category ? book.categoryId === parseInt(filters.category) : true;
     const matchesTag = filters.tag ? book.tagIds.includes(parseInt(filters.tag)) : true;
     const matchesStatus = filters.status ? book.status === filters.status : true;
     return matchesCategory && matchesTag && matchesStatus;

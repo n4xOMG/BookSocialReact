@@ -25,9 +25,16 @@ import {
 } from "@mui/material";
 import { Edit, Delete, Block, CheckCircle } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { banUserAction, getAllUsers, suspendUserAction, updateUserRoleAction } from "../../../redux/user/user.action";
+import {
+  banUserAction,
+  getAllUsers,
+  suspendUserAction,
+  unbanUserAction,
+  unsuspendUserAction,
+  updateUserRoleAction,
+} from "../../../redux/user/user.action";
 import { debounce } from "lodash";
-
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 const UserManagement = () => {
   const { users, loading, error } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -61,6 +68,15 @@ const UserManagement = () => {
       setErrorMessage("Failed to suspend user.");
     }
   };
+  const handleUnsuspend = async (user) => {
+    try {
+      await dispatch(unsuspendUserAction(user.id));
+      setSuccessMessage("User unsuspended successfully.");
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Failed to suspend user.");
+    }
+  };
 
   const handleBan = async (user) => {
     try {
@@ -71,7 +87,15 @@ const UserManagement = () => {
       setErrorMessage("Failed to ban user.");
     }
   };
-
+  const handleUnban = async (user) => {
+    try {
+      await dispatch(unbanUserAction(user.id));
+      setSuccessMessage("User unbanned successfully.");
+    } catch (error) {
+      console.log(error);
+      setErrorMessage("Failed to ban user.");
+    }
+  };
   const handleOpenRoleDialog = (user) => {
     setSelectedUser(user);
     setNewRole(user.role.name); // Assuming role has a 'name' property
@@ -138,17 +162,29 @@ const UserManagement = () => {
               <TableCell>{user.credits}</TableCell>
               <TableCell>{user.role.name}</TableCell>
               <TableCell align="right">
-                {user.status === "active" && (
+                {user.isSuspended ? (
+                  <Tooltip title="Unsuspend User">
+                    <IconButton color="success" onClick={() => handleUnsuspend(user)}>
+                      <Block />
+                    </IconButton>
+                  </Tooltip>
+                ) : (
                   <Tooltip title="Suspend User">
-                    <IconButton color="warning" onClick={() => handleSuspend(user)}>
+                    <IconButton color="error" onClick={() => handleSuspend(user)}>
                       <Block />
                     </IconButton>
                   </Tooltip>
                 )}
-                {user.status !== "banned" && (
+                {user.banned ? (
+                  <Tooltip title="Unban User">
+                    <IconButton color="success" onClick={() => handleUnban(user)}>
+                      <RemoveCircleIcon />
+                    </IconButton>
+                  </Tooltip>
+                ) : (
                   <Tooltip title="Ban User">
                     <IconButton color="error" onClick={() => handleBan(user)}>
-                      <Delete />
+                      <RemoveCircleIcon />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -171,9 +207,7 @@ const UserManagement = () => {
             <InputLabel id="role-select-label">Role</InputLabel>
             <Select labelId="role-select-label" value={newRole} label="Role" onChange={(e) => setNewRole(e.target.value)}>
               <MenuItem value="ADMIN">Admin</MenuItem>
-              <MenuItem value="MODERATOR">Moderator</MenuItem>
               <MenuItem value="USER">User</MenuItem>
-              {/* Add more roles as needed */}
             </Select>
           </FormControl>
         </DialogContent>

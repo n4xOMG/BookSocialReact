@@ -24,9 +24,15 @@ import {
   GET_PROGRESS_FAILED,
   GET_PROGRESS_REQUEST,
   GET_PROGRESS_SUCCESS,
+  LIKE_CHAPTER_FAILED,
+  LIKE_CHAPTER_REQUEST,
+  LIKE_CHAPTER_SUCCESS,
   SAVE_PROGRESS_FAILED,
   SAVE_PROGRESS_REQUEST,
   SAVE_PROGRESS_SUCCESS,
+  UNLIKE_CHAPTER_FAILED,
+  UNLIKE_CHAPTER_REQUEST,
+  UNLIKE_CHAPTER_SUCCESS,
   UNLOCK_CHAPTER_FAILED,
   UNLOCK_CHAPTER_REQUEST,
   UNLOCK_CHAPTER_SUCCESS,
@@ -55,6 +61,8 @@ export const chapterReducer = (state = initialState, action) => {
     case SAVE_PROGRESS_REQUEST:
     case GET_PROGRESS_REQUEST:
     case GET_CHAPTERS_BY_BOOK_REQUEST:
+    case LIKE_CHAPTER_REQUEST:
+    case UNLIKE_CHAPTER_REQUEST:
       return { ...state, loading: true, error: null };
     case UNLOCK_CHAPTER_REQUEST:
       return { ...state, loading: true, unlockError: null, unlockSuccess: false };
@@ -101,6 +109,22 @@ export const chapterReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null, chapters: action.payload };
     case CLEAR_CHAPTERS:
       return { ...state, chapters: [] };
+
+    case LIKE_CHAPTER_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        chapters: state.chapters.map((chapter) => (chapter.id === action.payload.id ? { ...chapter, likedByCurrentUser: true } : chapter)),
+        chapter: state.chapter && state.chapter.id === action.payload.id ? { ...state.chapter, likedByCurrentUser: true } : state.chapter,
+      };
+
+    case UNLIKE_CHAPTER_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        chapters: state.chapters.map((chapter) => (chapter.id === action.payload.id ? { ...chapter, likedByCurrentUser: false } : chapter)),
+        chapter: state.chapter && state.chapter.id === action.payload.id ? { ...state.chapter, likedByCurrentUser: false } : state.chapter,
+      };
     case UNLOCK_CHAPTER_FAILED:
       return { ...state, loading: false, unlockError: action.payload };
     case CHAPTER_UPLOAD_FAILED:
@@ -112,6 +136,8 @@ export const chapterReducer = (state = initialState, action) => {
     case GET_PROGRESS_FAILED:
     case GET_CHAPTERS_BY_BOOK_FAILED:
     case CREATE_PAYMENT_INTENT_FAILED:
+    case LIKE_CHAPTER_FAILED:
+    case UNLIKE_CHAPTER_FAILED:
       return { ...state, loading: false, error: action.payload };
 
     default:

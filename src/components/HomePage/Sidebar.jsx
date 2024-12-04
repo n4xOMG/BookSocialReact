@@ -44,9 +44,9 @@ export const Sidebar = () => {
       }}
     >
       {/* Sidebar Header */}
-      <Box p={2}>
+      <Box sx={{ cursor: "pointer", p: 2 }} onClick={() => navigate("/")}>
         <Typography variant="h6" fontWeight="bold">
-          BookLovers
+          BookSocial
         </Typography>
       </Box>
 

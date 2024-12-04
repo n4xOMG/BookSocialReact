@@ -3,11 +3,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Box, Button, Checkbox, Dialog, FormControlLabel, Grid, IconButton, TextField } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { editChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
+import { editChapterAction, manageChapterByBookId } from "../../../../../redux/chapter/chapter.action";
 import UploadToCloudinary from "../../../../../utils/uploadToCloudinary";
+import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 import LoadingSpinner from "../../../../LoadingSpinner";
 import ViewImageModal from "./ViewImageModal";
-import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function EditMangaChapterModal({ open, onClose, bookId, chapterDetails }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
@@ -107,7 +107,7 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
       };
 
       await dispatch(editChapterAction(bookId, chapterData));
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+      await dispatch(manageChapterByBookId(bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {

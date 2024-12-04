@@ -14,7 +14,7 @@ import CommentDrawer from "../../ChapterDetailComponents/CommentDrawer";
 import LoadingSpinner from "../../LoadingSpinner";
 import MangaChapterDetail from "./MangaChapterDetail";
 import NovelChapterDetail from "./NovelChapterDetail";
-import { isTokenExpired } from "../../../utils/useAuthCheck";
+import { isTokenExpired, useAuthCheck } from "../../../utils/useAuthCheck";
 
 export default function ChapterDetailPage() {
   const dispatch = useDispatch();
@@ -32,7 +32,7 @@ export default function ChapterDetailPage() {
   const [bookId] = useState(paramBookId);
   const [chapterId, setChapterId] = useState(paramChapterId);
   const [loading, setLoading] = useState(true);
-
+  const { checkAuth, AuthDialog } = useAuthCheck();
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [insufficientCreditsDialogOpen, setInsufficientCreditsDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState(null);
@@ -116,7 +116,7 @@ export default function ChapterDetailPage() {
     }
   }, [isLocked, chapter]);
 
-  const handleUnlock = async () => {
+  const handleUnlock = checkAuth(async () => {
     try {
       if (user && !isTokenExpired(jwt)) {
         await dispatch(unlockChapterAction(chapter.id));
@@ -135,7 +135,7 @@ export default function ChapterDetailPage() {
         setErrorMessage(error.message || "Failed to unlock chapter.");
       }
     }
-  };
+  });
 
   const handleCloseUnlockDialog = () => {
     setUnlockDialogOpen(false);
@@ -258,6 +258,7 @@ export default function ChapterDetailPage() {
           )}
         </>
       )}
+      <AuthDialog />
     </>
   );
 }

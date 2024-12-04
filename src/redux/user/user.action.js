@@ -1,4 +1,3 @@
-import axios from "axios";
 import { api, API_BASE_URL } from "../../api/api";
 import {
   BAN_USER_FAILED,
@@ -17,6 +16,12 @@ import {
   GET_USER_BY_ID_FAILED,
   GET_USER_BY_ID_REQUEST,
   GET_USER_BY_ID_SUCCESS,
+  GET_USER_FOLLOWERS_FAILURE,
+  GET_USER_FOLLOWERS_REQUEST,
+  GET_USER_FOLLOWERS_SUCCESS,
+  GET_USER_FOLLOWING_FAILURE,
+  GET_USER_FOLLOWING_REQUEST,
+  GET_USER_FOLLOWING_SUCCESS,
   GET_USER_PREFERENCES_FAILURE,
   GET_USER_PREFERENCES_REQUEST,
   GET_USER_PREFERENCES_SUCCESS,
@@ -57,13 +62,10 @@ export const getAllUsers = (page, size, searchTerm) => async (dispatch) => {
   }
 };
 
-export const getUserById = (jwt, userId) => async (dispatch) => {
+export const getUserById = (userId) => async (dispatch) => {
   dispatch({ type: GET_USER_BY_ID_REQUEST });
   try {
-    const apiClient = jwt ? api : axios;
-    const { data } = await apiClient.get(`${API_BASE_URL}/user/profile/${userId}`);
-
-    console.log("User", data);
+    const { data } = await api.get(`${API_BASE_URL}/user/profile/${userId}`);
     dispatch({ type: GET_USER_BY_ID_SUCCESS, payload: data });
     return { payload: data };
   } catch (error) {
@@ -220,5 +222,27 @@ export const getUserPreferences = () => async (dispatch) => {
     dispatch({ type: GET_USER_PREFERENCES_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: GET_USER_PREFERENCES_FAILURE, payload: error.message });
+  }
+};
+export const getUserFollowers = (userId) => async (dispatch) => {
+  dispatch({ type: GET_USER_FOLLOWERS_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/api/user/${userId}/followers`);
+    dispatch({ type: GET_USER_FOLLOWERS_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error: ", error);
+    dispatch({ type: GET_USER_FOLLOWERS_FAILURE, payload: error.message });
+  }
+};
+export const getUserFollowings = (userId) => async (dispatch) => {
+  dispatch({ type: GET_USER_FOLLOWING_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/api/user/${userId}/following`);
+    dispatch({ type: GET_USER_FOLLOWING_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error: ", error);
+    dispatch({ type: GET_USER_FOLLOWING_FAILURE, payload: error.message });
   }
 };

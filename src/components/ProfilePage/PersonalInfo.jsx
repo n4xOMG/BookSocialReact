@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardContent, Grid, MenuItem, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CardContent, Grid, MenuItem, TextField, Typography, Divider } from "@mui/material";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
@@ -46,6 +46,7 @@ const PersonalInfo = ({ user, setUser }) => {
         <Typography variant="h6" gutterBottom>
           Personal Information
         </Typography>
+        <Divider sx={{ mb: 2 }} />
         <Box component="form" onSubmit={handleUpdate}>
           {message && (
             <Alert severity="success" sx={{ mb: 2 }}>

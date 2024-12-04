@@ -1,11 +1,18 @@
-import { ArrowBack } from "@mui/icons-material";
+import { ArrowBack, Favorite, FavoriteBorder } from "@mui/icons-material";
 import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
 import React from "react";
+import { likeChapterAction, unlikeChapterAction } from "../../redux/chapter/chapter.action";
+import { useDispatch } from "react-redux";
 
-export default function Headbar({ chapter, onNavigate }) {
-  const handleLikeChapter = () => {
-    console.log("Like chapter");
-  };
+export default function Headbar({ chapter, onNavigate, checkAuth }) {
+  const dispatch = useDispatch();
+  const handleLikeChapter = checkAuth(() => {
+    if (chapter?.likedByCurrentUser) {
+      dispatch(unlikeChapterAction(chapter.id));
+    } else {
+      dispatch(likeChapterAction(chapter.id));
+    }
+  });
   return (
     <AppBar
       position="static"
@@ -23,9 +30,9 @@ export default function Headbar({ chapter, onNavigate }) {
         <Typography variant="h6" sx={{ position: "absolute", left: "50%", transform: "translateX(-50%)", color: "white" }}>
           Ch.{chapter.chapterNum}: {chapter.title}
         </Typography>
-        <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2 }}>
+        <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2, alignItems: "center" }}>
           <Button onClick={handleLikeChapter} sx={{ color: "white" }}>
-            Like chapter
+            {chapter?.likedByCurrentUser ? <Favorite /> : <FavoriteBorder />}
           </Button>
         </Box>
       </Toolbar>

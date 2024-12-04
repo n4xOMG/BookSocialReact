@@ -9,6 +9,7 @@ import FloatingMenu from "../../ChapterDetailComponents/FloatingMenu";
 import MangaPageContent from "../../ChapterDetailComponents/MangaChapterDetail/MangaPageContent";
 import Headbar from "../../ChapterDetailComponents/Headbar";
 import MangaPageNavigation from "../../ChapterDetailComponents/MangaChapterDetail/MangaPageNavigation";
+import { useAuthCheck } from "../../../utils/useAuthCheck";
 
 export default function MangaChapterDetail({
   anchorEl,
@@ -35,7 +36,7 @@ export default function MangaChapterDetail({
   const navigate = useNavigate();
   const theme = useTheme();
   const totalPages = Math.max((chapter?.content.match(/<img/g) || []).length, 1);
-
+  const { checkAuth, AuthDialog } = useAuthCheck();
   useEffect(() => {
     setLoading(true);
     if (!initialPageSet && readingProgress && !isNaN(readingProgress.progress) && totalPages > 0) {
@@ -180,7 +181,7 @@ export default function MangaChapterDetail({
                   zIndex: theme.zIndex.drawer + 2,
                 }}
               >
-                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} />
+                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} checkAuth={checkAuth} />
                 <FloatingMenu
                   anchorEl={anchorEl}
                   bookId={bookId}
@@ -206,6 +207,7 @@ export default function MangaChapterDetail({
           )}
         </Box>
       )}
+      <AuthDialog />
     </>
   );
 }

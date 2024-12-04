@@ -34,7 +34,7 @@ import { MarkButton, toggleMark } from "./TextEditorUtils/MarkButton";
 import { HOTKEYS } from "./TextEditorUtils/ToolbarFunctions";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { Cursors } from "./Cursors";
-import { editChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
+import { editChapterAction, getChapterByRoomId, publishChapterAction } from "../../../../../redux/chapter/chapter.action";
 import { deserializeContent, serializeContent } from "../../../../../utils/HtmlSerialize";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DOMPurify from "dompurify";
@@ -151,10 +151,9 @@ export const CollaborativeEditor = () => {
       console.log("Serialized Content:", serializedContent);
       try {
         await dispatch(
-          editChapterAction(chapter.bookId, {
+          publishChapterAction(chapter.bookId, {
             ...chapter,
             content: serializedContent,
-            draft: false,
           })
         );
         setSnackbarMessage("Chapter published successfully!");

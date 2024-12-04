@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, TextField, Button, Grid, Typography, Alert, Card, CardContent, Avatar } from "@mui/material";
+import { Box, TextField, Button, Grid, Typography, Alert, Card, CardContent, Avatar, Divider } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
 import UploadToCloudinary from "../../utils/uploadToCloudinary"; // Adjust the import path as needed
@@ -68,6 +68,7 @@ const AccountInfo = ({ user, setUser }) => {
         <Typography variant="h6" gutterBottom>
           Account Information
         </Typography>
+        <Divider sx={{ mb: 2 }} />
         <Box component="form" onSubmit={handleUpdate}>
           {message && (
             <Alert severity="success" sx={{ mb: 2 }}>

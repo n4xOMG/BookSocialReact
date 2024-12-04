@@ -9,6 +9,7 @@ import FloatingMenu from "../../ChapterDetailComponents/FloatingMenu";
 import Headbar from "../../ChapterDetailComponents/Headbar";
 import LoadingSpinner from "../../LoadingSpinner";
 import { saveChapterProgressAction } from "../../../redux/chapter/chapter.action";
+import { useAuthCheck } from "../../../utils/useAuthCheck";
 export default function NovelChapterDetail({
   anchorEl,
   bookId,
@@ -34,6 +35,7 @@ export default function NovelChapterDetail({
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("themeMode") || "light";
   });
+  const { checkAuth, AuthDialog } = useAuthCheck();
   const saveProgress = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -171,7 +173,7 @@ export default function NovelChapterDetail({
                   zIndex: theme.zIndex.drawer + 2,
                 }}
               >
-                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} />
+                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} checkAuth={checkAuth} />
                 <FloatingMenu
                   anchorEl={anchorEl}
                   bookId={bookId}
@@ -200,6 +202,7 @@ export default function NovelChapterDetail({
           )}
         </Box>
       )}
+      <AuthDialog />
     </>
   );
 }

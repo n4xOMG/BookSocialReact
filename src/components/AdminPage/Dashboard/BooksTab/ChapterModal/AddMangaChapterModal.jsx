@@ -4,7 +4,7 @@ import { Backdrop, Box, Button, CircularProgress, Dialog, Grid, IconButton, Text
 import DOMPurify from "dompurify";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { addChapterAction, manageChapterByBookId } from "../../../../../redux/chapter/chapter.action";
+import { addChapterAction, manageChapterByBookId, publishChapterAction } from "../../../../../redux/chapter/chapter.action";
 import UploadToCloudinary from "../../../../../utils/uploadToCloudinary";
 import ViewImageModal from "../ChapterModal/ViewImageModal";
 export default function AddMangaChapterModal({ open, onClose, bookId }) {
@@ -67,7 +67,7 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
         imageLinks: uploadedImageLinks,
       };
 
-      await dispatch(addChapterAction(bookId, chapterData));
+      await dispatch(publishChapterAction(bookId, chapterData));
       await dispatch(manageChapterByBookId(bookId));
     } catch (error) {
       console.error("Error submitting form:", error);

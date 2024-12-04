@@ -259,7 +259,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
 
           {/* Reply Comments */}
           {comment?.replyComment?.map((reply) => (
-            <Box key={reply?.id} sx={{ ml: 5, mt: 2, borderLeft: "1px solid #ccc", pl: 2, pt: 2 }}>
+            <Box key={reply?.id} sx={{ ml: 5, mt: 2, borderLeft: "1px solid #ccc", pl: 2, pt: 2, textAlign: "left" }}>
               <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
                 <Avatar src={reply?.user.avatarUrl || "/placeholder.svg"} alt="Avatar" />
                 <Box sx={{ flex: 1, ml: 1 }}>

@@ -13,7 +13,7 @@ import {
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { addChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
+import { addChapterAction, addDraftChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
 
 export default function AddChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();
@@ -38,7 +38,7 @@ export default function AddChapterModal({ open, onClose, bookId }) {
 
     console.log("Form Data:", chapterData);
     try {
-      const savedChapter = await dispatch(addChapterAction(bookId, chapterData));
+      const savedChapter = await dispatch(addDraftChapterAction(bookId, chapterData));
       setLoading(false);
       // Redirect to collaborative editor page with roomId
       dispatch(getChapterByRoomId(savedChapter.payload.roomId)).then(() => {

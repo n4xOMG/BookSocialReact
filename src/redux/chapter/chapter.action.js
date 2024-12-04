@@ -25,9 +25,15 @@ import {
   GET_PROGRESS_FAILED,
   GET_PROGRESS_REQUEST,
   GET_PROGRESS_SUCCESS,
+  LIKE_CHAPTER_FAILED,
+  LIKE_CHAPTER_REQUEST,
+  LIKE_CHAPTER_SUCCESS,
   SAVE_PROGRESS_FAILED,
   SAVE_PROGRESS_REQUEST,
   SAVE_PROGRESS_SUCCESS,
+  UNLIKE_CHAPTER_FAILED,
+  UNLIKE_CHAPTER_REQUEST,
+  UNLIKE_CHAPTER_SUCCESS,
   UNLOCK_CHAPTER_FAILED,
   UNLOCK_CHAPTER_REQUEST,
   UNLOCK_CHAPTER_SUCCESS,
@@ -100,11 +106,23 @@ export const getChapterByRoomId = (roomId) => async (dispatch) => {
     dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
   }
 };
-export const addChapterAction = (bookId, chapterData) => async (dispatch) => {
+export const addDraftChapterAction = (bookId, chapterData) => async (dispatch) => {
   dispatch({ type: CHAPTER_UPLOAD_REQUEST });
   console.log("Chapter Data: ", chapterData);
   try {
     const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters/draft`, chapterData);
+    dispatch({ type: CHAPTER_UPLOAD_SUCCEED, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error when trying to add new chapter: ", error);
+    dispatch({ type: CHAPTER_UPLOAD_FAILED, payload: error.message });
+  }
+};
+export const publishChapterAction = (bookId, chapterData) => async (dispatch) => {
+  dispatch({ type: CHAPTER_UPLOAD_REQUEST });
+  console.log("Chapter Data: ", chapterData);
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters`, chapterData);
     dispatch({ type: CHAPTER_UPLOAD_SUCCEED, payload: data });
     return { payload: data };
   } catch (error) {
@@ -188,3 +206,26 @@ export const confirmPayment = (confirmPaymentRequest) => async (dispatch) => {
 export const clearChapters = () => ({
   type: "CLEAR_CHAPTERS",
 });
+export const likeChapterAction = (chapterId) => async (dispatch) => {
+  dispatch({ type: LIKE_CHAPTER_REQUEST });
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/api/chapters/${chapterId}/like`);
+    dispatch({ type: LIKE_CHAPTER_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    dispatch({ type: LIKE_CHAPTER_FAILED, payload: error.message });
+    throw error;
+  }
+};
+
+export const unlikeChapterAction = (chapterId, token) => async (dispatch) => {
+  dispatch({ type: UNLIKE_CHAPTER_REQUEST });
+  try {
+    const { data } = await api.delete(`${API_BASE_URL}/api/chapters/${chapterId}/like`);
+    dispatch({ type: UNLIKE_CHAPTER_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    dispatch({ type: UNLIKE_CHAPTER_FAILED, payload: error.message });
+    throw error;
+  }
+};

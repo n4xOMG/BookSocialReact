@@ -204,13 +204,27 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                           <MenuItem onClick={() => handleEditReply(selectedCommentId, editedContent)}>Edit</MenuItem>
                         ),
                         (user?.id === comment.user.id || user?.role?.name === "ADMIN") && (
-                          <MenuItem onClick={() => handleDeleteComment(selectedCommentId)}>Delete</MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              handleDeleteComment(selectedCommentId);
+                              handleMenuClose();
+                            }}
+                          >
+                            Delete
+                          </MenuItem>
                         ),
                       ].filter(Boolean)
                     : [
                         user?.id === comment.user.id && <MenuItem onClick={handleEdit}>Edit</MenuItem>,
                         (user?.id === comment.user.id || user?.role?.name === "ADMIN") && (
-                          <MenuItem onClick={() => handleDeleteComment(selectedCommentId)}>Delete</MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              handleDeleteComment(selectedCommentId);
+                              handleMenuClose();
+                            }}
+                          >
+                            Delete
+                          </MenuItem>
                         ),
                       ].filter(Boolean)}
                 </Menu>
@@ -322,13 +336,27 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                     ? [
                         user?.id === reply?.user.id && <MenuItem onClick={() => handleEditReply(reply.id, reply.content)}>Edit</MenuItem>,
                         (user?.id === reply?.user.id || user?.role?.name === "ADMIN") && (
-                          <MenuItem onClick={() => handleDeleteComment(reply.id)}>Delete</MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              handleDeleteComment(reply.id);
+                              handleMenuClose();
+                            }}
+                          >
+                            Delete
+                          </MenuItem>
                         ),
                       ].filter(Boolean)
                     : [
                         user?.id === comment?.user.id && <MenuItem onClick={handleEdit}>Edit</MenuItem>,
                         (user?.id === comment?.user.id || user?.role?.name === "ADMIN") && (
-                          <MenuItem onClick={() => handleDeleteComment(comment.id)}>Delete</MenuItem>
+                          <MenuItem
+                            onClick={() => {
+                              handleDeleteComment(comment.id);
+                              handleMenuClose();
+                            }}
+                          >
+                            Delete
+                          </MenuItem>
                         ),
                       ].filter(Boolean)}
                 </Menu>

@@ -1,20 +1,18 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Box, TextField, Button, Typography, Avatar, Snackbar, Alert } from "@mui/material";
+import { Alert, Avatar, Box, Button, Snackbar, TextField, Typography } from "@mui/material";
+import React, { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import CommentItem from "./CommentItem";
 import {
   createPostCommentAction,
   createReplyPostCommentAction,
-  deleteCommentAction,
-  editCommentAction,
-  getAllCommentByPostAction,
-} from "../../redux/comment/comment.action";
-import LoadingSpinner from "../LoadingSpinner";
+  deletepostCommentAction,
+  fetchPostById,
+} from "../../redux/post/post.action";
 import { useAuthCheck } from "../../utils/useAuthCheck";
+import LoadingSpinner from "../LoadingSpinner";
+import CommentItem from "./CommentItem";
 
-const CommentSection = ({ postId }) => {
+const CommentSection = ({ comments, postId }) => {
   const dispatch = useDispatch();
-  const { postComments } = useSelector((state) => state.comment);
   const { user } = useSelector((state) => state.auth);
   const [commentText, setCommentText] = useState("");
   const [newReply, setNewReply] = useState("");
@@ -22,20 +20,6 @@ const CommentSection = ({ postId }) => {
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
   const { checkAuth, AuthDialog } = useAuthCheck();
-  const fetchPostComments = useCallback(async () => {
-    setLoading(true);
-    try {
-      await dispatch(getAllCommentByPostAction(postId));
-    } catch (e) {
-      console.log("Error fetching comments:", e);
-      setOpen(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-  useEffect(() => {
-    fetchPostComments();
-  }, [dispatch, postId, fetchPostComments]);
 
   const handleAddComment = () => {
     if (!user) {
@@ -94,8 +78,9 @@ const CommentSection = ({ postId }) => {
 
   const handleDeleteComment = useCallback(
     checkAuth(async (commentId) => {
-      await dispatch(deleteCommentAction(commentId));
-      fetchPostComments();
+      await dispatch(deletepostCommentAction(commentId));
+      await dispatch(fetchPostById(postId));
+      setOpen(false);
     }),
     [dispatch]
   );
@@ -125,7 +110,7 @@ const CommentSection = ({ postId }) => {
             </Button>
           </Box>
           <Box sx={{ mt: 2 }}>
-            {postComments.map((comment) => (
+            {comments.map((comment) => (
               <CommentItem
                 key={comment.id}
                 comment={comment}

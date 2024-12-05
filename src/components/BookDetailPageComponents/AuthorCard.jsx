@@ -57,13 +57,15 @@ const AuthorCard = ({ author, checkAuth }) => {
         </Typography>
       </Box>
       <Stack direction="column" spacing={1}>
-        <Button variant="outlined" color="primary" onClick={handleMessageClick}>
-          Message
-        </Button>
         {user?.id !== author.id && (
-          <Button variant={bookAuthor?.followedByCurrentUser ? "contained" : "outlined"} color="primary" onClick={handleFollow}>
-            {bookAuthor?.followedByCurrentUser ? "Following" : "Follow"}
-          </Button>
+          <>
+            <Button variant="outlined" color="primary" onClick={handleMessageClick}>
+              Message
+            </Button>
+            <Button variant={bookAuthor?.followedByCurrentUser ? "contained" : "outlined"} color="primary" onClick={handleFollow}>
+              {bookAuthor?.followedByCurrentUser ? "Following" : "Follow"}
+            </Button>
+          </>
         )}
       </Stack>
     </Box>

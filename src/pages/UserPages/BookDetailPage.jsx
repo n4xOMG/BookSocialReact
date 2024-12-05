@@ -1,4 +1,4 @@
-import { FavoriteBorder, MenuBook } from "@mui/icons-material";
+import { FavoriteBorder, MenuBook, Report } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { Box, Button, Grid, IconButton, Rating, Typography } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
@@ -24,11 +24,15 @@ import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
 import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
 import { clearChapters } from "../../redux/chapter/chapter.action";
 import RelatedBooks from "../../components/BookDetailPageComponents/RelatedBooks";
+import { createReportAction } from "../../redux/report/report.action";
+import ReportModal from "../../components/BookClubs/ReportModal";
 
 export const BookDetailPage = () => {
   const navigate = useNavigate();
   const { bookId } = useParams();
   const dispatch = useDispatch();
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
   const {
     book,
     relatedBooks,
@@ -42,7 +46,6 @@ export const BookDetailPage = () => {
     relatedBooks: store.book.relatedBooks,
     rating: store.book.rating,
     progresses: store.book.progresses,
-    chapterCounts: store.book.chapterCounts,
     categories: store.category.categories,
     tags: store.tag.tags,
   }));
@@ -69,21 +72,24 @@ export const BookDetailPage = () => {
   }, [user, bookId, jwt, dispatch]);
 
   const calculateOverallProgress = useCallback(() => {
-    if (!book || !book.chapters) {
+    if (!book || book.chapterCount === 0) {
       setOverallProgress(0);
       return;
     }
-    const selectedLanguageId = user?.preferredLanguageId || book.defaultLanguageId;
-    const filteredChapters = book.chapters.filter((chapter) => chapter.languageId === selectedLanguageId);
-    const filteredProgresses = progresses.filter((progress) => filteredChapters.some((chap) => chap.id === progress.chapterId));
-    if (filteredProgresses.length > 0 && filteredChapters.length > 0) {
-      const totalProgress = filteredProgresses.reduce((acc, progress) => acc + (progress.progress || 0), 0);
-      const averageProgress = Math.floor(totalProgress / filteredChapters.length);
-      setOverallProgress(averageProgress > 100 ? 100 : averageProgress);
-    } else {
-      setOverallProgress(0);
-    }
-  }, [book, progresses, user]);
+
+    const totalChapters = book.chapterCount;
+
+    // Sum the progress from all progresses
+    const sumProgress = progresses.reduce((acc, progress) => {
+      return acc + (progress.progress || 0);
+    }, 0);
+
+    // Calculate average progress
+    const averageProgress = Math.floor(sumProgress / totalChapters);
+
+    // Ensure progress does not exceed 100%
+    setOverallProgress(averageProgress > 100 ? 100 : averageProgress);
+  }, [book, progresses]);
 
   const handleFollowBook = checkAuth(async () => {
     try {
@@ -96,7 +102,35 @@ export const BookDetailPage = () => {
       setLoading(false);
     }
   });
+  const handleOpenReportModal = () => {
+    setIsReportModalOpen(true);
+  };
 
+  const handleCloseReportModal = () => {
+    setIsReportModalOpen(false);
+    setReportReason("");
+  };
+
+  const handleSubmitReport = checkAuth(async () => {
+    if (!reportReason.trim()) {
+      alert("Please enter a reason for reporting.");
+      return;
+    }
+
+    const reportData = {
+      reason: reportReason,
+      book: { id: bookId },
+    };
+
+    try {
+      console.log("Report data:", reportData);
+      await dispatch(createReportAction(reportData));
+      alert("Report submitted successfully.");
+      handleCloseReportModal();
+    } catch (error) {
+      alert("Failed to submit report.");
+    }
+  });
   const handleRating = checkAuth(async (value) => {
     try {
       setLoading(true);
@@ -173,6 +207,21 @@ export const BookDetailPage = () => {
                 <Typography sx={{ ml: 2, color: "gray.600" }}>{rating ? rating.rating : 0}</Typography>
               </Box>
               <IconButton
+                onClick={handleOpenReportModal}
+                sx={{
+                  backgroundColor: "white",
+                  border: "1px solid",
+                  borderColor: "grey.300",
+                  height: 40,
+                  width: 40,
+                  "&:hover": {
+                    backgroundColor: "grey.100",
+                  },
+                }}
+              >
+                <Report />
+              </IconButton>
+              <IconButton
                 onClick={handleFollowBook}
                 sx={{
                   backgroundColor: "white",
@@ -242,6 +291,13 @@ export const BookDetailPage = () => {
           </Grid>
         </Grid>
       </Box>
+      <ReportModal
+        open={isReportModalOpen}
+        onClose={handleCloseReportModal}
+        reportReason={reportReason}
+        setReportReason={setReportReason}
+        handleSubmitReport={handleSubmitReport}
+      />
       <AuthDialog />
     </Box>
   );

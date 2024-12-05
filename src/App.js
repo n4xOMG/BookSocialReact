@@ -23,6 +23,7 @@ import UserBookshelf from "./pages/UserPages/UserBookshelf";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import { getCurrentUserByJwt } from "./redux/auth/auth.action";
 import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
+import PostDetail from "./pages/UserPages/PostDetails";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -69,7 +70,7 @@ function App() {
         <Route path="/upload-book" element={<UserUploadBook />} />
         <Route path="/books/:bookId" element={<BookDetailPage />} />
         <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />
-
+        <Route path="/posts/:postId" element={<PostDetail />} />
         <Route path="/edit-chapter/:roomId" element={<CollaborativeEditorWrapper />} />
       </Routes>
       <AuthDialog />

@@ -67,7 +67,6 @@ const initialState = {
   avgRating: null,
   progresses: [],
   rating: null,
-  chapterCounts: null,
 };
 
 export const bookReducer = (state = initialState, action) => {

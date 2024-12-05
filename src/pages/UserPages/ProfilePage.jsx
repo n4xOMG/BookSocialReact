@@ -14,6 +14,8 @@ import ReadingHistory from "../../components/ProfilePage/ReadingHistory";
 import { getCurrentUserByJwt } from "../../redux/auth/auth.action";
 import UserPreferences from "./UserPreferences";
 import Header from "../../components/HomePage/Header.jsx";
+import PurchaseHistory from "../../components/ProfilePage/PurchaseHistory.jsx";
+import { CreditCard } from "@mui/icons-material";
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -92,6 +94,7 @@ const ProfilePage = () => {
                 aria-controls="profile-tabpanel-4"
               />
               <Tab label="Preferences" icon={<CategoryIcon />} iconPosition="start" id="profile-tab-5" aria-controls="profile-tabpanel-5" />
+              <Tab label="Preferences" icon={<CreditCard />} iconPosition="start" id="profile-tab-6" aria-controls="profile-tabpanel-6" />
             </Tabs>
             {/* Tab Panels */}
             <TabPanel value={tabValue} index={0}>
@@ -111,6 +114,9 @@ const ProfilePage = () => {
             </TabPanel>
             <TabPanel value={tabValue} index={5}>
               <UserPreferences />
+            </TabPanel>
+            <TabPanel value={tabValue} index={6}>
+              <PurchaseHistory />
             </TabPanel>
           </CardContent>
         </Card>

@@ -40,12 +40,13 @@ export default function MangaChapterDetail({
   useEffect(() => {
     setLoading(true);
     if (!initialPageSet && readingProgress && !isNaN(readingProgress.progress) && totalPages > 0) {
-      const initialPage = Math.floor((readingProgress.progress / 100) * totalPages);
-      if (initialPage >= totalPages) {
-        setCurrentPage(totalPages - 1);
-      } else if (initialPage - 1 > 0) {
-        setCurrentPage(initialPage - 1);
-      }
+      // Calculate initialPage using Math.ceil to better align with user progress
+      let initialPage = Math.ceil((readingProgress.progress / 100) * totalPages) - 1;
+
+      // Ensure initialPage is within valid bounds [0, totalPages - 1]
+      initialPage = Math.max(0, Math.min(initialPage, totalPages - 1));
+
+      setCurrentPage(initialPage);
       setInitialPageSet(true);
     }
     setLoading(false);
@@ -126,7 +127,7 @@ export default function MangaChapterDetail({
     [currentPage, viewMode]
   );
   const handleBackToBookPage = () => {
-    debouncedSaveProgress();
+    saveProgress();
     navigate(`/books/${bookId}`);
   };
   useEffect(() => {

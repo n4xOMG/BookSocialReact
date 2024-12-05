@@ -155,7 +155,7 @@ export default function NovelChapterDetail({
                 },
               }}
             >
-              {parse(chapter?.content)}
+              {chapter && chapter.content ? parse(chapter?.content) : "No content"}
             </Box>
           </Box>
           {isFloatingMenuVisible && (

@@ -1,6 +1,6 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CloseIcon from "@mui/icons-material/Close";
-import { Backdrop, Box, Button, CircularProgress, Dialog, Grid, IconButton, TextField } from "@mui/material";
+import { Backdrop, Box, Button, Checkbox, CircularProgress, Dialog, FormControlLabel, Grid, IconButton, TextField } from "@mui/material";
 import DOMPurify from "dompurify";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -25,10 +25,10 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
     imageLinks: [],
   });
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setChapter((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
   const handleImageChange = (e) => {
@@ -105,7 +105,22 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
           onChange={handleInputChange}
         />
         <TextField margin="normal" fullWidth name="title" label="Chapter title" value={chapter.title} onChange={handleInputChange} />
-
+        <TextField
+          margin="normal"
+          label="Price"
+          name="price"
+          type="number"
+          variant="outlined"
+          min={0}
+          value={chapter.price}
+          onChange={handleInputChange}
+          fullWidth
+          required
+        />
+        <FormControlLabel
+          control={<Checkbox checked={chapter.isLocked} onChange={handleInputChange} name="isLocked" color="primary" />}
+          label="Is Locked"
+        />
         <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={6} sm={4} md={3} sx={{ position: "relative", cursor: "pointer" }}>
             <Box

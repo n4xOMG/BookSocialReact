@@ -118,7 +118,7 @@ export const getFeaturedBooks = () => async (dispatch) => {
 export const getTrendingBooks = () => async (dispatch) => {
   dispatch({ type: GET_TRENDING_BOOKS_REQUEST });
   try {
-    const response = await axios.get(`${API_BASE_URL}/books/top-views`);
+    const response = await axios.get(`${API_BASE_URL}/books/top-likes`);
     dispatch({ type: GET_TRENDING_BOOKS_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: GET_TRENDING_BOOKS_FAILED, payload: error.message });

@@ -11,7 +11,6 @@ import ViewImageModal from "./ViewImageModal";
 export default function EditMangaChapterModal({ open, onClose, bookId, chapterDetails }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const [selectedImage, setSelectedImage] = useState(null);
   const { user } = useSelector((store) => store.auth);
   const [chapter, setChapter] = useState({
@@ -160,7 +159,7 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
               required
             />
             <FormControlLabel
-              control={<Checkbox checked={chapter.locked} onChange={handleInputChange} name="isLocked" color="primary" />}
+              control={<Checkbox checked={chapter.locked} onChange={handleInputChange} name="locked" color="primary" />}
               label="Is Locked"
             />
             <Grid container spacing={2} sx={{ mt: 2 }}>

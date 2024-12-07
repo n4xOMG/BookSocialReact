@@ -6,13 +6,14 @@ import { useDispatch, useSelector } from "react-redux";
 import ChatMessage from "../../components/MessagePage/ChatMessage";
 import SearchUser from "../../components/MessagePage/SearchUser";
 import UserChatCard from "../../components/MessagePage/UserChatCard";
-import { createMessage, fetchUserChats } from "../../redux/chat/chat.action";
+import { createMessage, fetchChatMessages, fetchUserChats } from "../../redux/chat/chat.action";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/api";
 import LoadingSpinner from "../../components/LoadingSpinner"; // Import LoadingSpinner
+import { RECEIVE_MESSAGE } from "../../redux/chat/chat.actionType";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
@@ -20,7 +21,7 @@ export default function MessagesPage() {
   const { chats } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
   const [currentChat, setCurrentChat] = useState();
-  const [messages, setMessages] = useState([]);
+  const messages = useSelector((state) => (currentChat ? state.chat.messages[currentChat.id] || [] : []));
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [stompClient, setStompClient] = useState(null);
@@ -97,7 +98,7 @@ export default function MessagesPage() {
   const onMessageReceived = (payload) => {
     console.log("Message received from WebSocket:", payload.body);
     const receivedMessage = JSON.parse(payload.body);
-    setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+    dispatch({ type: "RECEIVE_MESSAGE", payload: receivedMessage });
   };
 
   useEffect(() => {
@@ -109,9 +110,9 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (currentChat) {
-      setMessages(currentChat.messages);
+      dispatch(fetchChatMessages(currentChat.id));
     }
-  }, [currentChat]);
+  }, [currentChat, dispatch]);
 
   useEffect(() => {
     if (messagesEndRef.current) {

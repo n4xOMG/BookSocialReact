@@ -1,17 +1,15 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CloseIcon from "@mui/icons-material/Close";
-import { Backdrop, Box, Button, CircularProgress, Dialog, Grid, IconButton, TextField } from "@mui/material";
+import { Backdrop, Box, Button, Checkbox, CircularProgress, Dialog, FormControlLabel, Grid, IconButton, TextField } from "@mui/material";
 import DOMPurify from "dompurify";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { addChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
+import { useDispatch } from "react-redux";
+import { addChapterAction, manageChapterByBookId, publishChapterAction } from "../../../../../redux/chapter/chapter.action";
 import UploadToCloudinary from "../../../../../utils/uploadToCloudinary";
 import ViewImageModal from "../ChapterModal/ViewImageModal";
-import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function AddMangaChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const [selectedImage, setSelectedImage] = useState(null);
   const [chapter, setChapter] = useState({
     chapterNum: "",
@@ -27,10 +25,10 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
     imageLinks: [],
   });
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setChapter((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
   const handleImageChange = (e) => {
@@ -69,8 +67,8 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
         imageLinks: uploadedImageLinks,
       };
 
-      await dispatch(addChapterAction(bookId, { data: chapterData }));
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+      await dispatch(publishChapterAction(bookId, chapterData));
+      await dispatch(manageChapterByBookId(bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -107,7 +105,22 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
           onChange={handleInputChange}
         />
         <TextField margin="normal" fullWidth name="title" label="Chapter title" value={chapter.title} onChange={handleInputChange} />
-
+        <TextField
+          margin="normal"
+          label="Price"
+          name="price"
+          type="number"
+          variant="outlined"
+          min={0}
+          value={chapter.price}
+          onChange={handleInputChange}
+          fullWidth
+          required
+        />
+        <FormControlLabel
+          control={<Checkbox checked={chapter.isLocked} onChange={handleInputChange} name="isLocked" color="primary" />}
+          label="Is Locked"
+        />
         <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={6} sm={4} md={3} sx={{ position: "relative", cursor: "pointer" }}>
             <Box

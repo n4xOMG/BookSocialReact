@@ -12,6 +12,12 @@ import {
   GET_USER_BY_ID_FAILED,
   GET_USER_BY_ID_REQUEST,
   GET_USER_BY_ID_SUCCESS,
+  GET_USER_FOLLOWERS_FAILURE,
+  GET_USER_FOLLOWERS_REQUEST,
+  GET_USER_FOLLOWERS_SUCCESS,
+  GET_USER_FOLLOWING_FAILURE,
+  GET_USER_FOLLOWING_REQUEST,
+  GET_USER_FOLLOWING_SUCCESS,
   GET_USER_PREFERENCES_FAILURE,
   GET_USER_PREFERENCES_REQUEST,
   GET_USER_PREFERENCES_SUCCESS,
@@ -41,6 +47,8 @@ const initialState = {
   user: null,
   users: [],
   searchUsers: [],
+  userFollowers: [],
+  userFollowings: [],
   loading: false,
   readingProgresses: [],
   preferredCategories: [],
@@ -60,6 +68,8 @@ export const userReducer = (state = initialState, action) => {
     case DELETE_CHAPTER_REQUEST:
     case SEARCH_USER_REQUEST:
     case GET_USER_PREFERENCES_REQUEST:
+    case GET_USER_FOLLOWERS_REQUEST:
+    case GET_USER_FOLLOWING_REQUEST:
       return { ...state, loading: true, error: null };
     case GET_ALL_USERS_SUCCESS:
       return { ...state, loading: false, error: null, users: action.payload };
@@ -67,6 +77,11 @@ export const userReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null, user: action.payload };
     case GET_READING_PROGRESS_BY_USER_SUCCESS:
       return { ...state, loading: false, error: null, readingProgresses: action.payload };
+
+    case GET_USER_FOLLOWERS_SUCCESS:
+      return { ...state, loading: false, error: null, userFollowers: action.payload };
+    case GET_USER_FOLLOWING_SUCCESS:
+      return { ...state, loading: false, error: null, userFollowings: action.payload };
     case UPDATE_USER_SUCCESS:
     case SUSPEND_USER_SUCCESS:
     case UNSUSPEND_USER_SUCCESS:
@@ -116,6 +131,8 @@ export const userReducer = (state = initialState, action) => {
     case DELETE_CHAPTER_FAILED:
     case UPDATE_USER_ROLE_FAILED:
     case GET_USER_PREFERENCES_FAILURE:
+    case GET_USER_FOLLOWERS_FAILURE:
+    case GET_USER_FOLLOWING_FAILURE:
       return { ...state, loading: true, error: action.payload };
     default:
       return state;

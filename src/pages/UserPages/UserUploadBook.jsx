@@ -65,12 +65,19 @@ export default function UserUploadBook() {
           setSnackbarMessage("Please select a category.");
           return false;
         }
+        const hasManga = bookInfo.tags.some((tag) => tag.name.toLowerCase() === "manga");
+        const hasNovel = bookInfo.tags.some((tag) => tag.name.toLowerCase() === "novel");
         const hasMandatoryTag = bookInfo.tags.some((tag) => tag.name.toLowerCase() === "novel" || tag.name.toLowerCase() === "manga");
         if (!hasMandatoryTag) {
           setSnackbarMessage("You must select either 'novel' or 'manga' tag.");
           return false;
         }
+        if (hasManga && hasNovel) {
+          setSnackbarMessage("A book cannot have both 'manga' and 'novel' tags.");
+          return false;
+        }
         break;
+
       default:
         return true;
     }

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
+import { CollaborativeEditorWrapper } from "./components/AdminPage/Dashboard/BooksTab/ChapterModal/CollaborativeEditor";
 import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
@@ -11,17 +12,18 @@ import SignIn from "./pages/Authentication/SignIn";
 import SignUp from "./pages/Authentication/SignUp";
 import BookClubs from "./pages/UserPages/BookClubs";
 import { BookDetailPage } from "./pages/UserPages/BookDetailPage";
+import BookSearchResults from "./pages/UserPages/BookSearchResults";
 import CreditPackages from "./pages/UserPages/CreditPackages";
 import HomePage from "./pages/UserPages/HomePage";
 import MessagesPage from "./pages/UserPages/MessagesPage";
 import OtherUserProfile from "./pages/UserPages/OtherUserProfile";
 import ProfilePage from "./pages/UserPages/ProfilePage";
 import UserBooks from "./pages/UserPages/UserBooks";
+import UserBookshelf from "./pages/UserPages/UserBookshelf";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import { getCurrentUserByJwt } from "./redux/auth/auth.action";
 import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
-import UserBookshelf from "./pages/UserPages/UserBookshelf";
-import BookSearchResults from "./pages/UserPages/BookSearchResults";
+import PostDetail from "./pages/UserPages/PostDetails";
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -68,6 +70,8 @@ function App() {
         <Route path="/upload-book" element={<UserUploadBook />} />
         <Route path="/books/:bookId" element={<BookDetailPage />} />
         <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />
+        <Route path="/posts/:postId" element={<PostDetail />} />
+        <Route path="/edit-chapter/:roomId" element={<CollaborativeEditorWrapper />} />
       </Routes>
       <AuthDialog />
     </div>

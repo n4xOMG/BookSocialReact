@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { sendForgotPasswordMail } from "../../redux/auth/auth.action";
 import { Alert, Box, Button, Card, CardContent, CardHeader, CircularProgress, Snackbar, TextField } from "@mui/material";
 
@@ -8,13 +8,16 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
-
+  const error = useSelector((store) => store.auth.error);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      await dispatch(sendForgotPasswordMail(email));
+      const result = await dispatch(sendForgotPasswordMail(email));
+      if (result && result.error) {
+        setOpen(true);
+      }
     } catch (error) {
       console.error("Error sending reset password link", error);
       alert("Error sending reset password link");
@@ -83,9 +86,15 @@ const ForgotPassword = () => {
         </form>
       </Card>
       <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="success" variant="filled" sx={{ width: "100%" }}>
-          Reset password link has been sent to your mail!
-        </Alert>
+        {error ? (
+          <Alert onClose={handleClose} severity="error" variant="filled" sx={{ width: "100%" }}>
+            {error}
+          </Alert>
+        ) : (
+          <Alert onClose={handleClose} severity="success" variant="filled" sx={{ width: "100%" }}>
+            Reset password link has been sent to your mail!
+          </Alert>
+        )}
       </Snackbar>
     </Box>
   );

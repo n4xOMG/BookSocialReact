@@ -2,7 +2,7 @@ import { Image } from "./ImageRender";
 
 export const Element = (props) => {
   const { attributes, children, element } = props;
-  const style = { textAlign: element.align };
+  const style = { textAlign: element.align || "left" };
   switch (element.type) {
     case "image":
       return (

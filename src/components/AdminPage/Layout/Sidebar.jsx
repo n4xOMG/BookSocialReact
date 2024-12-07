@@ -4,6 +4,7 @@ import {
   MonetizationOn as MonetizationOnIcon,
   People as PeopleIcon,
 } from "@mui/icons-material";
+import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import CategoryIcon from "@mui/icons-material/Category";
 import StyleIcon from "@mui/icons-material/Style";
 import { Divider, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar } from "@mui/material";
@@ -18,6 +19,7 @@ const Sidebar = () => {
     { text: "Overview", icon: <DashboardIcon />, path: "/admin/overview" },
     { text: "Books Management", icon: <BookIcon />, path: "/admin/books" },
     { text: "User Management", icon: <PeopleIcon />, path: "/admin/users" },
+    { text: "Report Management", icon: <ReportGmailerrorredIcon />, path: "/admin/reports" },
     { text: "Credits Management", icon: <MonetizationOnIcon />, path: "/admin/credits" },
     { text: "Categories Management", icon: <CategoryIcon />, path: "/admin/categories" },
     { text: "Tags Management", icon: <StyleIcon />, path: "/admin/tags" },

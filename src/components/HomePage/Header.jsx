@@ -1,5 +1,5 @@
 import { Upload } from "@mui/icons-material";
-import { AppBar, Box, IconButton, Stack, Toolbar } from "@mui/material";
+import { AppBar, Box, IconButton, Stack, Toolbar, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -47,6 +47,11 @@ const Header = () => {
         <AppBar position="sticky" color="default">
           <Toolbar>
             <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
+              <Box sx={{ cursor: "pointer", p: 2 }} onClick={() => navigate("/")}>
+                <Typography variant="h6" fontWeight="bold">
+                  BookSocial
+                </Typography>
+              </Box>
               <SearchBar
                 categories={categories}
                 tags={tags}

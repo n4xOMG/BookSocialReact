@@ -25,10 +25,13 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
       tags: newTags,
     }));
 
-    // Check if either "novel" or "manga" tag is selected
-    const hasMandatoryTag = newTags.some((tag) => tag.name.toLowerCase() === "novel" || tag.name.toLowerCase() === "manga");
-    if (!hasMandatoryTag) {
+    const hasManga = newTags.some((tag) => tag.name.toLowerCase() === "novel");
+    const hasNovel = newTags.some((tag) => tag.name.toLowerCase() === "manga");
+
+    if (!hasManga && !hasNovel) {
       setValidationError("You must select either 'novel' or 'manga' tag.");
+    } else if (hasManga && hasNovel) {
+      setValidationError("A book cannot have both 'manga' and 'novel' tags.");
     } else {
       setValidationError("");
     }
@@ -40,11 +43,13 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
       ...prev,
       tags: newTags,
     }));
+    const hasManga = newTags.some((tag) => tag.name.toLowerCase() === "novel");
+    const hasNovel = newTags.some((tag) => tag.name.toLowerCase() === "manga");
 
-    // Check if either "novel" or "manga" tag is selected
-    const hasMandatoryTag = newTags.some((tag) => tag.name.toLowerCase() === "novel" || tag.name.toLowerCase() === "manga");
-    if (!hasMandatoryTag) {
+    if (!hasManga && !hasNovel) {
       setValidationError("You must select either 'novel' or 'manga' tag.");
+    } else if (hasManga && hasNovel) {
+      setValidationError("A book cannot have both 'manga' and 'novel' tags.");
     } else {
       setValidationError("");
     }

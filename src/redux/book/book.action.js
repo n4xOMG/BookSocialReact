@@ -47,9 +47,6 @@ import {
   GET_TRENDING_BOOKS_FAILED,
   GET_TRENDING_BOOKS_REQUEST,
   GET_TRENDING_BOOKS_SUCCESS,
-  GET_USER_BOOKS_FAILED,
-  GET_USER_BOOKS_REQUEST,
-  GET_USER_BOOKS_SUCCESS,
   RATING_BOOK_FAILED,
   RATING_BOOK_REQUEST,
   RATING_BOOK_SUCCESS,
@@ -121,7 +118,7 @@ export const getFeaturedBooks = () => async (dispatch) => {
 export const getTrendingBooks = () => async (dispatch) => {
   dispatch({ type: GET_TRENDING_BOOKS_REQUEST });
   try {
-    const response = await axios.get(`${API_BASE_URL}/books/top-views`);
+    const response = await axios.get(`${API_BASE_URL}/books/top-likes`);
     dispatch({ type: GET_TRENDING_BOOKS_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: GET_TRENDING_BOOKS_FAILED, payload: error.message });

@@ -11,6 +11,8 @@ import creditPackageReducer from "./creditpackage/creditpackage.reducer";
 import { notificationReducer } from "./notification/notification.reducer";
 import { chatReducer } from "./chat/chat.reducer";
 import { postReducer } from "./post/post.reducer";
+import { reportReducer } from "./report/report.reducer";
+import purchaseReducer from "./purchase/purchase.reducer";
 
 const rootReducers = combineReducers({
   auth: authReducer,
@@ -24,5 +26,7 @@ const rootReducers = combineReducers({
   post: postReducer,
   chat: chatReducer,
   notification: notificationReducer,
+  report: reportReducer,
+  purchase: purchaseReducer,
 });
 export const store = legacy_createStore(rootReducers, applyMiddleware(thunk));

@@ -9,6 +9,7 @@ import FloatingMenu from "../../ChapterDetailComponents/FloatingMenu";
 import MangaPageContent from "../../ChapterDetailComponents/MangaChapterDetail/MangaPageContent";
 import Headbar from "../../ChapterDetailComponents/Headbar";
 import MangaPageNavigation from "../../ChapterDetailComponents/MangaChapterDetail/MangaPageNavigation";
+import { useAuthCheck } from "../../../utils/useAuthCheck";
 
 export default function MangaChapterDetail({
   anchorEl,
@@ -35,16 +36,17 @@ export default function MangaChapterDetail({
   const navigate = useNavigate();
   const theme = useTheme();
   const totalPages = Math.max((chapter?.content.match(/<img/g) || []).length, 1);
-
+  const { checkAuth, AuthDialog } = useAuthCheck();
   useEffect(() => {
     setLoading(true);
     if (!initialPageSet && readingProgress && !isNaN(readingProgress.progress) && totalPages > 0) {
-      const initialPage = Math.floor((readingProgress.progress / 100) * totalPages);
-      if (initialPage >= totalPages) {
-        setCurrentPage(totalPages - 1);
-      } else if (initialPage - 1 > 0) {
-        setCurrentPage(initialPage - 1);
-      }
+      // Calculate initialPage using Math.ceil to better align with user progress
+      let initialPage = Math.ceil((readingProgress.progress / 100) * totalPages) - 1;
+
+      // Ensure initialPage is within valid bounds [0, totalPages - 1]
+      initialPage = Math.max(0, Math.min(initialPage, totalPages - 1));
+
+      setCurrentPage(initialPage);
       setInitialPageSet(true);
     }
     setLoading(false);
@@ -125,7 +127,7 @@ export default function MangaChapterDetail({
     [currentPage, viewMode]
   );
   const handleBackToBookPage = () => {
-    debouncedSaveProgress();
+    saveProgress();
     navigate(`/books/${bookId}`);
   };
   useEffect(() => {
@@ -180,7 +182,7 @@ export default function MangaChapterDetail({
                   zIndex: theme.zIndex.drawer + 2,
                 }}
               >
-                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} />
+                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} checkAuth={checkAuth} />
                 <FloatingMenu
                   anchorEl={anchorEl}
                   bookId={bookId}
@@ -206,6 +208,7 @@ export default function MangaChapterDetail({
           )}
         </Box>
       )}
+      <AuthDialog />
     </>
   );
 }

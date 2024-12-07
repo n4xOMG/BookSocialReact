@@ -99,7 +99,13 @@ export const sendForgotPasswordMail = (email) => async (dispatch) => {
     dispatch({ type: FORGOT_PASSWORD_SUCCEED, payload: data.message });
   } catch (error) {
     console.log("Api error: ", error.message);
-    dispatch({ type: FORGOT_PASSWORD_FAILED, payload: error.response.data });
+    console.log("Api error: ", error.response);
+    if (error.response && error.response.status === 400) {
+      dispatch({ type: FORGOT_PASSWORD_FAILED, payload: error.response.data || "Invalid reset code or email." });
+      return { error: error.response.data || "Invalid reset code or email." };
+    }
+    dispatch({ type: FORGOT_PASSWORD_FAILED, payload: error.response?.data || "Error resetting password." });
+    return { error: error.response?.data || "Error resetting password." };
   }
 };
 
@@ -111,7 +117,13 @@ export const resetPasswordAction = (code, password) => async (dispatch) => {
     dispatch({ type: RESET_PASSWORD_SUCCEED, payload: data.message });
   } catch (error) {
     console.log("Api error: ", error.message);
-    dispatch({ type: RESET_PASSWORD_FAILED, payload: error.response.data });
+    console.log("Api error: ", error.response);
+    if (error.response && error.response.status === 400) {
+      dispatch({ type: RESET_PASSWORD_FAILED, payload: error.response.data || "Invalid reset code or email." });
+      return { error: error.response.data || "Invalid reset code or email." };
+    }
+    dispatch({ type: RESET_PASSWORD_FAILED, payload: error.response?.data || "Error resetting password." });
+    return { error: error.response?.data || "Error resetting password." };
   }
 };
 

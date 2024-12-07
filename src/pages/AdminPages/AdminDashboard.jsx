@@ -10,6 +10,7 @@ import CreditsManagement from "../../components/AdminPage/Dashboard/CreditsManag
 import CategoriesTab from "../../components/AdminPage/Dashboard/CategoriesTab";
 import TagsTab from "../../components/AdminPage/Dashboard/TagsTab";
 import UserManagement from "../../components/AdminPage/Dashboard/UserManagement";
+import ReportsManagement from "../../components/AdminPage/Dashboard/ReportsManagement";
 
 const AdminDashboard = () => {
   return (
@@ -32,6 +33,14 @@ const AdminDashboard = () => {
             element={
               <ProtectedRoute roles={["ADMIN", "MODERATOR"]}>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute roles={["ADMIN", "MODERATOR"]}>
+                <ReportsManagement />
               </ProtectedRoute>
             }
           />

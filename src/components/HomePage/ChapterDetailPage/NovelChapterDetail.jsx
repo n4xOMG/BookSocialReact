@@ -1,6 +1,7 @@
 import { Backdrop, LinearProgress, useMediaQuery, useTheme } from "@mui/material";
 import { Box } from "@mui/system";
 import { debounce } from "lodash";
+import parse from "html-react-parser";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import FloatingMenu from "../../ChapterDetailComponents/FloatingMenu";
 import Headbar from "../../ChapterDetailComponents/Headbar";
 import LoadingSpinner from "../../LoadingSpinner";
 import { saveChapterProgressAction } from "../../../redux/chapter/chapter.action";
+import { useAuthCheck } from "../../../utils/useAuthCheck";
 export default function NovelChapterDetail({
   anchorEl,
   bookId,
@@ -33,6 +35,7 @@ export default function NovelChapterDetail({
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("themeMode") || "light";
   });
+  const { checkAuth, AuthDialog } = useAuthCheck();
   const saveProgress = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -117,9 +120,43 @@ export default function NovelChapterDetail({
             sx={{ flex: 1, p: 3, typography: "body1", lineHeight: 1.75, px: isSmallScreen ? 2 : 10 }}
           >
             <Box
-              sx={{ textAlign: "justify", color: themeMode === "light" ? "#242424" : "white" }}
-              dangerouslySetInnerHTML={{ __html: chapter?.content }}
-            />
+              sx={{
+                color: themeMode === "light" ? "#242424" : "white",
+                "& p": {
+                  marginBottom: "1em",
+                },
+                "& strong": {
+                  fontWeight: "bold",
+                },
+                "& em": {
+                  fontStyle: "italic",
+                },
+                "& u": {
+                  textDecoration: "underline",
+                },
+                "& a": {
+                  color: "#1e90ff",
+                  textDecoration: "none",
+                  "&:hover": {
+                    textDecoration: "underline",
+                  },
+                },
+                "& img": {
+                  maxWidth: "100%",
+                  height: "auto",
+                  display: "block",
+                  margin: "0 auto",
+                },
+                "& blockquote": {
+                  borderLeft: "4px solid #ccc",
+                  paddingLeft: "1em",
+                  color: "#666",
+                  fontStyle: "italic",
+                },
+              }}
+            >
+              {chapter && chapter.content ? parse(chapter?.content) : "No content"}
+            </Box>
           </Box>
           {isFloatingMenuVisible && (
             <>
@@ -136,7 +173,7 @@ export default function NovelChapterDetail({
                   zIndex: theme.zIndex.drawer + 2,
                 }}
               >
-                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} />
+                <Headbar chapter={chapter} onNavigate={handleBackToBookPage} checkAuth={checkAuth} />
                 <FloatingMenu
                   anchorEl={anchorEl}
                   bookId={bookId}
@@ -165,6 +202,7 @@ export default function NovelChapterDetail({
           )}
         </Box>
       )}
+      <AuthDialog />
     </>
   );
 }

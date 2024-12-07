@@ -1,7 +1,9 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { Box, Card, CardContent, Divider, LinearProgress, Typography } from "@mui/material";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 function ReadingHistoryCard({ readingProgresses }) {
+  const navigate = useNavigate();
   return (
     <Card sx={{ mt: 6, mx: 2, textAlign: "left", overscrollBehavior: "contain" }}>
       <CardContent>
@@ -15,7 +17,11 @@ function ReadingHistoryCard({ readingProgresses }) {
           {readingProgresses
             ?.sort((a, b) => new Date(b.lastReadAt) - new Date(a.lastReadAt))
             .map((progress, index) => (
-              <Box key={progress.id} sx={{ py: 2, px: 1 }}>
+              <Box
+                key={progress.id}
+                sx={{ py: 2, px: 1, cursor: "pointer" }}
+                onClick={() => navigate(`/books/${progress.bookId}/chapters/${progress.chapterId}`)}
+              >
                 <Typography variant="body2" fontWeight="bold">
                   {progress.bookTitle}
                 </Typography>

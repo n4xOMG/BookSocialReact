@@ -1,17 +1,22 @@
+import { Avatar, Box, Button, Stack, Typography } from "@mui/material";
 import React, { useEffect } from "react";
-import { Box, Typography, Avatar, Button, Stack } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { followAuthorAction, getUserById, unfollowAuthorAction } from "../../redux/user/user.action";
-import { isTokenExpired } from "../../utils/useAuthCheck";
 import { useNavigate } from "react-router-dom";
 import { createChat } from "../../redux/chat/chat.action";
+import { followAuthorAction, getUserById, unfollowAuthorAction } from "../../redux/user/user.action";
 const AuthorCard = ({ author, checkAuth }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((store) => store.user);
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
+  const { user } = useSelector((store) => store.auth);
+  const bookAuthor = useSelector((store) => store.user.user);
+  useEffect(() => {
+    dispatch(getUserById(author.id));
+  }, [dispatch, author.id]);
   const handleFollow = checkAuth(() => {
-    if (user?.followedByCurrentUser) {
+    if (author.id === user?.id) {
+      alert("Cannot self-follow!");
+    }
+    if (bookAuthor?.followedByCurrentUser) {
       dispatch(unfollowAuthorAction(author.id));
     } else {
       dispatch(followAuthorAction(author.id));
@@ -27,9 +32,7 @@ const AuthorCard = ({ author, checkAuth }) => {
       console.error("Failed to create or retrieve chat:", error);
     }
   };
-  useEffect(() => {
-    dispatch(getUserById(jwt, author.id));
-  }, [dispatch]);
+
   return (
     <Box
       sx={{
@@ -54,12 +57,16 @@ const AuthorCard = ({ author, checkAuth }) => {
         </Typography>
       </Box>
       <Stack direction="column" spacing={1}>
-        <Button variant="outlined" color="primary" onClick={handleMessageClick}>
-          Message
-        </Button>
-        <Button variant={user?.followedByCurrentUser ? "contained" : "outlined"} color="primary" onClick={handleFollow}>
-          {user?.followedByCurrentUser ? "Following" : "Follow"}
-        </Button>
+        {user?.id !== author.id && (
+          <>
+            <Button variant="outlined" color="primary" onClick={handleMessageClick}>
+              Message
+            </Button>
+            <Button variant={bookAuthor?.followedByCurrentUser ? "contained" : "outlined"} color="primary" onClick={handleFollow}>
+              {bookAuthor?.followedByCurrentUser ? "Following" : "Follow"}
+            </Button>
+          </>
+        )}
       </Stack>
     </Box>
   );

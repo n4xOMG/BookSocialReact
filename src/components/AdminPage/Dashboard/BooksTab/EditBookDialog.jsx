@@ -46,15 +46,27 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
       setCoverFile(null);
     }
   }, [currentBook]);
-
+  const getTagsByIds = (tagIds) => {
+    return tags.filter((tag) => tagIds.includes(tag.id));
+  };
   const handleSubmit = async () => {
     // Basic validation
     if (!title || !description || !language || !status || !category) {
       setError("Please fill in all required fields.");
       return;
     }
+    const hasManga = getTagsByIds(selectedTags).some((tag) => tag.name.toLowerCase() === "novel");
+    const hasNovel = getTagsByIds(selectedTags).some((tag) => tag.name.toLowerCase() === "manga");
 
-    setError("");
+    if (!hasManga && !hasNovel) {
+      setError("You must select either 'novel' or 'manga' tag.");
+      return;
+    } else if (hasManga && hasNovel) {
+      setError("A book cannot have both 'manga' and 'novel' tags.");
+      return;
+    } else {
+      setError("");
+    }
 
     let uploadedImageUrl = currentBook.bookCover;
     setLoading(true);
@@ -89,15 +101,25 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
       setLoading(false);
     }
   };
-
-  const handleTagsChange = (event) => {
+  const handleTagChange = (event) => {
     const {
       target: { value },
     } = event;
-    setSelectedTags(
-      // On autofill we get a stringified value.
-      typeof value === "string" ? value.split(",") : value
-    );
+    const newTags = typeof value === "string" ? value.split(",") : value;
+    setSelectedTags(newTags);
+
+    const hasManga = getTagsByIds(newTags).some((tag) => tag.name.toLowerCase() === "manga");
+    const hasNovel = getTagsByIds(newTags).some((tag) => tag.name.toLowerCase() === "novel");
+
+    if (!hasManga && !hasNovel) {
+      setError("You must select either 'novel' or 'manga' tag.");
+      return;
+    } else if (hasManga && hasNovel) {
+      setError("A book cannot have both 'manga' and 'novel' tags.");
+      return;
+    } else {
+      setError("");
+    }
   };
 
   const handleCoverChange = (event) => {
@@ -176,14 +198,14 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
           </FormControl>
 
           {/* Tags Selection (Multiple Select) */}
-          <FormControl fullWidth variant="outlined">
+          <FormControl fullWidth variant="outlined" error={!!error}>
             <InputLabel id="tags-select-label">Tags</InputLabel>
             <Select
               labelId="tags-select-label"
               id="tags-select"
               multiple
               value={selectedTags}
-              onChange={handleTagsChange}
+              onChange={handleTagChange}
               input={<OutlinedInput label="Tags" />}
               renderValue={(selected) => (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>

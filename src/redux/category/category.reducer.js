@@ -56,7 +56,6 @@ export const categoryReducer = (state = initialState, action) => {
       return { ...state, loading: false, booksByCategory: action.payload };
 
     case GET_CATEGORIES_SUCCESS:
-    case GET_CATEGORY_BY_BOOK_SUCCESS:
       return { ...state, loading: false, categories: action.payload };
     case GET_CATEGORY_SUCCESS:
       return { ...state, loading: false, category: action.payload };

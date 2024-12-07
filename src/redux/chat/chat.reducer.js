@@ -18,11 +18,11 @@ import {
 
 const initialState = {
   chats: [],
-  messages: [],
+  messages: {}, // Correctly initialized as an object
   message: null,
   loading: false,
   error: null,
-  subscriptions: {}, // Add subscriptions to state
+  subscriptions: {},
 };
 
 export const chatReducer = (state = initialState, action) => {

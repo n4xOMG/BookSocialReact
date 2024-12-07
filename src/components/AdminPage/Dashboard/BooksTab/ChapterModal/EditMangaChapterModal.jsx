@@ -3,15 +3,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Box, Button, Checkbox, Dialog, FormControlLabel, Grid, IconButton, TextField } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { editChapterAction, getAllChaptersByBookIdAction } from "../../../../../redux/chapter/chapter.action";
+import { editChapterAction, manageChapterByBookId } from "../../../../../redux/chapter/chapter.action";
 import UploadToCloudinary from "../../../../../utils/uploadToCloudinary";
+import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 import LoadingSpinner from "../../../../LoadingSpinner";
 import ViewImageModal from "./ViewImageModal";
-import { isTokenExpired } from "../../../../../utils/useAuthCheck";
 export default function EditMangaChapterModal({ open, onClose, bookId, chapterDetails }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const [selectedImage, setSelectedImage] = useState(null);
   const { user } = useSelector((store) => store.auth);
   const [chapter, setChapter] = useState({
@@ -106,8 +105,8 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
         imageLinks: allImageLinks,
       };
 
-      await dispatch(editChapterAction(bookId, { data: chapterData }));
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+      await dispatch(editChapterAction(bookId, chapterData));
+      await dispatch(manageChapterByBookId(bookId));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -160,7 +159,7 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
               required
             />
             <FormControlLabel
-              control={<Checkbox checked={chapter.locked} onChange={handleInputChange} name="isLocked" color="primary" />}
+              control={<Checkbox checked={chapter.locked} onChange={handleInputChange} name="locked" color="primary" />}
               label="Is Locked"
             />
             <Grid container spacing={2} sx={{ mt: 2 }}>
@@ -233,7 +232,7 @@ export default function EditMangaChapterModal({ open, onClose, bookId, chapterDe
           {selectedImage && (
             <ViewImageModal
               open={true}
-              image={{ imageUrl: selectedImage }}
+              image={selectedImage}
               onClose={() => setSelectedImage(null)}
               onNext={handleNextImage}
               onPrev={handlePrevImage}

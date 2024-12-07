@@ -23,7 +23,7 @@ export default function AddChapterModal({ open, onClose, bookId }) {
     chapterNum: "",
     title: "",
     price: 0,
-    isLocked: false,
+    locked: false,
   });
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -87,7 +87,7 @@ export default function AddChapterModal({ open, onClose, bookId }) {
           required
         />
         <FormControlLabel
-          control={<Checkbox checked={chapterData.isLocked} onChange={handleChange} name="isLocked" color="primary" />}
+          control={<Checkbox checked={chapterData.locked} onChange={handleChange} name="locked" color="primary" />}
           label="Is Locked"
         />
         <DialogActions sx={{ px: 3, pb: 2 }}>

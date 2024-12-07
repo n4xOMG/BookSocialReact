@@ -15,7 +15,7 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
     chapterNum: "",
     title: "",
     price: 0,
-    isLocked: false,
+    locked: false,
     content: "",
   });
 
@@ -118,7 +118,7 @@ export default function AddMangaChapterModal({ open, onClose, bookId }) {
           required
         />
         <FormControlLabel
-          control={<Checkbox checked={chapter.isLocked} onChange={handleInputChange} name="isLocked" color="primary" />}
+          control={<Checkbox checked={chapter.locked} onChange={handleInputChange} name="locked" color="primary" />}
           label="Is Locked"
         />
         <Grid container spacing={2} sx={{ mt: 2 }}>

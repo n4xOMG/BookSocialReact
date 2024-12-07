@@ -13,6 +13,7 @@ export default function SettingsStep({ bookInfo, setBookInfo }) {
           onChange={(e) => setBookInfo((prev) => ({ ...prev, language: e.target.value }))}
           label="Language"
         >
+          <MenuItem value="vn">Vietnamese</MenuItem>
           <MenuItem value="en">English</MenuItem>
           <MenuItem value="es">Spanish</MenuItem>
           <MenuItem value="fr">French</MenuItem>

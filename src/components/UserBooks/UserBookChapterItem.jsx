@@ -8,7 +8,7 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
 
   return (
     <Grid item xs={12} style={style}>
-      <Card sx={{ "&:hover": { bgcolor: "grey.300" }, transition: "background-color 0.3s" }}>
+      <Card sx={{ "&:hover": { bgcolor: "grey.300" }, transition: "background-color 0.3s", textAlign: "left" }}>
         <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Typography variant="subtitle1" sx={{ fontWeight: "medium" }}>
             {isSmallScreen ? `Chapter ${chapter.chapterNum}` : `Chapter ${chapter.chapterNum} ${chapter.title}`}

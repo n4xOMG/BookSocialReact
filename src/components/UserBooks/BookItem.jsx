@@ -11,6 +11,7 @@ export const BookItem = React.memo(({ book, onSelect, onEdit, onDelete, style })
           "&:hover": { bgcolor: "grey.300" },
           transition: "background-color 0.3s",
           cursor: "pointer",
+          textAlign: "left",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", p: 3 }} onClick={() => onSelect(book.id)}>

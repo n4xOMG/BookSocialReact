@@ -254,25 +254,27 @@ export const BookDetailPage = () => {
                 )}
               </IconButton>
             </Box>
-            <Button
-              fullWidth
-              onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
-              sx={{
-                mt: 4,
-                backgroundColor: "black",
-                color: "white",
-                height: 50,
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                "&:hover": {
-                  backgroundColor: "darkgray",
-                },
-              }}
-            >
-              <MenuBook sx={{ mr: 2, width: 20, height: 20 }} /> Start Reading
-            </Button>
+            {firstChapterId && (
+              <Button
+                fullWidth
+                onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
+                sx={{
+                  mt: 4,
+                  backgroundColor: "black",
+                  color: "white",
+                  height: 50,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  "&:hover": {
+                    backgroundColor: "darkgray",
+                  },
+                }}
+              >
+                <MenuBook sx={{ mr: 2, width: 20, height: 20 }} /> Start Reading
+              </Button>
+            )}
           </Grid>
           <Grid item md={8}>
             <BookDetails book={book} categories={categories} tags={tags} />

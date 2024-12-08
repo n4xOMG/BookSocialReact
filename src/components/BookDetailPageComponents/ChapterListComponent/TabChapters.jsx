@@ -16,10 +16,12 @@ import {
   Alert,
 } from "@mui/material";
 import UnlockIcon from "@mui/icons-material/LockOpen";
-import { unlockChapterAction } from "../../../redux/chapter/chapter.action";
+import { getAllChaptersByBookIdAction, unlockChapterAction } from "../../../redux/chapter/chapter.action";
+import { isTokenExpired } from "../../../utils/useAuthCheck";
 
 export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
   const dispatch = useDispatch();
+  const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const { user } = useSelector((state) => state.auth);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState(null);
@@ -41,6 +43,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
 
     try {
       await dispatch(unlockChapterAction(selectedChapter.id));
+      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
       // Optionally, update the UI without reloading
       handleDialogClose();
     } catch (err) {
@@ -55,7 +58,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
         {chapters?.map((chapter) => {
           const progress = Array.isArray(progresses) ? progresses.find((p) => Number(p.chapterId) === Number(chapter.id)) : null;
 
-          const isLocked = chapter?.isLocked && !chapter?.isChapterUnlockedByUser && chapter?.price > 0;
+          const isLocked = chapter?.locked && !chapter?.unlockedByUser && chapter?.price > 0;
 
           return (
             <ListItem

@@ -26,6 +26,7 @@ import { clearChapters } from "../../redux/chapter/chapter.action";
 import RelatedBooks from "../../components/BookDetailPageComponents/RelatedBooks";
 import { createReportAction } from "../../redux/report/report.action";
 import ReportModal from "../../components/BookClubs/ReportModal";
+import { getOptimizedImageUrl } from "../../utils/optimizeImages";
 
 export const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -193,7 +194,7 @@ export const BookDetailPage = () => {
           <Grid item md={3}>
             <Box
               component="img"
-              src={book.bookCover}
+              src={getOptimizedImageUrl(book.bookCover)}
               alt={`Cover of ${book.title}`}
               sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
             />

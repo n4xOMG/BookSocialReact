@@ -8,7 +8,7 @@ import CommentSection from "./CommentSection";
 import ShareModal from "./ShareModal";
 import ViewImageModal from "../AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
 
-const PostItem = ({ post, onEdit, checkAuth }) => {
+const PostItem = ({ post, checkAuth }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [isLiked, setIsLiked] = useState(user ? isFavouredByReqUser(user, post) : false);
@@ -36,11 +36,6 @@ const PostItem = ({ post, onEdit, checkAuth }) => {
   const handleDelete = () => {
     dispatch(deletePost(post.id));
   };
-
-  const handleEdit = () => {
-    onEdit(post);
-  };
-
   const handleShareClick = () => {
     setOpenShareModal(true);
   };
@@ -83,9 +78,6 @@ const PostItem = ({ post, onEdit, checkAuth }) => {
           user &&
           user.id === post.user.id && (
             <>
-              <IconButton onClick={handleEdit}>
-                <Edit />
-              </IconButton>
               <IconButton onClick={handleDelete}>
                 <Delete />
               </IconButton>

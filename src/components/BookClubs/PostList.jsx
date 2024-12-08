@@ -22,7 +22,7 @@ const PostList = ({ posts, loading, error, onEdit, checkAuth }) => {
   return (
     <Box>
       {posts?.map((post) => (
-        <PostItem key={post.id} post={post} onEdit={onEdit} checkAuth={checkAuth} />
+        <PostItem key={post.id} post={post} checkAuth={checkAuth} />
       ))}
     </Box>
   );

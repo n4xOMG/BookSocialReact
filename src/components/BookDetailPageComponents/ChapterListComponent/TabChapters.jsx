@@ -104,7 +104,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
                 ) : (
                   // Display progress or other indicators for unlocked chapters
                   <Typography variant="body2" color="textSecondary">
-                    {progress ? `${progress.progress}%` : "0%"}
+                    {progress ? `${progress.progress.toFixed(2)}%` : "0%"}
                   </Typography>
                 )}
               </div>

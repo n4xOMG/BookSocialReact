@@ -45,7 +45,6 @@ const CreditPackages = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    console.log("Fetching credit packages... with stripe: ", process.env.REACT_APP_STRIPE_PUBLIC_KEY);
     fetchCreditPackages();
   }, [fetchCreditPackages]);
 

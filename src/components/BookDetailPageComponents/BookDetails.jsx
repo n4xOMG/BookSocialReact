@@ -15,7 +15,7 @@ export const BookDetails = ({ book, categories, tags }) => {
   };
 
   return (
-    <>
+    <Box>
       <Typography variant="h3" sx={{ mb: 2, textAlign: "left" }}>
         {book.title}
       </Typography>
@@ -40,13 +40,21 @@ export const BookDetails = ({ book, categories, tags }) => {
       <Typography sx={{ color: "gray.700", mb: 6, textAlign: "left" }}>{book.description}</Typography>
 
       {/* Additional Details */}
-      <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          mb: 4,
+          flexWrap: "wrap",
+          gap: 1,
+        }}
+      >
         <Chip label={`Category: ${getCategoryName(book.categoryId)}`} />
         <Chip label={`Status: ${book.status}`} />
         {getTagNames(book.tagIds).map((tag) => (
           <Chip key={tag} label={tag} color="primary" />
         ))}
       </Stack>
-    </>
+    </Box>
   );
 };

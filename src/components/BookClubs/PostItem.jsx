@@ -93,10 +93,10 @@ const PostItem = ({ post, checkAuth }) => {
           </Typography>
         )}
         {/* Display shared post information */}
-        {post.sharedPostImages && post.sharedPostImages.length > 0 && (
+        {post.sharePostImages && post.sharePostImages.length > 0 && (
           <Box sx={{ mt: 2 }}>
             <Grid container spacing={1}>
-              {post.sharedPostImages.slice(0, 3).map((imageUrl, index) => (
+              {post.sharePostImages.slice(0, 3).map((imageUrl, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Box
                     sx={{
@@ -120,7 +120,7 @@ const PostItem = ({ post, checkAuth }) => {
                       onClick={() => handleImageClick(index)}
                     />
                     {/* Overlay for additional images in shared post */}
-                    {index === 2 && post.sharedPostImages.length > 3 && (
+                    {index === 2 && post.sharePostImages.length > 3 && (
                       <Box
                         sx={{
                           bgcolor: "rgba(0, 0, 0, 0.5)",
@@ -135,7 +135,7 @@ const PostItem = ({ post, checkAuth }) => {
                         }}
                         onClick={() => handleImageClick(index)}
                       >
-                        +{post.sharedPostImages.length - 3} more
+                        +{post.sharePostImages.length - 3} more
                       </Box>
                     )}
                   </Box>
@@ -252,11 +252,11 @@ const PostItem = ({ post, checkAuth }) => {
       )}
 
       {/* View Image Modal for Shared Post Images */}
-      {post.sharedPostImages && post.sharedPostImages.length > 0 && (
+      {post.sharePostImages && post.sharePostImages.length > 0 && (
         <ViewImageModal
           open={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          image={post.sharedPostImages[currentImageIndex] || post.images[currentImageIndex]}
+          image={post.sharePostImages[currentImageIndex] || post.images[currentImageIndex]}
           onNext={handleNextImage}
           onPrev={handlePrevImage}
         />

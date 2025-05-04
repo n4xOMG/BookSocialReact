@@ -16,10 +16,9 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
   const [likes, setLikes] = useState(comment.likedUsers.length || 0);
-  const [isLiked, setIsLiked] = useState(user ? isFavouredByReqUser(user, comment) : false);
   const [replyLikes, setReplyLikes] = useState(
     comment.replyComment.reduce((acc, reply) => {
-      acc[reply?.id] = { likes: reply?.likedUsers.length || 0, isLiked: user ? isFavouredByReqUser(user, reply) : false };
+      acc[reply?.id] = { likes: reply?.likedUsers.length || 0, isLiked: reply.likedByCurrentUser };
       return acc;
     }, {})
   );
@@ -129,8 +128,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
         setLoading(true);
         setTimeout(() => {
           dispatch(likeCommentAction(comment.id));
-          setIsLiked((prev) => !prev);
-          setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
+          setLikes((prev) => (comment.likedByCurrentUser ? prev - 1 : prev + 1));
         }, 300);
       } catch (e) {
         console.log("Error liking comment: ", e);
@@ -138,7 +136,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
         setLoading(false);
       }
     }),
-    [dispatch, checkAuth, comment.id, isLiked]
+    [dispatch, checkAuth, comment.id]
   );
 
   // Handle like for reply comments
@@ -150,7 +148,6 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
         setReplyLikes((prevLikes) => ({
           ...prevLikes,
           [replyId]: {
-            isLiked: !prevLikes[replyId].isLiked,
             likes: prevLikes[replyId].isLiked ? prevLikes[replyId].likes - 1 : prevLikes[replyId].likes + 1,
           },
         }));
@@ -258,7 +255,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                   </Typography>
                   <Box sx={{ display: "flex", alignItems: "center", mt: 1, gap: 2 }}>
                     <IconButton onClick={handleLikeComment} disabled={loading}>
-                      {isLiked ? <ThumbUpIcon color="primary" /> : <ThumbUpOffAltIcon />}
+                      {comment.likedByCurrentUser ? <ThumbUpIcon color="primary" /> : <ThumbUpOffAltIcon />}
                     </IconButton>
                     <Typography variant="body2">{likes}</Typography>
                     <Button size="small" onClick={() => setIsReplying(!isReplying)}>

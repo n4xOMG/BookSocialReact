@@ -36,6 +36,13 @@ const initialState = {
   sensitiveWords: [],
   newSensitiveWord: null,
   likedComment: null,
+  pagination: {
+    page: 0,
+    size: 10,
+    totalPages: 0,
+    totalElements: 0,
+    hasMore: false,
+  },
 };
 
 export const commentReducer = (state = initialState, action) => {
@@ -52,7 +59,14 @@ export const commentReducer = (state = initialState, action) => {
     case GET_ALL_BOOK_COMMENT_SUCCESS:
       return {
         ...state,
-        bookComments: action.payload,
+        bookComments: action.payload.page > 0 ? [...state.bookComments, ...action.payload.comments] : action.payload.comments,
+        pagination: {
+          page: action.payload.page,
+          size: action.payload.size,
+          totalPages: action.payload.totalPages,
+          totalElements: action.payload.totalElements,
+          hasMore: action.payload.page < action.payload.totalPages - 1,
+        },
         error: null,
       };
     case GET_ALL_CHAPTER_COMMENT_SUCCESS:
@@ -68,7 +82,7 @@ export const commentReducer = (state = initialState, action) => {
       return {
         ...state,
         newComment: action.payload,
-        bookComments: [...state.bookComments, action.payload],
+        bookComments: [action.payload, ...state.bookComments],
         error: null,
       };
     case CREATE_CHAPTER_COMMENT_SUCCESS:

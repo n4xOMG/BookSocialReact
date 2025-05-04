@@ -42,7 +42,14 @@ export const CollaborativeEditorWrapper = () => {
   const { roomId } = useParams();
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(getChapterByRoomId(roomId));
+    console.log("Dispatching getChapterByRoomId with roomId:", roomId);
+    dispatch(getChapterByRoomId(roomId))
+      .then((result) => {
+        console.log("getChapterByRoomId result:", result);
+      })
+      .catch((error) => {
+        console.error("getChapterByRoomId error:", error);
+      });
   }, [roomId]);
   if (!roomId) {
     return <div>Room ID is missing!</div>;
@@ -65,7 +72,10 @@ export const CollaborativeEditor = () => {
   const [sharedType, setSharedType] = useState(null);
   const [provider, setProvider] = useState(null);
   const { chapter } = useSelector((store) => store.chapter);
+  console.log("Chapter state:", chapter);
+
   const [content, setContent] = useState("");
+  const [isLoadingChapter, setIsLoadingChapter] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -79,7 +89,8 @@ export const CollaborativeEditor = () => {
 
   useEffect(() => {
     if (chapter) {
-      // Initialize the Yjs document and provider
+      setIsLoadingChapter(false);
+      console.log("Initializing Yjs for chapter:", chapter);
       const yDoc = new Y.Doc();
       const parsedContent = chapter.content ? new DOMParser().parseFromString(chapter.content, "text/html") : null;
       const deserialized = parsedContent ? deserializeContent(parsedContent.body) : [{ text: "" }];
@@ -89,25 +100,52 @@ export const CollaborativeEditor = () => {
       const yProvider = new LiveblocksYjsProvider(room, yDoc);
       const sharedDoc = yDoc.get("slate", Y.XmlText);
 
-      // Sync connection status
-      yProvider.on("sync", setConnected);
+      yProvider.on("sync", (isSynced) => {
+        console.log("Yjs sync status:", isSynced);
+        setConnected(isSynced);
+      });
+      yProvider.on("status", (status) => {
+        console.log("Yjs provider status:", status);
+      });
 
-      // Set up shared type and provider
       setSharedType(sharedDoc);
       setProvider(yProvider);
 
-      // Cleanup function
       return () => {
-        yProvider.off("sync", setConnected); // Remove sync listener
-        yProvider.destroy(); // Destroy provider
-        yDoc.destroy(); // Destroy Yjs document
+        console.log("Cleaning up Yjs provider and document");
+        yProvider.off("sync", setConnected);
+        if (yProvider && typeof yProvider.destroy === "function") {
+          try {
+            yProvider.destroy();
+          } catch (e) {
+            console.warn("Error destroying yProvider:", e);
+          }
+        }
+        if (yDoc && typeof yDoc.destroy === "function") {
+          try {
+            yDoc.destroy();
+          } catch (e) {
+            console.warn("Error destroying yDoc:", e);
+          }
+        }
       };
+    } else {
+      setIsLoadingChapter(true);
     }
   }, [chapter, room]);
 
-  if (!connected || !sharedType || !provider) {
-    return <div>Loading…</div>;
+  if (isLoadingChapter) {
+    return <div>Loading chapter data...</div>;
   }
+
+  if (!chapter) {
+    return <div>Error: Chapter data not loaded</div>;
+  }
+
+  if (!connected || !sharedType || !provider) {
+    return <div>Loading editor...</div>;
+  }
+
   const handleSaveDraft = async () => {
     if (content && provider) {
       const serializedContent = serializeContent(content);
@@ -140,9 +178,11 @@ export const CollaborativeEditor = () => {
   const handlePublish = () => {
     setDialogOpen(true);
   };
+
   const cancelPublish = () => {
     setDialogOpen(false);
   };
+
   const confirmPublish = async () => {
     setDialogOpen(false);
     if (content && provider) {
@@ -170,15 +210,18 @@ export const CollaborativeEditor = () => {
       }
     }
   };
+
   const onNavigateBack = () => {
     navigate(-1);
   };
+
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
       return;
     }
     setSnackbarOpen(false);
   };
+
   return (
     <Box>
       <Headbar onSaveDraft={handleSaveDraft} onPublish={handlePublish} onNavigateBack={onNavigateBack} />
@@ -188,7 +231,6 @@ export const CollaborativeEditor = () => {
         initialContent={content}
         onContentChange={(newContent) => setContent(newContent)}
       />
-      ;
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -199,7 +241,6 @@ export const CollaborativeEditor = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-      {/* Confirmation Dialog for Publish */}
       <Dialog open={dialogOpen} onClose={cancelPublish}>
         <DialogTitle>Confirm Publish</DialogTitle>
         <DialogContent>

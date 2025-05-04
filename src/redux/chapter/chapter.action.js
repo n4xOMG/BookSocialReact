@@ -94,14 +94,16 @@ export const getChapterById = (jwt, bookId, chapterId) => async (dispatch) => {
 };
 export const getChapterByRoomId = (roomId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTER_REQUEST });
+  console.log("Inside getChapterByRoomId Room ID: ", roomId);
   try {
+    console.log("API_BASE_URL: ", API_BASE_URL);
     const { data } = await api.get(`${API_BASE_URL}/api/chapters/room/${roomId}`);
     dispatch({ type: GET_CHAPTER_SUCCESS, payload: data });
 
     console.log("Chapter: ", data);
     return { payload: data };
   } catch (error) {
-    console.log("Api error when trying to retreiving chapter: ", error.response?.status);
+    console.log("Api error when trying to retreiving chapter: ", error);
 
     dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
   }

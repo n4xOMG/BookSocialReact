@@ -184,17 +184,19 @@ export const editCommentAction = (commentId, comment) => async (dispatch) => {
   }
 };
 
-export const getAllCommentByBookAction = (bookId) => async (dispatch) => {
-  dispatch({ type: GET_ALL_BOOK_COMMENT_REQUEST });
-  try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/comments`);
-    dispatch({ type: GET_ALL_BOOK_COMMENT_SUCCESS, payload: data });
-    return { payload: data };
-  } catch (error) {
-    console.log("error trying to get all book comment", error);
-    dispatch({ type: GET_ALL_BOOK_COMMENT_FAILED, payload: error });
-  }
-};
+export const getAllCommentByBookAction =
+  (bookId, page = 0, size = 10) =>
+  async (dispatch) => {
+    dispatch({ type: GET_ALL_BOOK_COMMENT_REQUEST });
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/comments?page=${page}&size=${size}`);
+      dispatch({ type: GET_ALL_BOOK_COMMENT_SUCCESS, payload: data });
+      return { payload: data };
+    } catch (error) {
+      console.log("error trying to get all book comment", error);
+      dispatch({ type: GET_ALL_BOOK_COMMENT_FAILED, payload: error });
+    }
+  };
 
 export const getAllCommentByChapterAction = (bookId, chapterId) => async (dispatch) => {
   dispatch({ type: GET_ALL_CHAPTER_COMMENT_REQUEST });

@@ -1,20 +1,44 @@
-import React, { useEffect } from "react";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 import {
   Box,
-  Typography,
-  CircularProgress,
-  Alert,
+  Button,
+  Chip,
+  Divider,
+  Paper,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
+  Typography,
 } from "@mui/material";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { format } from "date-fns";
 import { fetchPurchaseHistory } from "../../redux/purchase/purchase.action";
+
+// Helper function to safely format IDs of any type
+const formatId = (id) => {
+  if (id === null || id === undefined) return "N/A";
+
+  if (typeof id === "string") {
+    return id.length > 8 ? `#${id.substring(0, 8)}` : `#${id}`;
+  }
+
+  // For number or any other type, convert to string
+  const idStr = String(id);
+  return idStr.length > 8 ? `#${idStr.substring(0, 8)}` : `#${idStr}`;
+};
+
+// Helper function to safely format payment intent IDs
+const formatPaymentId = (id) => {
+  if (!id) return "N/A";
+
+  const idStr = String(id);
+  return idStr.length > 12 ? `${idStr.substring(0, 12)}...` : idStr;
+};
 
 const PurchaseHistory = () => {
   const dispatch = useDispatch();
@@ -24,57 +48,205 @@ const PurchaseHistory = () => {
     dispatch(fetchPurchaseHistory());
   }, [dispatch]);
 
-  return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        Purchase History
-      </Typography>
-
-      {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
-
-      {error && (
-        <Alert severity="error" sx={{ mt: 4 }}>
-          {error}
-        </Alert>
-      )}
-
-      {!loading && !error && purchases.length === 0 && (
-        <Alert severity="info" sx={{ mt: 4 }}>
-          You have no purchase history.
-        </Alert>
-      )}
-
-      {!loading && !error && purchases.length > 0 && (
-        <TableContainer component={Paper} sx={{ mt: 4 }}>
+  if (loading) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Skeleton variant="text" width={200} height={40} sx={{ mb: 2 }} />
+        <Skeleton variant="text" width={300} height={24} sx={{ mb: 3 }} />
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2 }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Purchase ID</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Credit Package</TableCell>
-                <TableCell>Purchase Date</TableCell>
-                <TableCell>Payment Intent ID</TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width={100} />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width={80} />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width={120} />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width={150} />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width={100} />
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {purchases.map((purchase) => (
-                <TableRow key={purchase.id}>
-                  <TableCell>{purchase.id}</TableCell>
-                  <TableCell>${purchase.amount.toFixed(2) / 100}</TableCell>
-                  <TableCell>{purchase.creditPackage.name || "N/A"}</TableCell>
-                  <TableCell>{format(new Date(purchase.purchaseDate), "PPP p")}</TableCell>
-                  <TableCell>{purchase.paymentIntentId || "N/A"}</TableCell>
+              {[1, 2, 3].map((item) => (
+                <TableRow key={item}>
+                  <TableCell>
+                    <Skeleton variant="text" width={100} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" width={80} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" width={120} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" width={150} />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" width={100} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
-      )}
-    </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Paper elevation={0} sx={{ p: 3, borderRadius: 3, textAlign: "center" }}>
+        <Typography color="error" variant="h6">
+          {error}
+        </Typography>
+        <Button variant="outlined" color="primary" sx={{ mt: 2, borderRadius: 2 }} onClick={() => dispatch(fetchPurchaseHistory())}>
+          Try Again
+        </Button>
+      </Paper>
+    );
+  }
+
+  if (!loading && !error && (!purchases || purchases.length === 0)) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          p: 5,
+          borderRadius: 3,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          component="img"
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/BLANK.jpg/138px-BLANK.jpg"
+          alt="No purchases"
+          sx={{
+            width: 200,
+            height: 200,
+            mb: 3,
+            opacity: 0.8,
+          }}
+        />
+        <Typography variant="h6" gutterBottom>
+          No Purchase History
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mx: "auto", mb: 3 }}>
+          You haven't made any purchases yet. Buy credits to unlock premium content and features.
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<CreditCardIcon />}
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: "bold",
+            px: 3,
+            py: 1,
+          }}
+        >
+          Purchase Credits
+        </Button>
+      </Paper>
+    );
+  }
+
+  return (
+    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
+      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <ReceiptIcon color="primary" sx={{ mr: 1 }} />
+          <Typography variant="h5" fontWeight="medium">
+            Purchase History
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          A record of all your credit purchases and transactions
+        </Typography>
+
+        <Divider sx={{ mb: 3 }} />
+
+        <TableContainer sx={{ overflowX: "auto" }}>
+          <Table sx={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow sx={{ "& th": { fontWeight: "bold", bgcolor: (theme) => theme.palette.background.default } }}>
+                <TableCell>ID</TableCell>
+                <TableCell>Amount</TableCell>
+                <TableCell>Package</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Payment ID</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {purchases.map((purchase) => (
+                <TableRow
+                  key={purchase.id}
+                  sx={{
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor: (theme) => theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      {formatId(purchase.id)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="bold" color="primary">
+                      ${((purchase.amount || 0) / 100).toFixed(2)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={purchase.creditPackage?.name || "N/A"}
+                      size="small"
+                      sx={{
+                        borderRadius: 1,
+                        bgcolor: (theme) => theme.palette.primary.light,
+                        color: (theme) => theme.palette.primary.contrastText,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {purchase.purchaseDate
+                        ? new Date(purchase.purchaseDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "N/A"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={purchase.status || "Completed"} size="small" color="success" variant="outlined" sx={{ borderRadius: 1 }} />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
+                      {formatPaymentId(purchase.paymentIntentId)}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </Paper>
   );
 };
 

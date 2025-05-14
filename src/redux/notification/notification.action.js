@@ -4,6 +4,7 @@ import {
   FETCH_NOTIFICATIONS_REQUEST,
   FETCH_NOTIFICATIONS_SUCCESS,
   RECEIVE_NOTIFICATION,
+  MARK_ALL_NOTIFICATIONS_AS_READ,
 } from "./notification.actionType";
 
 // Fetch user notifications
@@ -22,3 +23,13 @@ export const receiveNotification = (notification) => ({
   type: RECEIVE_NOTIFICATION,
   payload: notification,
 });
+
+// Mark all notifications as read
+export const markAllNotificationsAsRead = () => async (dispatch, getState) => {
+  try {
+    await api.put(`${API_BASE_URL}/api/notifications/mark-all-read`);
+    dispatch({ type: MARK_ALL_NOTIFICATIONS_AS_READ });
+  } catch (error) {
+    console.error("Error marking notifications as read:", error);
+  }
+};

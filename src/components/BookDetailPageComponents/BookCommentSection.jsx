@@ -11,8 +11,10 @@ import {
   Snackbar,
   TextField,
   Typography,
+  Avatar,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import CommentIcon from "@mui/icons-material/Comment";
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -188,10 +190,15 @@ const BookCommentSection = ({ bookId, user }) => {
   }, []);
 
   return (
-    <Paper elevation={2} sx={{ p: 3, borderRadius: 2, bgcolor: "#f8f9fa" }}>
-      <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600, color: "#333" }}>
-        Discussion
-      </Typography>
+    <Box>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <CommentIcon sx={{ mr: 1.5 }} />
+        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+          Discussion
+        </Typography>
+      </Box>
+
+      <Divider sx={{ mb: 3 }} />
 
       {/* Comment Input Section */}
       <Box
@@ -200,45 +207,62 @@ const BookCommentSection = ({ bookId, user }) => {
           display: "flex",
           alignItems: "center",
           mb: 4,
-          p: 1,
-          bgcolor: "white",
-          borderRadius: 2,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          gap: 2,
         }}
         onSubmit={(e) => {
           e.preventDefault();
           handleCreateComment();
         }}
       >
+        {user && (
+          <Avatar src={user.avatarUrl} alt={user.username} sx={{ width: 40, height: 40 }}>
+            {user.username?.charAt(0)}
+          </Avatar>
+        )}
+
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Share your thoughts..."
+          placeholder={user ? "Share your thoughts..." : "Sign in to comment"}
           size="medium"
           required
           value={newComment}
           onChange={handleCommentChange}
+          disabled={!user}
           sx={{
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
+              backgroundColor: "white",
             },
           }}
         />
-        <IconButton color="primary" onClick={handleCreateComment} sx={{ ml: 1 }} disabled={!newComment.trim()}>
-          <SendIcon />
-        </IconButton>
-      </Box>
 
-      <Divider sx={{ my: 2 }} />
+        <Button
+          variant="contained"
+          endIcon={<SendIcon />}
+          onClick={handleCreateComment}
+          disabled={!newComment.trim() || !user}
+          sx={{
+            borderRadius: 1,
+            py: 1.2,
+            px: 2.5,
+          }}
+        >
+          Post
+        </Button>
+      </Box>
 
       {/* Comment List Section */}
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress />
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4, flexDirection: "column", alignItems: "center" }}>
+          <CircularProgress size={30} thickness={4} />
+          <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
+            Loading comments...
+          </Typography>
         </Box>
       ) : bookComments?.length > 0 ? (
         <>
-          <List sx={{ width: "100%" }}>
+          <List sx={{ width: "100%", bgcolor: "background.paper", borderRadius: 2 }}>
             {bookComments.map((comment, index) => (
               <React.Fragment key={comment.id || `temp-${index}`}>
                 <ListItem
@@ -265,12 +289,13 @@ const BookCommentSection = ({ bookId, user }) => {
           </List>
 
           {pagination.hasMore && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
               <Button
                 variant="outlined"
                 onClick={handleLoadMore}
                 disabled={loadingMore}
                 startIcon={loadingMore ? <CircularProgress size={20} /> : null}
+                sx={{ borderRadius: 1, py: 1 }}
               >
                 {loadingMore ? "Loading..." : "Load More Comments"}
               </Button>
@@ -278,8 +303,21 @@ const BookCommentSection = ({ bookId, user }) => {
           )}
         </>
       ) : (
-        <Box sx={{ textAlign: "center", py: 4 }}>
-          <Typography color="text.secondary" variant="body1">
+        <Box
+          sx={{
+            textAlign: "center",
+            py: 6,
+            bgcolor: "background.paper",
+            borderRadius: 2,
+            border: "1px dashed",
+            borderColor: "divider",
+          }}
+        >
+          <CommentIcon sx={{ fontSize: 48, color: "text.disabled", mb: 2 }} />
+          <Typography color="text.secondary" variant="h6" sx={{ mb: 1 }}>
+            No comments yet
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
             Be the first to share your thoughts on this book!
           </Typography>
         </Box>
@@ -292,7 +330,7 @@ const BookCommentSection = ({ bookId, user }) => {
       </Snackbar>
 
       <AuthDialog />
-    </Paper>
+    </Box>
   );
 };
 

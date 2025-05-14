@@ -30,6 +30,12 @@ const initialState = {
   postsByUser: [],
   loading: false,
   error: null,
+  pagination: {
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+    size: 10,
+  },
 };
 
 export const postReducer = (state = initialState, action) => {
@@ -56,7 +62,13 @@ export const postReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        posts: action.payload,
+        posts: action.payload.content,
+        pagination: {
+          currentPage: action.payload.currentPage,
+          totalPages: action.payload.totalPages,
+          totalElements: action.payload.totalElements,
+          size: action.payload.size,
+        },
       };
     case FETCH_POSTS_BY_USER_SUCCESS:
       return {
@@ -68,7 +80,11 @@ export const postReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        posts: [action.payload, ...state.posts],
+        posts: [action.payload, ...state.posts].slice(0, state.pagination.size),
+        pagination: {
+          ...state.pagination,
+          totalElements: state.pagination.totalElements + 1,
+        },
       };
     case UPDATE_POST_SUCCESS:
       return {

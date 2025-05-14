@@ -1,5 +1,6 @@
-import { Avatar, CircularProgress, List, ListItem, ListItemAvatar, ListItemText, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import { Avatar, Box, Button, Divider, Grid, Paper, Skeleton, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserFollowings } from "../../redux/user/user.action";
 
@@ -8,6 +9,7 @@ const FollowingList = ({ userId }) => {
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
   const { userFollowings } = useSelector((state) => state.user);
+
   useEffect(() => {
     const fetchFollowing = async () => {
       try {
@@ -22,28 +24,149 @@ const FollowingList = ({ userId }) => {
   }, [userId]);
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box sx={{ p: 2 }}>
+        {[1, 2, 3, 4].map((item) => (
+          <Box key={item} sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <Skeleton variant="circular" width={50} height={50} sx={{ mr: 2 }} />
+            <Box>
+              <Skeleton variant="text" width={120} height={24} />
+              <Skeleton variant="text" width={160} height={18} />
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography color="error">{error}</Typography>;
+    return (
+      <Paper elevation={0} sx={{ p: 3, borderRadius: 3, textAlign: "center" }}>
+        <Typography color="error" variant="h6">
+          {error}
+        </Typography>
+        <Button variant="outlined" color="primary" sx={{ mt: 2, borderRadius: 2 }} onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </Paper>
+    );
   }
 
-  if (userFollowings?.length === 0) {
-    return <Typography>Not following anyone yet.</Typography>;
+  if (!userFollowings || userFollowings.length === 0) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          p: 5,
+          borderRadius: 3,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          component="img"
+          src={"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/BLANK.jpg/138px-BLANK.jpg"}
+          alt="Not following anyone"
+          sx={{
+            width: 180,
+            height: 180,
+            mb: 3,
+            opacity: 0.8,
+          }}
+        />
+        <Typography variant="h6" gutterBottom>
+          You're Not Following Anyone Yet
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mx: "auto", mb: 3 }}>
+          Follow authors and other readers to keep up with their activities and recommendations.
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: "bold",
+            px: 3,
+            py: 1,
+          }}
+        >
+          Discover People to Follow
+        </Button>
+      </Paper>
+    );
   }
 
   return (
-    <List>
-      {userFollowings?.map((user) => (
-        <ListItem key={user.id}>
-          <ListItemAvatar>
-            <Avatar src={user.avatarUrl} alt={user.fullname} />
-          </ListItemAvatar>
-          <ListItemText primary={user.fullname} secondary={`@${user.username}`} />
-        </ListItem>
-      ))}
-    </List>
+    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
+      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
+        <Typography variant="h5" gutterBottom fontWeight="medium">
+          People You Follow
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          You're following {userFollowings.length} {userFollowings.length === 1 ? "person" : "people"}
+        </Typography>
+
+        <Divider sx={{ mb: 2 }} />
+
+        <Grid container spacing={2}>
+          {userFollowings?.map((user) => (
+            <Grid item xs={12} sm={6} md={4} key={user.id}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  transition: "all 0.3s",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.02)",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                  },
+                }}
+              >
+                <Avatar
+                  src={user.avatarUrl}
+                  alt={user.fullname}
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    mr: 2,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="medium" noWrap>
+                    {user.fullname}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    @{user.username}
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<PersonRemoveIcon fontSize="small" />}
+                    sx={{
+                      mt: 1,
+                      textTransform: "none",
+                      borderRadius: 5,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    Unfollow
+                  </Button>
+                </Box>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    </Paper>
   );
 };
 

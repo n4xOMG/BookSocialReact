@@ -1,6 +1,6 @@
 import { FavoriteBorder, MenuBook, Report } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { Box, Button, Grid, IconButton, Rating, Typography } from "@mui/material";
+import { Box, Button, Grid, IconButton, Rating, Typography, Paper, Container, Divider } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -177,122 +177,149 @@ export const BookDetailPage = () => {
   }
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
+    <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#f9fafb" }}>
       <Sidebar />
       <Box
-        container="true"
         sx={{
           width: "100%",
-          mx: "auto",
-          px: { xs: 2, md: 4 },
-          py: 3,
-          backgroundColor: "#f9fafb",
           overflowY: "auto",
+          overscrollBehavior: "contain",
+          px: 0,
+          py: 0,
         }}
       >
-        <Grid container spacing={5} sx={{ backgroundColor: "#f9fafb" }}>
-          <Grid item md={3}>
-            <Box
-              component="img"
-              src={getOptimizedImageUrl(book.bookCover)}
-              alt={`Cover of ${book.title}`}
-              sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
-            />
-            <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Rating
-                  name="simple-controlled"
-                  value={rating ? rating.rating : 0}
-                  onChange={(event, newValue) => handleRating(newValue)}
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Grid container spacing={4}>
+            {/* Left Column - Book Cover and Actions */}
+            <Grid item xs={12} md={3}>
+              <Paper elevation={2} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
+                <Box
+                  component="img"
+                  src={getOptimizedImageUrl(book.bookCover)}
+                  alt={`Cover of ${book.title}`}
+                  sx={{
+                    width: "100%",
+                    borderRadius: 2,
+                    boxShadow: "0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+                    mb: 3,
+                  }}
                 />
-                <Typography sx={{ ml: 2, color: "gray.600" }}>{rating ? rating.rating : 0}</Typography>
-              </Box>
-              <IconButton
-                onClick={handleOpenReportModal}
-                sx={{
-                  backgroundColor: "white",
-                  border: "1px solid",
-                  borderColor: "grey.300",
-                  height: 40,
-                  width: 40,
-                  "&:hover": {
-                    backgroundColor: "grey.100",
-                  },
-                }}
-              >
-                <Report />
-              </IconButton>
-              <IconButton
-                onClick={handleFollowBook}
-                sx={{
-                  backgroundColor: "white",
-                  border: "1px solid",
-                  borderColor: "grey.300",
-                  height: 40,
-                  width: 40,
-                  "&:hover": {
-                    backgroundColor: "grey.100",
-                  },
-                }}
-              >
-                {isFavorite ? (
-                  <FavoriteIcon
+
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Rating
+                      name="book-rating"
+                      precision={0.5}
+                      value={rating ? rating.rating : 0}
+                      onChange={(event, newValue) => handleRating(newValue)}
+                    />
+                    <Typography variant="body2" sx={{ ml: 1, color: "text.secondary" }}>
+                      {rating ? rating.rating?.toFixed(1) : "0.0"}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={handleFollowBook}
+                    startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorder />}
+                    color={isFavorite ? "error" : "primary"}
+                    sx={{ py: 1.5 }}
+                  >
+                    {isFavorite ? "Following" : "Follow"}
+                  </Button>
+
+                  <IconButton
+                    onClick={handleOpenReportModal}
                     sx={{
-                      width: 24,
-                      height: 24,
-                      color: "red",
+                      border: "1px solid",
+                      borderColor: "grey.300",
+                      borderRadius: 1,
+                      p: 1.5,
                     }}
-                  />
-                ) : (
-                  <FavoriteBorder
+                  >
+                    <Report />
+                  </IconButton>
+                </Box>
+
+                {firstChapterId && (
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
                     sx={{
-                      width: 24,
-                      height: 24,
-                      color: "black",
+                      py: 1.5,
+                      backgroundColor: "black",
+                      color: "white",
+                      borderRadius: 1,
+                      boxShadow: 3,
+                      "&:hover": {
+                        backgroundColor: "#333",
+                        boxShadow: 4,
+                      },
                     }}
-                  />
+                    startIcon={<MenuBook />}
+                  >
+                    Start Reading
+                  </Button>
                 )}
-              </IconButton>
-            </Box>
-            {firstChapterId && (
-              <Button
-                fullWidth
-                onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
-                sx={{
-                  mt: 4,
-                  backgroundColor: "black",
-                  color: "white",
-                  height: 50,
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "&:hover": {
-                    backgroundColor: "darkgray",
-                  },
-                }}
-              >
-                <MenuBook sx={{ mr: 2, width: 20, height: 20 }} /> Start Reading
-              </Button>
-            )}
+              </Paper>
+
+              {/* Progress Section on Mobile/Tablet */}
+              <Box sx={{ display: { xs: "block", md: "none" } }}>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Your Progress
+                  </Typography>
+                  <ProgressBar progress={overallProgress} />
+                </Paper>
+              </Box>
+            </Grid>
+
+            {/* Right Column - Book Details and Content */}
+            <Grid item xs={12} md={9}>
+              <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                <BookDetails book={book} categories={categories} tags={tags} />
+              </Paper>
+
+              <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                <AuthorCard author={book.author} checkAuth={checkAuth} />
+              </Paper>
+
+              {/* Progress Section on Desktop */}
+              <Box sx={{ display: { xs: "none", md: "block" } }}>
+                <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Your Progress
+                  </Typography>
+                  <ProgressBar progress={overallProgress} />
+                </Paper>
+              </Box>
+
+              <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                <ChapterList
+                  chapterCounts={chapterCounts}
+                  progresses={progresses}
+                  onCalculateProgress={calculateOverallProgress}
+                  onNavigate={navigate}
+                  bookId={bookId}
+                  user={user ? user : null}
+                  onFirstChapterId={setFirstChapterId}
+                />
+              </Paper>
+
+              <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                <BookCommentSection bookId={book.id} user={user} />
+              </Paper>
+
+              <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
+              </Paper>
+            </Grid>
           </Grid>
-          <Grid item md={8}>
-            <BookDetails book={book} categories={categories} tags={tags} />
-            <AuthorCard author={book.author} checkAuth={checkAuth} />
-            <ProgressBar progress={overallProgress} />
-            <ChapterList
-              chapterCounts={chapterCounts}
-              progresses={progresses}
-              onCalculateProgress={calculateOverallProgress}
-              onNavigate={navigate}
-              bookId={bookId}
-              user={user ? user : null}
-              onFirstChapterId={setFirstChapterId}
-            />
-            <BookCommentSection bookId={book.id} user={user} />
-            <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
-          </Grid>
-        </Grid>
+        </Container>
       </Box>
       <ReportModal
         open={isReportModalOpen}

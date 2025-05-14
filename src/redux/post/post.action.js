@@ -36,16 +36,35 @@ import {
 import { api, API_BASE_URL } from "../../api/api";
 import axios from "axios";
 
-// Fetch all posts
-export const fetchPosts = () => async (dispatch) => {
-  dispatch({ type: FETCH_POSTS_REQUEST });
-  try {
-    const response = await axios.get(`${API_BASE_URL}/posts`);
-    dispatch({ type: FETCH_POSTS_SUCCESS, payload: response.data });
-  } catch (error) {
-    dispatch({ type: FETCH_POSTS_FAILURE, payload: error.message });
-  }
-};
+// Fetch all posts with pagination
+export const fetchPosts =
+  (page = 0, size = 10, sort = "timestamp,desc") =>
+  async (dispatch) => {
+    dispatch({ type: FETCH_POSTS_REQUEST });
+    try {
+      const response = await axios.get(`${API_BASE_URL}/posts`, {
+        params: { page, size, sort },
+        headers: {
+          Authorization: localStorage.getItem("token"), // Make sure to send JWT if available
+        },
+      });
+      dispatch({
+        type: FETCH_POSTS_SUCCESS,
+        payload: {
+          content: response.data.content,
+          totalPages: response.data.totalPages,
+          totalElements: response.data.totalElements,
+          currentPage: response.data.number,
+          size: response.data.size,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      dispatch({ type: FETCH_POSTS_FAILURE, payload: error.message });
+      return null;
+    }
+  };
+
 export const fetchPostById = (postId) => async (dispatch) => {
   dispatch({ type: FETCH_POSTS_BY_ID_REQUEST });
   try {

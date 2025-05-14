@@ -1,5 +1,7 @@
-import { Avatar, CircularProgress, List, ListItem, ListItemAvatar, ListItemText, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import BookIcon from "@mui/icons-material/Book";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import { Box, Button, Chip, Divider, Grid, LinearProgress, Paper, Skeleton, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
 
@@ -8,6 +10,7 @@ const ReadingHistory = ({ userId }) => {
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
   const { readingProgresses = [] } = useSelector((state) => state.user);
+
   useEffect(() => {
     const fetchReadingHistory = async () => {
       try {
@@ -22,31 +25,182 @@ const ReadingHistory = ({ userId }) => {
   }, [userId]);
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box sx={{ p: 2 }}>
+        {[1, 2, 3].map((item) => (
+          <Box key={item} sx={{ mb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+              <Skeleton variant="rectangular" width={60} height={80} sx={{ borderRadius: 1, mr: 2 }} />
+              <Box width="100%">
+                <Skeleton variant="text" width="70%" height={28} />
+                <Skeleton variant="text" width="40%" height={20} />
+                <Skeleton variant="text" width="100%" height={16} sx={{ mt: 1 }} />
+              </Box>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    );
   }
 
   if (error) {
-    return <Typography color="error">{error}</Typography>;
+    return (
+      <Paper elevation={0} sx={{ p: 3, borderRadius: 3, textAlign: "center" }}>
+        <Typography color="error" variant="h6">
+          {error}
+        </Typography>
+        <Button variant="outlined" color="primary" sx={{ mt: 2, borderRadius: 2 }} onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </Paper>
+    );
   }
 
   if (readingProgresses?.length === 0) {
-    return <Typography>No reading history yet.</Typography>;
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          p: 5,
+          borderRadius: 3,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          component="img"
+          src={"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/BLANK.jpg/138px-BLANK.jpg"}
+          alt="No reading history"
+          sx={{
+            width: 200,
+            height: 200,
+            mb: 3,
+            opacity: 0.8,
+          }}
+        />
+        <Typography variant="h6" gutterBottom>
+          Your Reading Journey Awaits
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mx: "auto", mb: 3 }}>
+          You haven't started reading any books yet. Explore our library and begin your reading adventure!
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<BookIcon />}
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: "bold",
+            px: 3,
+            py: 1,
+          }}
+        >
+          Discover Books
+        </Button>
+      </Paper>
+    );
   }
 
   return (
-    <List>
-      {readingProgresses?.map((item) => (
-        <ListItem key={item.id}>
-          <ListItemAvatar>
-            <Avatar src={item.bookCover} alt={item.bookTitle} />
-          </ListItemAvatar>
-          <ListItemText
-            primary={item.bookTitle}
-            secondary={`Chapter ${item.chapterNum}: ${item.chapterName} - ${item.progress.toFixed(2)}%`}
-          />
-        </ListItem>
-      ))}
-    </List>
+    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
+      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
+        <Typography variant="h5" gutterBottom fontWeight="medium">
+          Your Reading History
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Track your progress on books you've been reading
+        </Typography>
+
+        <Divider sx={{ mb: 3 }} />
+
+        <Grid container spacing={3}>
+          {readingProgresses?.map((item) => (
+            <Grid item xs={12} key={item.id}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  display: "flex",
+                  bgcolor: (theme) => theme.palette.background.default,
+                  transition: "all 0.3s",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                  },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={item.bookCover}
+                  alt={item.bookTitle}
+                  sx={{
+                    width: 80,
+                    height: 120,
+                    borderRadius: 1,
+                    objectFit: "cover",
+                    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                    mr: 3,
+                  }}
+                />
+                <Box sx={{ flex: 1 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="h6" fontWeight="medium" gutterBottom>
+                      {item.bookTitle}
+                    </Typography>
+                    <Chip
+                      label={`${item.progress.toFixed(0)}% Complete`}
+                      color="primary"
+                      size="small"
+                      variant="outlined"
+                      sx={{ fontWeight: "medium" }}
+                    />
+                  </Box>
+
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Currently on: Chapter {item.chapterNum} - {item.chapterName}
+                  </Typography>
+
+                  <LinearProgress
+                    variant="determinate"
+                    value={item.progress}
+                    sx={{
+                      mt: 1,
+                      mb: 2,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: (theme) => theme.palette.grey[200],
+                    }}
+                  />
+
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Last read: {new Date(item.updatedAt).toLocaleDateString()}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="primary"
+                      startIcon={<MenuBookIcon fontSize="small" />}
+                      sx={{
+                        textTransform: "none",
+                        borderRadius: 6,
+                        px: 2,
+                      }}
+                    >
+                      Continue Reading
+                    </Button>
+                  </Box>
+                </Box>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    </Paper>
   );
 };
 

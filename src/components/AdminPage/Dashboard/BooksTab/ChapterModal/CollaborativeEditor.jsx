@@ -44,6 +44,12 @@ import DOMPurify from "dompurify";
 export const CollaborativeEditorWrapper = () => {
   const { roomId } = useParams();
   const dispatch = useDispatch();
+  // Generate a random color for the user's cursor
+  const userColor = useMemo(() => {
+    const COLORS = ["#DC2626", "#D97706", "#059669", "#7C3AED", "#DB2777"];
+    return COLORS[Math.floor(Math.random() * COLORS.length)];
+  }, []);
+
   useEffect(() => {
     console.log("Dispatching getChapterByRoomId with roomId:", roomId);
     dispatch(getChapterByRoomId(roomId))
@@ -63,7 +69,14 @@ export const CollaborativeEditorWrapper = () => {
     <LiveblocksProvider publicApiKey={process.env.REACT_APP_LIVEBLOCK_PUBLIC_KEY}>
       <RoomProvider
         id={roomId}
-        initialPresence={{ cursor: null, user: { name: "Anonymous", color: "#" + Math.floor(Math.random() * 16777215).toString(16) } }}
+        initialPresence={{
+          cursor: null,
+          selection: null,
+          user: {
+            name: "Anonymous",
+            color: userColor,
+          },
+        }}
       >
         <ClientSideSuspense fallback={<LoadingEditor />}>
           <CollaborativeEditor />
@@ -100,33 +113,52 @@ export const CollaborativeEditor = () => {
   // Confirmation Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Initialize Yjs when chapter is loaded
   useEffect(() => {
     if (chapter) {
       setIsLoadingChapter(false);
       console.log("Initializing Yjs for chapter:", chapter);
+
+      // Create a new Y.Doc for this collaboration session
       const yDoc = new Y.Doc();
+
+      // Parse the initial content from HTML if available
       const parsedContent = chapter.content ? new DOMParser().parseFromString(chapter.content, "text/html") : null;
+
+      // Deserialize the HTML to Slate structure or use an empty paragraph
       const deserialized = parsedContent ? deserializeContent(parsedContent.body) : [{ type: "paragraph", children: [{ text: "" }] }];
+
       console.log("Deserialized Content:", deserialized);
       setContent(deserialized);
-      Y.applyUpdate(yDoc, Y.encodeStateAsUpdate(yDoc));
-      const yProvider = new LiveblocksYjsProvider(room, yDoc);
+
+      // Important: Initialize the shared document with the content
+      // This creates the document structure before connecting to Liveblocks
       const sharedDoc = yDoc.get("slate", Y.XmlText);
 
+      // Create the Liveblocks <-> Yjs provider
+      const yProvider = new LiveblocksYjsProvider(room, yDoc);
+
+      // Listen for sync events
       yProvider.on("sync", (isSynced) => {
         console.log("Yjs sync status:", isSynced);
         setConnected(isSynced);
       });
+
       yProvider.on("status", (status) => {
         console.log("Yjs provider status:", status);
       });
 
+      // Store shared type and provider for use in the editor
       setSharedType(sharedDoc);
       setProvider(yProvider);
 
       return () => {
         console.log("Cleaning up Yjs provider and document");
+
+        // Remove event listeners
         yProvider.off("sync", setConnected);
+
+        // Cleanup provider
         if (yProvider && typeof yProvider.destroy === "function") {
           try {
             yProvider.destroy();
@@ -134,6 +166,8 @@ export const CollaborativeEditor = () => {
             console.warn("Error destroying yProvider:", e);
           }
         }
+
+        // Cleanup document
         if (yDoc && typeof yDoc.destroy === "function") {
           try {
             yDoc.destroy();
@@ -317,15 +351,20 @@ const emptyNode = {
 function SlateEditor({ sharedType, provider, initialContent, onContentChange, editorRef }) {
   const updateMyPresence = useUpdateMyPresence();
   const [editorReady, setEditorReady] = useState(false);
+  const [userName] = useState(`User-${Math.floor(Math.random() * 10000)}`);
+  const userColorRef = useRef("#" + Math.floor(Math.random() * 16777215).toString(16));
+  const editorDomRef = useRef(null);
 
-  // Memoize the initial value to prevent it from changing on each render
+  // Memoize the initial value to prevent it causing re-renders
   const initialValue = useMemo(() => {
-    return initialContent && initialContent.length > 0 ? initialContent : [emptyNode];
+    return initialContent && initialContent.length > 0
+      ? JSON.parse(JSON.stringify(initialContent)) // Create a deep copy
+      : [{ type: "paragraph", children: [{ text: "" }] }];
   }, [initialContent]);
 
-  // Create editor instance
+  // Create editor instance with Yjs integration
   const editor = useMemo(() => {
-    // Create the editor with React and Yjs plugins
+    // Important: create in the correct order - withYjs must come before withReact
     const e = withReact(withCursors(withYjs(createEditor(), sharedType), provider.awareness));
     editorRef.current = e;
 
@@ -347,83 +386,126 @@ function SlateEditor({ sharedType, provider, initialContent, onContentChange, ed
 
   // Connect to Yjs when editor is ready
   useEffect(() => {
-    // Connect to Yjs editor
+    console.log("Connecting editor to Yjs");
+
+    // Connect editor to Yjs
     YjsEditor.connect(editor);
 
-    // Set a small delay to ensure DOM is ready
+    // Set editor as ready after a delay to ensure DOM is ready
     const readyTimer = setTimeout(() => {
       setEditorReady(true);
-    }, 100);
+      console.log("Editor is ready");
 
-    return () => {
-      // Clean up
-      clearTimeout(readyTimer);
-      YjsEditor.disconnect(editor);
-    };
-  }, [editor]);
-
-  // Track content changes with a stable callback
-  const handleContentChange = useCallback(
-    (value) => {
-      // Only send updates for real changes, not just selection changes
-      const isAstChange = editor.operations.some((op) => "set_selection" !== op.type);
-
-      if (isAstChange) {
-        onContentChange(value);
-      }
-    },
-    [editor, onContentChange]
-  );
-
-  // Track and broadcast cursor position
-  const handleSelectionChange = useCallback(
-    (selection) => {
-      if (!selection) return;
-
+      // Initialize presence with user info
       updateMyPresence({
-        cursor: selection,
+        cursor: null,
+        selection: null,
         user: {
-          name: "User",
-          color: "#" + Math.floor(Math.random() * 16777215).toString(16),
+          name: userName,
+          color: userColorRef.current,
         },
       });
-    },
-    [updateMyPresence]
-  );
+    }, 500);
 
-  // Set up selection change tracking
+    return () => {
+      clearTimeout(readyTimer);
+
+      // Disconnect from Yjs when unmounting
+      try {
+        YjsEditor.disconnect(editor);
+      } catch (err) {
+        console.warn("Error disconnecting editor:", err);
+      }
+    };
+  }, [editor, updateMyPresence, userName]);
+
+  // Store editor DOM reference after it's ready
   useEffect(() => {
     if (!editorReady) return;
 
-    let el;
     try {
-      el = ReactEditor.toDOMNode(editor, editor);
+      // Get the DOM node for the editor
+      const editorDomNode = ReactEditor.toDOMNode(editor, editor);
+      editorDomRef.current = editorDomNode;
+      console.log("Editor DOM node stored:", !!editorDomNode);
     } catch (err) {
-      console.error("Failed to get DOM node:", err);
-      return;
+      console.error("Failed to get editor DOM node:", err);
     }
+  }, [editorReady, editor]);
 
-    const handleDOMSelectionChange = () => {
-      try {
-        const domSelection = window.getSelection();
-        if (domSelection && domSelection.rangeCount > 0 && ReactEditor.hasDOMNode(editor, domSelection.anchorNode)) {
-          const selection = ReactEditor.toSlateRange(editor, domSelection);
-          handleSelectionChange(selection);
-        }
-      } catch (err) {
-        console.error("Error in selection tracking:", err);
-      }
+  // Set up mouse tracking
+  useEffect(() => {
+    if (!editorReady || !editorDomRef.current) return;
+
+    const editorElement = editorDomRef.current;
+
+    // Simplified mouse move handler - just track x,y coordinates
+    const handleMouseMove = (e) => {
+      const rect = editorElement.getBoundingClientRect();
+      const x = Math.round(e.clientX - rect.left);
+      const y = Math.round(e.clientY - rect.top);
+
+      updateMyPresence({
+        cursor: { x, y },
+        user: { name: userName, color: userColorRef.current },
+      });
     };
 
-    document.addEventListener("selectionchange", handleDOMSelectionChange);
+    // Clear cursor position when mouse leaves editor
+    const handleMouseLeave = () => {
+      updateMyPresence({
+        cursor: null,
+        user: { name: userName, color: userColorRef.current },
+      });
+    };
+
+    // Add event listeners
+    editorElement.addEventListener("mousemove", handleMouseMove);
+    editorElement.addEventListener("mouseleave", handleMouseLeave);
+
+    console.log("Added mouse tracking to editor");
+
     return () => {
-      document.removeEventListener("selectionchange", handleDOMSelectionChange);
+      editorElement.removeEventListener("mousemove", handleMouseMove);
+      editorElement.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [editor, handleSelectionChange, editorReady]);
+  }, [editorReady, updateMyPresence, userName]);
 
-  // Memoize render functions to prevent unnecessary recreations
+  // Handle content changes
+  const handleSlateChange = useCallback(
+    (newValue) => {
+      const hasContentChanges = editor.operations.some((op) => op.type !== "set_selection");
+
+      if (hasContentChanges) {
+        onContentChange(newValue);
+      }
+
+      // Update selection for presence
+      if (editor.selection) {
+        updateMyPresence((prevPresence) => ({
+          ...prevPresence,
+          selection: editor.selection,
+        }));
+      }
+    },
+    [editor, onContentChange, updateMyPresence]
+  );
+
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (event) => {
+      for (const hotkey in HOTKEYS) {
+        if (isHotkey(hotkey, event)) {
+          event.preventDefault();
+          toggleMark(editor, HOTKEYS[hotkey]);
+        }
+      }
+    },
+    [editor]
+  );
 
   return (
     <Paper
@@ -449,7 +531,7 @@ function SlateEditor({ sharedType, provider, initialContent, onContentChange, ed
           height: "100%",
         }}
       >
-        <Slate editor={editor} initialValue={initialValue} onChange={handleContentChange}>
+        <Slate editor={editor} initialValue={initialValue} onChange={handleSlateChange}>
           <Paper elevation={1} sx={{ mb: 2, p: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             <MarkButton format={"bold"} icon={<FormatBoldIcon />} />
             <MarkButton format={"italic"} icon={<FormatItalicIcon />} />
@@ -462,20 +544,12 @@ function SlateEditor({ sharedType, provider, initialContent, onContentChange, ed
           </Paper>
 
           {editorReady ? (
-            <Cursors editorRef={editorRef}>
+            <Cursors editorRef={editorRef} editorDomRef={editorDomRef}>
               <Editable
                 renderElement={renderElement}
                 renderLeaf={renderLeaf}
                 placeholder="Enter some text..."
-                onKeyDown={(event) => {
-                  for (const hotkey in HOTKEYS) {
-                    if (isHotkey(hotkey, event)) {
-                      event.preventDefault();
-                      const mark = HOTKEYS[hotkey];
-                      toggleMark(editor, mark);
-                    }
-                  }
-                }}
+                onKeyDown={handleKeyDown}
                 style={{
                   minHeight: "500px",
                   padding: "8px",

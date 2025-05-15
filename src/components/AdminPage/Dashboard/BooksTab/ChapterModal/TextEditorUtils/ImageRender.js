@@ -10,7 +10,6 @@ export const Image = ({ attributes, element, children }) => {
   const [showControls, setShowControls] = useState(false);
   const [error, setError] = useState(false);
 
-  // Load image once on component mount
   useEffect(() => {
     if (!element.url) {
       setError(true);
@@ -26,8 +25,6 @@ export const Image = ({ attributes, element, children }) => {
       setError(true);
       setIsLoaded(true);
     };
-
-    // No need for cleanup as we just want to trigger the load
   }, [element.url]);
 
   const removeImage = () => {
@@ -43,10 +40,10 @@ export const Image = ({ attributes, element, children }) => {
     <Box
       {...attributes}
       contentEditable={false}
-      position="relative"
-      display="inline-block"
-      maxWidth="100%"
       sx={{
+        position: "relative",
+        display: "inline-block",
+        maxWidth: "100%",
         "&:hover": {
           "& .image-controls": {
             opacity: 1,
@@ -58,14 +55,16 @@ export const Image = ({ attributes, element, children }) => {
     >
       {!isLoaded && (
         <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          width="100%"
-          minHeight="200px"
-          bgcolor="#f5f5f5"
-          border="1px dashed #ccc"
-          borderRadius="4px"
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            minHeight: "200px",
+            bgcolor: "#f5f5f5",
+            border: "1px dashed #ccc",
+            borderRadius: "4px",
+          }}
         >
           <CircularProgress size={40} />
         </Box>
@@ -73,16 +72,18 @@ export const Image = ({ attributes, element, children }) => {
 
       {error ? (
         <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          width="100%"
-          minHeight="100px"
-          bgcolor="#fff3f3"
-          border="1px dashed #f88"
-          borderRadius="4px"
-          color="#d32f2f"
-          p={2}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            minHeight: "100px",
+            bgcolor: "#fff3f3",
+            border: "1px dashed #f88",
+            borderRadius: "4px",
+            color: "#d32f2f",
+            p: 2,
+          }}
         >
           Failed to load image
         </Box>
@@ -104,14 +105,16 @@ export const Image = ({ attributes, element, children }) => {
       {showControls && (isLoaded || error) && (
         <Box
           className="image-controls"
-          position="absolute"
-          top={8}
-          right={8}
-          opacity={0}
-          transition="opacity 0.2s"
-          bgcolor="rgba(0,0,0,0.6)"
-          borderRadius="4px"
-          zIndex={100}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            opacity: 0,
+            transition: "opacity 0.2s",
+            bgcolor: "rgba(0,0,0,0.6)",
+            borderRadius: "4px",
+            zIndex: 100,
+          }}
         >
           <IconButton size="small" onClick={removeImage} sx={{ color: "white" }} title="Remove image">
             <DeleteIcon fontSize="small" />

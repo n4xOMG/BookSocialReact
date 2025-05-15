@@ -9,36 +9,107 @@ export function Cursors({ children, editorRef }) {
   const [cursorPositions, setCursorPositions] = useState([]);
 
   useEffect(() => {
-    const updatedCursors = others
-      .map(({ presence, connectionId }) => {
-        if (presence.cursor && presence.user) {
-          const { anchor, focus } = presence.cursor;
+    // Function to update cursor positions
+    const updateCursors = () => {
+      if (!editorRef.current || !others) return;
 
-          // Create a Slate Range from anchor to focus
-          const range = { anchor, focus };
+      try {
+        const editor = editorRef.current;
 
-          // Convert Slate Range to DOM Range
-          let domRange;
-          try {
-            domRange = ReactEditor.toDOMRange(editorRef.current, range);
-          } catch (error) {
-            console.error("Error converting Slate Range to DOM Range:", error);
-            return null;
-          }
-
-          const domRect = domRange.getBoundingClientRect();
-
-          return {
-            connectionId,
-            user: presence.user,
-            rect: domRect,
-          };
+        // Verify editor has been mounted to DOM
+        let editorEl;
+        try {
+          editorEl = ReactEditor.toDOMNode(editor, editor);
+        } catch (err) {
+          // Editor not yet connected to DOM
+          console.warn("Editor not yet connected to DOM:", err);
+          return;
         }
-        return null;
-      })
-      .filter((cursor) => cursor && cursor.rect !== null);
 
-    setCursorPositions(updatedCursors);
+        const editorRect = editorEl.getBoundingClientRect();
+
+        const updatedCursors = others
+          .filter((user) => user.presence?.cursor)
+          .map(({ presence, connectionId }) => {
+            if (!presence.cursor) return null;
+
+            try {
+              // Create a range from the cursor position
+              const range = {
+                anchor: presence.cursor.anchor,
+                focus: presence.cursor.focus || presence.cursor.anchor, // Ensure we have a focus point
+              };
+
+              // Make sure the range is valid for this editor
+              if (
+                !range.anchor ||
+                !range.focus ||
+                range.anchor.path.some((p) => typeof p !== "number") ||
+                range.focus.path.some((p) => typeof p !== "number")
+              ) {
+                return null;
+              }
+
+              // Validate path exists in the document
+              try {
+                Editor.node(editor, range.anchor.path);
+                Editor.node(editor, range.focus.path);
+              } catch (err) {
+                // Path doesn't exist in this document
+                return null;
+              }
+
+              // Get DOM rect for the range
+              let domRange;
+              try {
+                domRange = ReactEditor.toDOMRange(editor, range);
+              } catch (err) {
+                console.warn("Could not convert to DOM range:", err);
+                return null;
+              }
+
+              const rect = domRange.getBoundingClientRect();
+
+              // Calculate position relative to editor
+              return {
+                connectionId,
+                user: presence.user || { name: "Anonymous", color: "#ff0000" },
+                rect: {
+                  top: rect.top - editorRect.top,
+                  left: rect.left - editorRect.left,
+                  height: rect.height,
+                  width: 2, // Width of cursor line
+                },
+              };
+            } catch (err) {
+              console.warn("Error rendering cursor:", err);
+              return null;
+            }
+          })
+          .filter(Boolean);
+
+        setCursorPositions(updatedCursors);
+      } catch (error) {
+        console.error("Error updating cursors:", error);
+      }
+    };
+
+    // Initialize and set up event listeners
+    const timeoutId = setTimeout(updateCursors, 500); // Initial delay to ensure editor is mounted
+
+    // Update on window resize and scroll
+    window.addEventListener("resize", updateCursors);
+    window.addEventListener("scroll", updateCursors);
+
+    // Update periodically to handle any missed updates
+    const interval = setInterval(updateCursors, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", updateCursors);
+      window.removeEventListener("scroll", updateCursors);
+      clearInterval(interval);
+    };
   }, [others, editorRef]);
 
   return (
@@ -49,28 +120,35 @@ export function Cursors({ children, editorRef }) {
           key={connectionId}
           sx={{
             position: "absolute",
-            left: rect.left + window.scrollX,
-            top: rect.top + window.scrollY,
-            width: "2px",
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
+            width: `${rect.width}px`,
             height: `${rect.height}px`,
-            backgroundColor: user.color,
+            backgroundColor: user.color || "#ff0000",
             pointerEvents: "none",
+            zIndex: 50,
           }}
         >
           <Box
             sx={{
               position: "absolute",
-              top: "-1.5em",
+              top: "-20px",
               left: "0",
-              backgroundColor: user.color,
+              backgroundColor: user.color || "#ff0000",
               color: "#fff",
-              padding: "2px 4px",
+              padding: "2px 6px",
               borderRadius: "4px",
               fontSize: "12px",
               whiteSpace: "nowrap",
+              pointerEvents: "none",
+              zIndex: 51,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              maxWidth: "150px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            {user.name}
+            {user.name || "Anonymous"}
           </Box>
         </Box>
       ))}

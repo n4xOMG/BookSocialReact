@@ -42,6 +42,7 @@
     "react-router-dom": "^6.27.0",
     "react-scripts": "5.0.1",
     "react-stomp-hooks": "^3.0.1",
+    "react-virtualized-auto-sizer": "^1.0.26",
     "react-window": "^1.8.10",
     "recharts": "^2.13.3",
     "redux": "^5.0.1",

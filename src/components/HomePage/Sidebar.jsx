@@ -40,7 +40,6 @@ export const Sidebar = () => {
   // Define menu items, conditionally including "My Stories" and "Library" if logged in
   const menuItems = [
     { text: "Home", icon: <Explore />, link: "/" },
-    { text: "Browse", icon: <Book />, link: "/browse" },
     ...(user
       ? [
           { text: "My Stories", icon: <Person />, link: "/stories" },

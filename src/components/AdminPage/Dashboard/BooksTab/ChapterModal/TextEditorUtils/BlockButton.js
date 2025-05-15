@@ -4,6 +4,7 @@ import { TEXT_ALIGN_TYPES } from "./ToolbarFunctions";
 import { Button } from "@mui/material";
 import clsx from "clsx";
 import { css } from "@emotion/react";
+
 const isBlockActive = (editor, format, blockType = "type") => {
   const { selection } = editor;
   if (!selection) return false;
@@ -54,14 +55,23 @@ export const BlockButton = ({ format, icon }) => {
 
   return (
     <Button
-      active={isActive ? "true" : undefined}
+      size="small"
+      variant={isActive ? "contained" : "outlined"}
+      color={isActive ? "primary" : "inherit"}
+      sx={{
+        minWidth: "40px",
+        height: "40px",
+        p: 1,
+        borderRadius: "4px",
+        "& .MuiSvgIcon-root": {
+          fontSize: "1.2rem",
+        },
+      }}
       onMouseDown={(event) => {
         event.preventDefault();
         toggleBlock(editor, format);
       }}
-      className={clsx(css`
-        ${isActive ? "background-color: lightgray;" : ""}
-      `)}
+      title={`Align ${format}`}
     >
       {icon}
     </Button>

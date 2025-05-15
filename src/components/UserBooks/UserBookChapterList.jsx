@@ -1,17 +1,29 @@
-import React from "react";
+import React, { useCallback } from "react";
+import { FixedSizeList as List } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 import { UserBookChapterItem } from "./UserBookChapterItem";
-import { FixedSizeList } from "react-window";
 
-export const UserBookChapterList = React.memo(({ chapters, onEditChapter, onDeleteChapter }) => (
-  <FixedSizeList
-    height={400}
-    itemCount={chapters.length}
-    itemSize={80}
-    width="100%"
-    itemData={{ chapters, onEditChapter, onDeleteChapter }}
-  >
-    {({ index, style, data }) => (
+export const UserBookChapterList = React.memo(({ chapters, onEditChapter, onDeleteChapter }) => {
+  const renderRow = useCallback(
+    ({ index, style, data }) => (
       <UserBookChapterItem chapter={data.chapters[index]} onEdit={data.onEditChapter} onDelete={data.onDeleteChapter} style={style} />
-    )}
-  </FixedSizeList>
-));
+    ),
+    []
+  );
+
+  return (
+    <AutoSizer>
+      {({ height, width }) => (
+        <List
+          height={height}
+          itemCount={chapters.length}
+          itemSize={70}
+          width={width}
+          itemData={{ chapters, onEditChapter, onDeleteChapter }}
+        >
+          {renderRow}
+        </List>
+      )}
+    </AutoSizer>
+  );
+});

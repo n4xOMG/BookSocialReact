@@ -1,4 +1,4 @@
-import { ClientSideSuspense, LiveblocksProvider, RoomProvider, useOthers, useRoom, useUpdateMyPresence } from "@liveblocks/react";
+import { ClientSideSuspense, LiveblocksProvider, RoomProvider, useRoom, useUpdateMyPresence } from "@liveblocks/react";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
@@ -16,16 +16,18 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  Paper,
   Snackbar,
   Toolbar,
+  Typography,
 } from "@mui/material";
 import { withCursors, withYjs, YjsEditor } from "@slate-yjs/core";
 import isHotkey from "is-hotkey";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { createEditor, Editor, Transforms } from "slate";
-import { Editable, Slate, withReact } from "slate-react";
+import { createEditor, Editor, Range, Transforms } from "slate";
+import { Editable, ReactEditor, Slate, withReact } from "slate-react";
 import * as Y from "yjs";
 import { BlockButton } from "./TextEditorUtils/BlockButton";
 import { Element, Leaf } from "./TextEditorUtils/Element";
@@ -38,6 +40,7 @@ import { editChapterAction, getChapterByRoomId, publishChapterAction } from "../
 import { deserializeContent, serializeContent } from "../../../../../utils/HtmlSerialize";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DOMPurify from "dompurify";
+
 export const CollaborativeEditorWrapper = () => {
   const { roomId } = useParams();
   const dispatch = useDispatch();
@@ -50,15 +53,19 @@ export const CollaborativeEditorWrapper = () => {
       .catch((error) => {
         console.error("getChapterByRoomId error:", error);
       });
-  }, [roomId]);
+  }, [dispatch, roomId]);
+
   if (!roomId) {
     return <div>Room ID is missing!</div>;
   }
 
   return (
     <LiveblocksProvider publicApiKey={process.env.REACT_APP_LIVEBLOCK_PUBLIC_KEY}>
-      <RoomProvider id={roomId}>
-        <ClientSideSuspense fallback={<div>Loading…</div>}>
+      <RoomProvider
+        id={roomId}
+        initialPresence={{ cursor: null, user: { name: "Anonymous", color: "#" + Math.floor(Math.random() * 16777215).toString(16) } }}
+      >
+        <ClientSideSuspense fallback={<LoadingEditor />}>
           <CollaborativeEditor />
         </ClientSideSuspense>
       </RoomProvider>
@@ -66,13 +73,19 @@ export const CollaborativeEditorWrapper = () => {
   );
 };
 
+const LoadingEditor = () => (
+  <Paper elevation={3} sx={{ p: 4, m: 2, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "300px" }}>
+    <Typography variant="h5">Loading editor...</Typography>
+  </Paper>
+);
+
 export const CollaborativeEditor = () => {
   const room = useRoom();
   const [connected, setConnected] = useState(false);
   const [sharedType, setSharedType] = useState(null);
   const [provider, setProvider] = useState(null);
   const { chapter } = useSelector((store) => store.chapter);
-  console.log("Chapter state:", chapter);
+  const editorRef = useRef(null);
 
   const [content, setContent] = useState("");
   const [isLoadingChapter, setIsLoadingChapter] = useState(true);
@@ -93,7 +106,7 @@ export const CollaborativeEditor = () => {
       console.log("Initializing Yjs for chapter:", chapter);
       const yDoc = new Y.Doc();
       const parsedContent = chapter.content ? new DOMParser().parseFromString(chapter.content, "text/html") : null;
-      const deserialized = parsedContent ? deserializeContent(parsedContent.body) : [{ text: "" }];
+      const deserialized = parsedContent ? deserializeContent(parsedContent.body) : [{ type: "paragraph", children: [{ text: "" }] }];
       console.log("Deserialized Content:", deserialized);
       setContent(deserialized);
       Y.applyUpdate(yDoc, Y.encodeStateAsUpdate(yDoc));
@@ -135,15 +148,21 @@ export const CollaborativeEditor = () => {
   }, [chapter, room]);
 
   if (isLoadingChapter) {
-    return <div>Loading chapter data...</div>;
+    return <LoadingEditor />;
   }
 
   if (!chapter) {
-    return <div>Error: Chapter data not loaded</div>;
+    return (
+      <Paper elevation={3} sx={{ p: 4, m: 2, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          Error: Chapter data not loaded
+        </Typography>
+      </Paper>
+    );
   }
 
   if (!connected || !sharedType || !provider) {
-    return <div>Loading editor...</div>;
+    return <LoadingEditor />;
   }
 
   const handleSaveDraft = async () => {
@@ -223,13 +242,14 @@ export const CollaborativeEditor = () => {
   };
 
   return (
-    <Box>
-      <Headbar onSaveDraft={handleSaveDraft} onPublish={handlePublish} onNavigateBack={onNavigateBack} />
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Headbar onSaveDraft={handleSaveDraft} onPublish={handlePublish} onNavigateBack={onNavigateBack} chapterTitle={chapter.title} />
       <SlateEditor
         sharedType={sharedType}
         provider={provider}
         initialContent={content}
         onContentChange={(newContent) => setContent(newContent)}
+        editorRef={editorRef}
       />
       <Snackbar
         open={snackbarOpen}
@@ -258,38 +278,56 @@ export const CollaborativeEditor = () => {
     </Box>
   );
 };
-const Headbar = ({ onSaveDraft, onPublish, onNavigateBack }) => (
-  <Toolbar
-    sx={{
-      display: "flex",
-      justifyContent: "flex-start",
-      gap: 2,
-      backgroundColor: "background.paper",
-      boxShadow: 1,
-      padding: 2,
-    }}
-  >
-    <IconButton edge="start" color="inherit" aria-label="back" onClick={onNavigateBack} sx={{ mr: 2 }}>
-      <ArrowBackIcon />
-    </IconButton>
-    <Button variant="contained" color="secondary" onClick={onSaveDraft} sx={{ textTransform: "none" }}>
-      Save Draft
-    </Button>
-    <Button variant="contained" color="primary" onClick={onPublish} sx={{ textTransform: "none" }}>
-      Publish
-    </Button>
-  </Toolbar>
+
+const Headbar = ({ onSaveDraft, onPublish, onNavigateBack, chapterTitle }) => (
+  <Paper elevation={2} sx={{ mb: 2 }}>
+    <Toolbar
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        backgroundColor: "background.paper",
+        padding: 2,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <IconButton edge="start" color="inherit" aria-label="back" onClick={onNavigateBack} sx={{ mr: 2 }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h6" noWrap sx={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {chapterTitle || "Untitled Chapter"}
+        </Typography>
+      </Box>
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <Button variant="outlined" color="secondary" onClick={onSaveDraft} sx={{ textTransform: "none" }}>
+          Save Draft
+        </Button>
+        <Button variant="contained" color="primary" onClick={onPublish} sx={{ textTransform: "none" }}>
+          Publish
+        </Button>
+      </Box>
+    </Toolbar>
+  </Paper>
 );
+
 const emptyNode = {
+  type: "paragraph",
   children: [{ text: "" }],
 };
-function SlateEditor({ sharedType, provider, initialContent, onContentChange }) {
-  useEffect(() => {
-    console.log("SlateEditor Props:", { sharedType, provider, initialContent });
-  }, []);
+
+function SlateEditor({ sharedType, provider, initialContent, onContentChange, editorRef }) {
+  const updateMyPresence = useUpdateMyPresence();
+  const [editorReady, setEditorReady] = useState(false);
+
+  // Memoize the initial value to prevent it from changing on each render
+  const initialValue = useMemo(() => {
+    return initialContent && initialContent.length > 0 ? initialContent : [emptyNode];
+  }, [initialContent]);
+
+  // Create editor instance
   const editor = useMemo(() => {
     // Create the editor with React and Yjs plugins
     const e = withReact(withCursors(withYjs(createEditor(), sharedType), provider.awareness));
+    editorRef.current = e;
 
     // Ensure the editor always has at least one valid child
     const { normalizeNode } = e;
@@ -299,76 +337,176 @@ function SlateEditor({ sharedType, provider, initialContent, onContentChange }) 
       if (!Editor.isEditor(node) || node.children.length > 0) {
         return normalizeNode(entry);
       }
-      if (initialContent.length > 0) {
-        Transforms.insertNodes(e, initialContent, { at: [0] });
-      }
+
+      // Insert empty paragraph if needed
       Transforms.insertNodes(e, emptyNode, { at: [0] });
     };
 
     return e;
-  }, [sharedType]);
+  }, [sharedType, provider.awareness, editorRef]);
 
+  // Connect to Yjs when editor is ready
   useEffect(() => {
     // Connect to Yjs editor
     YjsEditor.connect(editor);
+
+    // Set a small delay to ensure DOM is ready
+    const readyTimer = setTimeout(() => {
+      setEditorReady(true);
+    }, 100);
+
     return () => {
-      // Disconnect when the component unmounts
+      // Clean up
+      clearTimeout(readyTimer);
       YjsEditor.disconnect(editor);
     };
   }, [editor]);
 
+  // Track content changes with a stable callback
+  const handleContentChange = useCallback(
+    (value) => {
+      // Only send updates for real changes, not just selection changes
+      const isAstChange = editor.operations.some((op) => "set_selection" !== op.type);
+
+      if (isAstChange) {
+        onContentChange(value);
+      }
+    },
+    [editor, onContentChange]
+  );
+
+  // Track and broadcast cursor position
+  const handleSelectionChange = useCallback(
+    (selection) => {
+      if (!selection) return;
+
+      updateMyPresence({
+        cursor: selection,
+        user: {
+          name: "User",
+          color: "#" + Math.floor(Math.random() * 16777215).toString(16),
+        },
+      });
+    },
+    [updateMyPresence]
+  );
+
+  // Set up selection change tracking
+  useEffect(() => {
+    if (!editorReady) return;
+
+    let el;
+    try {
+      el = ReactEditor.toDOMNode(editor, editor);
+    } catch (err) {
+      console.error("Failed to get DOM node:", err);
+      return;
+    }
+
+    const handleDOMSelectionChange = () => {
+      try {
+        const domSelection = window.getSelection();
+        if (domSelection && domSelection.rangeCount > 0 && ReactEditor.hasDOMNode(editor, domSelection.anchorNode)) {
+          const selection = ReactEditor.toSlateRange(editor, domSelection);
+          handleSelectionChange(selection);
+        }
+      } catch (err) {
+        console.error("Error in selection tracking:", err);
+      }
+    };
+
+    document.addEventListener("selectionchange", handleDOMSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleDOMSelectionChange);
+    };
+  }, [editor, handleSelectionChange, editorReady]);
+
+  // Memoize render functions to prevent unnecessary recreations
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
 
   return (
-    <Box
+    <Paper
+      elevation={3}
       sx={{
+        flex: 1,
         display: "flex",
         flexDirection: "column",
         position: "relative",
         borderRadius: "12px",
         backgroundColor: "#fff",
         width: "100%",
-        height: "100%",
+        margin: "0 auto",
+        maxWidth: "1000px",
+        overflow: "auto",
         color: "#111827",
       }}
     >
       <Box
         sx={{
           position: "relative",
-          padding: "1em",
+          padding: "1.5em",
           height: "100%",
         }}
       >
-        <Slate editor={editor} initialValue={initialContent.length > 0 ? initialContent : [emptyNode]} onChange={onContentChange}>
-          <Cursors>
-            <Toolbar>
-              <MarkButton format={"bold"} icon={<FormatBoldIcon />} />
-              <MarkButton format={"italic"} icon={<FormatItalicIcon />} />
-              <MarkButton format={"underline"} icon={<FormatUnderlinedIcon />} />
-              <BlockButton format={"left"} icon={<FormatAlignLeftIcon />} />
-              <BlockButton format={"center"} icon={<FormatAlignCenterIcon />} />
-              <BlockButton format={"right"} icon={<FormatAlignRightIcon />} />
-              <BlockButton format={"justify"} icon={<FormatAlignJustifyIcon />} />
-              <InsertImageButton />
-            </Toolbar>
-            <Editable
-              renderElement={renderElement}
-              renderLeaf={renderLeaf}
-              placeholder="Enter some text..."
-              onKeyDown={(event) => {
-                for (const hotkey in HOTKEYS) {
-                  if (isHotkey(hotkey, event)) {
-                    event.preventDefault();
-                    const mark = HOTKEYS[hotkey];
-                    toggleMark(editor, mark);
+        <Slate editor={editor} initialValue={initialValue} onChange={handleContentChange}>
+          <Paper elevation={1} sx={{ mb: 2, p: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+            <MarkButton format={"bold"} icon={<FormatBoldIcon />} />
+            <MarkButton format={"italic"} icon={<FormatItalicIcon />} />
+            <MarkButton format={"underline"} icon={<FormatUnderlinedIcon />} />
+            <BlockButton format={"left"} icon={<FormatAlignLeftIcon />} />
+            <BlockButton format={"center"} icon={<FormatAlignCenterIcon />} />
+            <BlockButton format={"right"} icon={<FormatAlignRightIcon />} />
+            <BlockButton format={"justify"} icon={<FormatAlignJustifyIcon />} />
+            <InsertImageButton />
+          </Paper>
+
+          {editorReady ? (
+            <Cursors editorRef={editorRef}>
+              <Editable
+                renderElement={renderElement}
+                renderLeaf={renderLeaf}
+                placeholder="Enter some text..."
+                onKeyDown={(event) => {
+                  for (const hotkey in HOTKEYS) {
+                    if (isHotkey(hotkey, event)) {
+                      event.preventDefault();
+                      const mark = HOTKEYS[hotkey];
+                      toggleMark(editor, mark);
+                    }
                   }
-                }
+                }}
+                style={{
+                  minHeight: "500px",
+                  padding: "8px",
+                  fontSize: "16px",
+                  lineHeight: "1.6",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "4px",
+                }}
+              />
+            </Cursors>
+          ) : (
+            <Box
+              sx={{
+                minHeight: "500px",
+                padding: "8px",
+                fontSize: "16px",
+                lineHeight: "1.6",
+                border: "1px solid #e0e0e0",
+                borderRadius: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-            />
-          </Cursors>
+            >
+              <Typography variant="body1" color="text.secondary">
+                Initializing editor...
+              </Typography>
+            </Box>
+          )}
         </Slate>
       </Box>
-    </Box>
+    </Paper>
   );
 }

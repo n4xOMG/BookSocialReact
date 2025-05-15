@@ -1,4 +1,5 @@
-import { Backdrop, Box, Button, CircularProgress, Grid, Typography } from "@mui/material";
+import { Backdrop, Box, Button, CircularProgress, Grid, Paper, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import { debounce } from "lodash";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,6 +22,8 @@ import { getTags } from "../../redux/tag/tag.action";
 const UserBooks = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { booksByAuthor, book } = useSelector((store) => store.book);
   const { chapters } = useSelector((store) => store.chapter);
   const { user } = useSelector((store) => store.auth);
@@ -104,79 +107,132 @@ const UserBooks = () => {
       <Sidebar />
       <Box
         sx={{
-          display: "grid",
+          display: isMobile ? "flex" : "grid",
+          flexDirection: isMobile ? "column" : "unset",
           maxWidth: "100%",
           width: "100%",
           height: "100%",
           gridTemplateColumns: "1fr 1fr",
           bgcolor: "background.default",
+          overflow: "hidden",
         }}
       >
-        <Box component="aside" sx={{ height: "100%", borderRight: 1, borderColor: "divider", px: 4, pt: 4, bgcolor: "grey.100" }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, height: "100%", maxHeight: "100vh" }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                Books
-              </Typography>
-              <Button size="small" onClick={() => navigate("/upload-book")}>
-                Add Book
-              </Button>
-            </Box>
-            <Box sx={{ flex: 1, overflow: "auto" }}>
-              {loading ? (
-                <Box sx={{ display: "flex", justifyContent: "center" }}>
-                  <CircularProgress />
-                </Box>
-              ) : (
-                <Grid container spacing={2}>
-                  <BookList
-                    books={booksByAuthor}
-                    onSelectBook={debouncedSetSelectedBookId}
-                    onEditBook={(book) => handleOpenModal("editBook", book)}
-                    onDeleteBook={(book) => handleOpenModal("deleteBook", book)}
-                  />
-                </Grid>
-              )}
-            </Box>
+        <Box
+          component={Paper}
+          elevation={1}
+          sx={{
+            height: isMobile ? "50vh" : "100%",
+            borderRight: isMobile ? 0 : 1,
+            borderColor: "divider",
+            px: 3,
+            pt: 3,
+            pb: 2,
+            bgcolor: "grey.50",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
+              My Books
+            </Typography>
+            <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
+              Add Book
+            </Button>
+          </Box>
+          <Box sx={{ flex: 1, overflow: "hidden" }}>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                <CircularProgress />
+              </Box>
+            ) : booksByAuthor.length > 0 ? (
+              <BookList
+                books={booksByAuthor}
+                selectedBookId={selectedBookId}
+                onSelectBook={debouncedSetSelectedBookId}
+                onEditBook={(book) => handleOpenModal("editBook", book)}
+                onDeleteBook={(book) => handleOpenModal("deleteBook", book)}
+              />
+            ) : (
+              <Box
+                sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+              >
+                <Typography variant="body1" color="text.secondary">
+                  You haven't created any books yet
+                </Typography>
+                <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
+                  Create Your First Book
+                </Button>
+              </Box>
+            )}
           </Box>
         </Box>
-        <Box component="main" sx={{ px: 4, pt: 4 }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 4, height: "100%" }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                Chapters
-              </Typography>
-              {selectedBookId ? (
-                isManga ? (
-                  <Button size="small" onClick={() => handleOpenModal("addMangaChapter")}>
-                    Add Manga Chapter
-                  </Button>
-                ) : (
-                  <Button size="small" onClick={() => handleOpenModal("addNovelChapter")}>
-                    Add Chapter
-                  </Button>
-                )
+        <Box
+          component={Paper}
+          elevation={1}
+          sx={{
+            height: isMobile ? "50vh" : "100%",
+            px: 3,
+            pt: 3,
+            pb: 2,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
+              Chapters
+            </Typography>
+            {selectedBookId ? (
+              isManga ? (
+                <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addMangaChapter")}>
+                  Add Manga Chapter
+                </Button>
               ) : (
-                <div>No book selected</div>
-              )}
-            </Box>
-            <Box sx={{ flex: 1, overflow: "auto" }}>
-              {loading ? (
-                <Box sx={{ display: "flex", justifyContent: "center" }}>
-                  <CircularProgress />
-                </Box>
-              ) : (
-                <Grid container spacing={2}>
-                  <UserBookChapterList
-                    chapters={chapters}
-                    onEditChapter={(chapter) => handleOpenModal("editChapter", chapter)}
-                    onDeleteChapter={(chapter) => handleOpenModal("deleteChapter", chapter)}
-                  />
-                </Grid>
-              )}
-            </Box>
+                <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addNovelChapter")}>
+                  Add Chapter
+                </Button>
+              )
+            ) : null}
+          </Box>
+          <Box sx={{ flex: 1, overflow: "hidden" }}>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                <CircularProgress />
+              </Box>
+            ) : !selectedBookId ? (
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                <Typography variant="body1" color="text.secondary">
+                  Select a book to view chapters
+                </Typography>
+              </Box>
+            ) : chapters.length > 0 ? (
+              <UserBookChapterList
+                chapters={chapters}
+                onEditChapter={(chapter) => handleOpenModal("editChapter", chapter)}
+                onDeleteChapter={(chapter) => handleOpenModal("deleteChapter", chapter)}
+              />
+            ) : (
+              <Box
+                sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+              >
+                <Typography variant="body1" color="text.secondary">
+                  No chapters added yet
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter")}
+                >
+                  Add Your First Chapter
+                </Button>
+              </Box>
+            )}
           </Box>
         </Box>
+
         <Suspense fallback={<CircularProgress />}>
           {openModal.type === "editBook" && (
             <EditBookDialog open={true} handleClose={handleCloseModal} currentBook={openModal.data} categories={categories} tags={tags} />

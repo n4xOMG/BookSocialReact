@@ -1,19 +1,19 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import WestIcon from "@mui/icons-material/West";
 import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import { Stomp } from "@stomp/stompjs";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import SockJS from "sockjs-client";
+import { API_BASE_URL } from "../../api/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import ChatMessage from "../../components/MessagePage/ChatMessage";
 import SearchUser from "../../components/MessagePage/SearchUser";
 import UserChatCard from "../../components/MessagePage/UserChatCard";
 import { createMessage, fetchChatMessages, fetchUserChats } from "../../redux/chat/chat.action";
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
-import UploadToCloudinary from "../../utils/uploadToCloudinary";
-import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../api/api";
-import LoadingSpinner from "../../components/LoadingSpinner"; // Import LoadingSpinner
 import { RECEIVE_MESSAGE } from "../../redux/chat/chat.actionType";
+import UploadToCloudinary from "../../utils/uploadToCloudinary";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
@@ -27,9 +27,15 @@ export default function MessagesPage() {
   const [stompClient, setStompClient] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(true); // State for WebSocket connection
-  const [isFetchingChats, setIsFetchingChats] = useState(true); // State for fetching chats
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isFetchingChats, setIsFetchingChats] = useState(true);
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const reconnectAttemptsRef = useRef(0);
+  const RECONNECT_INTERVAL = 3000;
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -68,45 +74,136 @@ export default function MessagesPage() {
     setIsSending(false);
   };
 
+  // Setup WebSocket connection
+  const setupStompClient = () => {
+    try {
+      setIsConnecting(true);
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+
+      const socket = new SockJS(`${API_BASE_URL}/ws`);
+      socketRef.current = socket;
+      const stomp = Stomp.over(socket);
+
+      setStompClient(stomp);
+      stomp.connect({}, onConnect, onErr);
+
+      return () => {
+        if (reconnectTimerRef.current) {
+          clearTimeout(reconnectTimerRef.current);
+        }
+        if (stomp) {
+          stomp.disconnect();
+        }
+        setIsConnected(false);
+      };
+    } catch (error) {
+      console.error("Error setting up STOMP client:", error);
+      attemptReconnect();
+    }
+  };
+
   useEffect(() => {
-    const socket = new SockJS(`${API_BASE_URL}/ws`);
-    const stomp = Stomp.over(socket);
-    setStompClient(stomp);
-    stomp.connect({}, onConnect, onErr);
+    return setupStompClient();
   }, []);
+
+  // Handle visibility change to reconnect when tab becomes active again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && !isConnected) {
+        console.log("Page became visible, checking connection...");
+        if (stompClient && !stompClient.connected) {
+          setupStompClient();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [stompClient, isConnected]);
+
+  const attemptReconnect = () => {
+    if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+      reconnectAttemptsRef.current += 1;
+      console.log(`Attempting reconnect ${reconnectAttemptsRef.current} of ${MAX_RECONNECT_ATTEMPTS} in ${RECONNECT_INTERVAL}ms`);
+
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
+
+      reconnectTimerRef.current = setTimeout(() => {
+        setupStompClient();
+      }, RECONNECT_INTERVAL);
+    } else {
+      console.error("Max reconnect attempts reached");
+      setIsConnecting(false);
+    }
+  };
 
   const onConnect = () => {
     console.log("Connected to WebSocket");
-    setIsConnecting(false); // Update connection state
-    if (stompClient && user && currentChat) {
-      console.log(`Subscribing to group: /group/${currentChat.id}/private`);
-      stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
-    }
+    setIsConnecting(false);
+    setIsConnected(true);
+    reconnectAttemptsRef.current = 0;
+    subscribeToChat();
   };
 
   const onErr = (err) => {
     console.log("Websocket error: ", err);
-    setIsConnecting(false); // Ensure loading stops on error
+    setIsConnecting(false);
+    setIsConnected(false);
+    attemptReconnect();
+  };
+
+  const subscribeToChat = () => {
+    if (stompClient && stompClient.connected && user && currentChat) {
+      try {
+        console.log(`Subscribing to group: /group/${currentChat.id}/private`);
+        stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
+      } catch (error) {
+        console.error("Error subscribing to chat:", error);
+        // If this fails, we might need to reconnect
+        if (error.message.includes("no underlying")) {
+          attemptReconnect();
+        }
+      }
+    }
   };
 
   const sendMessageToServer = (newMessage) => {
-    if (stompClient && newMessage) {
-      stompClient.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
+    if (!stompClient || !newMessage || !currentChat) return;
+
+    try {
+      if (stompClient.connected) {
+        stompClient.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
+      } else {
+        console.error("STOMP client not connected, attempting to reconnect");
+        setupStompClient();
+        // Could queue message to be sent after reconnection if needed
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      if (error.message.includes("no underlying")) {
+        attemptReconnect();
+      }
     }
   };
 
   const onMessageReceived = (payload) => {
     console.log("Message received from WebSocket:", payload.body);
     const receivedMessage = JSON.parse(payload.body);
-    dispatch({ type: "RECEIVE_MESSAGE", payload: receivedMessage });
+    dispatch({ type: RECEIVE_MESSAGE, payload: receivedMessage });
   };
 
   useEffect(() => {
-    if (stompClient && user && currentChat) {
-      const subscription = stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
-      return () => subscription.unsubscribe();
+    if (stompClient && user && currentChat && isConnected) {
+      subscribeToChat();
     }
-  }, [stompClient, user, currentChat]);
+  }, [stompClient, user, currentChat, isConnected]);
 
   useEffect(() => {
     if (currentChat) {

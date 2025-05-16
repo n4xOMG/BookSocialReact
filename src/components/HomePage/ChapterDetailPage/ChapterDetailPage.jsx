@@ -43,7 +43,7 @@ export default function ChapterDetailPage() {
   const fetchChapterDetail = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await dispatch(getChapterById(jwt, bookId, chapterId));
+      const response = await dispatch(getChapterById(jwt, chapterId));
 
       if (response.payload.error) {
         setGeneralError(response.payload.error);
@@ -85,7 +85,7 @@ export default function ChapterDetailPage() {
 
   const handleChapterChange = (nextChapterId) => {
     setChapterId(nextChapterId);
-    navigate(`/books/${bookId}/chapters/${nextChapterId}`);
+    navigate(`/chapters/${nextChapterId}`);
   };
   const toggleSideDrawer = useCallback(() => {
     console.log("Toggling Drawer");
@@ -246,13 +246,7 @@ export default function ChapterDetailPage() {
                 />
               )}
               {isSideDrawerOpen && (
-                <CommentDrawer
-                  open={isSideDrawerOpen}
-                  user={user}
-                  bookId={book.id}
-                  chapterId={chapter.id}
-                  onToggleDrawer={toggleSideDrawer}
-                />
+                <CommentDrawer open={isSideDrawerOpen} user={user} chapterId={chapter.id} onToggleDrawer={toggleSideDrawer} />
               )}
             </>
           )}

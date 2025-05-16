@@ -40,13 +40,13 @@ export default function NovelChapterDetail({
     if (!user) return;
     setLoading(true);
     try {
-      await dispatch(saveChapterProgressAction(bookId, chapter?.id, user.id, progressRef.current));
+      await dispatch(saveChapterProgressAction(chapter?.id, user.id, progressRef.current));
     } catch (e) {
       console.log("Error in novel chapter detail: ", e);
     } finally {
       setLoading(false);
     }
-  }, [dispatch, bookId, chapter?.id, user]);
+  }, [dispatch, chapter?.id, user]);
   const debouncedSaveProgress = useMemo(() => debounce(saveProgress, 300), [saveProgress]);
 
   const handleBackToBookPage = () => {
@@ -176,7 +176,6 @@ export default function NovelChapterDetail({
                 <Headbar chapter={chapter} onNavigate={handleBackToBookPage} checkAuth={checkAuth} />
                 <FloatingMenu
                   anchorEl={anchorEl}
-                  bookId={bookId}
                   currentChapterId={chapter?.id}
                   chapters={chapters}
                   open={isFloatingMenuVisible}

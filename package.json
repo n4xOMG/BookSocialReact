@@ -14,7 +14,7 @@
     "@mui/x-data-grid": "^7.23.0",
     "@mui/x-date-pickers": "^7.22.0",
     "@slate-yjs/core": "^1.0.2",
-    "@stomp/stompjs": "^7.0.0",
+    "@stomp/stompjs": "^7.1.1",
     "@stripe/react-stripe-js": "^3.0.0",
     "@stripe/stripe-js": "^5.2.0",
     "@testing-library/jest-dom": "^5.17.0",

@@ -124,7 +124,40 @@ export const commentReducer = (state = initialState, action) => {
       };
 
     case LIKE_COMMENT_SUCCESS:
-      return { ...state, error: null, likedComment: action.payload };
+      return {
+        ...state,
+        error: null,
+        likedComment: action.payload,
+        // Update the comment in both bookComments and chapterComments arrays
+        bookComments: state.bookComments.map((comment) => {
+          if (comment.id === action.payload.id) {
+            // Make sure we preserve all properties from the payload
+            return action.payload;
+          }
+          // Check in reply comments too
+          if (comment.replyComment && comment.replyComment.length > 0) {
+            return {
+              ...comment,
+              replyComment: comment.replyComment.map((reply) => (reply.id === action.payload.id ? action.payload : reply)),
+            };
+          }
+          return comment;
+        }),
+        chapterComments: state.chapterComments.map((comment) => {
+          if (comment.id === action.payload.id) {
+            return action.payload;
+          }
+          // Check in reply comments too
+          if (comment.replyComment && comment.replyComment.length > 0) {
+            return {
+              ...comment,
+              replyComment: comment.replyComment.map((reply) => (reply.id === action.payload.id ? action.payload : reply)),
+            };
+          }
+          return comment;
+        }),
+      };
+
     case ADD_SENSITIVE_WORD_SUCCESS:
       return { ...state, error: null, newSensitiveWord: action.payload };
     case EDIT_COMMENT_SUCCESS:

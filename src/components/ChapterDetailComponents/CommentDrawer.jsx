@@ -9,7 +9,7 @@ import {
 import { Alert, Box, Button, CircularProgress, Drawer, List, ListItem, Snackbar, TextField, Typography } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import CommentItem from "../BookClubs/CommentItem";
-export default function CommentDrawer({ open, user, bookId, chapterId, onToggleDrawer }) {
+export default function CommentDrawer({ open, user, chapterId, onToggleDrawer }) {
   const { chapterComments, error } = useSelector((store) => store.comment);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -21,14 +21,17 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
   const fetchComments = useCallback(async () => {
     try {
       setLoading(true);
-      await dispatch(getAllCommentByChapterAction(bookId, chapterId));
+      const response = await dispatch(getAllCommentByChapterAction(chapterId));
+      if (response && response.error) {
+        setSnackBarOpen(true);
+      }
     } catch (e) {
       console.error("Error fetching comments: ", e);
       setSnackBarOpen(true);
     } finally {
       setLoading(false);
     }
-  }, [bookId, chapterId, dispatch]);
+  }, [chapterId, dispatch]);
 
   useEffect(() => {
     fetchComments();
@@ -44,22 +47,34 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
 
   const handleCreateComment = useCallback(
     checkAuth(async () => {
-      if (newComment.trim()) {
+      if (!newComment.trim()) {
+        alert("Comment cannot be empty!");
+        return;
+      }
+
+      try {
+        setLoading(true);
         const reqData = {
-          bookId: bookId,
           chapterId: chapterId,
           data: {
             content: newComment,
           },
         };
-        await dispatch(createChapterCommentAction(reqData));
-        fetchComments();
-        setNewComment("");
-      } else {
-        alert("Comment cannot be null!");
+        const response = await dispatch(createChapterCommentAction(reqData));
+        if (response && response.error) {
+          alert(response.error);
+        } else {
+          setNewComment("");
+          await fetchComments();
+        }
+      } catch (error) {
+        console.error("Error creating comment:", error);
+        alert("Failed to post comment");
+      } finally {
+        setLoading(false);
       }
     }),
-    [newComment, bookId, dispatch, fetchComments]
+    [newComment, dispatch, fetchComments, chapterId, checkAuth]
   );
 
   const handleSubmitReply = useCallback(
@@ -67,7 +82,6 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
       if (newReply.trim()) {
         const reqData = {
           parentCommentId: parentCommentId,
-          bookId: bookId,
           chapterId: chapterId,
           data: {
             content: newReply,
@@ -80,7 +94,7 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
         alert("Reply cannot be null!");
       }
     }),
-    [newReply, bookId, dispatch, fetchComments]
+    [newReply, dispatch, fetchComments]
   );
 
   const handleDeleteComment = useCallback(

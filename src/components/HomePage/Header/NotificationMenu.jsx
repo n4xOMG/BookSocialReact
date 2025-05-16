@@ -2,18 +2,26 @@ import { Notifications, MarkChatRead } from "@mui/icons-material";
 import { Badge, Box, Button, Divider, IconButton, Menu, Paper, Tooltip, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getNotifications, markAllNotificationsAsRead } from "../../../redux/notification/notification.action";
+import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "../../../redux/notification/notification.action";
 import LoadingSpinner from "../../LoadingSpinner";
+import { connectWebSocket, disconnectWebSocket } from "../../../services/websocket.service";
 
 export default function NotificationMenu() {
   const dispatch = useDispatch();
-  const { notifications, loading: reduxLoading } = useSelector((state) => state.notification);
+  const { notifications } = useSelector((state) => state.notification);
+  const { user } = useSelector((state) => state.auth);
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
   const open = Boolean(anchorEl);
 
+  // Remove useMemo and compute sortedNotifications inline:
+  const sortedNotifications = notifications
+    ? [...notifications].sort((a, b) => new Date(b.createdDate || b.time) - new Date(a.createdDate || a.time))
+    : [];
+
   const unreadCount = notifications?.filter((noti) => !noti.read)?.length || 0;
 
+  // Handle notification menu click
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -26,34 +34,69 @@ export default function NotificationMenu() {
     dispatch(markAllNotificationsAsRead());
   };
 
+  const handleMarkAsRead = (notificationId) => {
+    dispatch(markNotificationAsRead(notificationId));
+  };
+
+  // Fetch notifications on component mount
   useEffect(() => {
-    setLoading(true);
-    try {
-      dispatch(getNotifications());
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
-    }
+    const fetchNotifications = async () => {
+      setLoading(true);
+      try {
+        await dispatch(getNotifications());
+      } catch (e) {
+        console.error("Error fetching notifications:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
   }, [dispatch]);
+
+  // Connect to WebSocket when component mounts
+  useEffect(() => {
+    if (user?.id) {
+      connectWebSocket(user.username);
+
+      return () => {
+        disconnectWebSocket();
+      };
+    }
+  }, [user]);
 
   // Format time to a more readable format
   const formatTime = (timeString) => {
-    const date = new Date(timeString);
-    const now = new Date();
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+    if (!timeString) return "Unknown time";
 
-    if (diffInHours < 1) {
-      return "Just now";
-    } else if (diffInHours < 24) {
-      return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      if (diffInDays < 7) {
-        return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
-      } else {
-        return date.toLocaleDateString();
+    try {
+      // Parse ISO 8601 date string (what LocalDateTime typically returns from Java)
+      const date = new Date(timeString);
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date:", timeString);
+        return "Invalid date";
       }
+
+      const now = new Date();
+      const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+      if (diffInHours < 1) {
+        return "Just now";
+      } else if (diffInHours < 24) {
+        return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
+      } else {
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) {
+          return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+        } else {
+          return date.toLocaleDateString();
+        }
+      }
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Date error";
     }
   };
 
@@ -137,8 +180,8 @@ export default function NotificationMenu() {
                 },
               }}
             >
-              {notifications?.length > 0 ? (
-                notifications.map((noti, index) => (
+              {sortedNotifications?.length > 0 ? (
+                sortedNotifications.map((noti, index) => (
                   <Box
                     key={noti?.id}
                     sx={{
@@ -153,6 +196,7 @@ export default function NotificationMenu() {
                       },
                       borderLeft: noti?.read ? "none" : "4px solid #1976d2",
                     }}
+                    onClick={() => !noti.read && handleMarkAsRead(noti.id)}
                   >
                     {!noti?.read && (
                       <Box
@@ -172,10 +216,10 @@ export default function NotificationMenu() {
                         {noti?.message}
                       </Typography>
                       <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {formatTime(noti?.time)}
+                        {formatTime(noti?.createdDate)}
                       </Typography>
                     </Box>
-                    {index < notifications?.length - 1 && <Divider sx={{ mt: 2 }} />}
+                    {index < sortedNotifications?.length - 1 && <Divider sx={{ mt: 2 }} />}
                   </Box>
                 ))
               ) : (

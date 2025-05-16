@@ -74,11 +74,11 @@ export const getChaptersByBookAndLanguageAction = (bookId, languageId) => async 
     dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_FAILED, payload: error.message });
   }
 };
-export const getChapterById = (jwt, bookId, chapterId) => async (dispatch) => {
+export const getChapterById = (jwt, chapterId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTER_REQUEST });
   try {
     const apiClient = jwt ? api : axios; // Choose the API client based on `jwt`
-    const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`);
+    const { data } = await apiClient.get(`${API_BASE_URL}/chapters/${chapterId}`);
     dispatch({ type: GET_CHAPTER_SUCCESS, payload: data });
 
     console.log("Chapter: ", data);
@@ -132,31 +132,31 @@ export const publishChapterAction = (bookId, chapterData) => async (dispatch) =>
     dispatch({ type: CHAPTER_UPLOAD_FAILED, payload: error.message });
   }
 };
-export const editChapterAction = (bookId, chapterData) => async (dispatch) => {
+export const editChapterAction = (chapterData) => async (dispatch) => {
   dispatch({ type: EDIT_CHAPTER_REQUEST });
   console.log("Edit Chapter Data: ", chapterData);
   try {
-    const { data } = await api.put(`${API_BASE_URL}/api/books/${bookId}/chapters/${chapterData.id}`, chapterData);
+    const { data } = await api.put(`${API_BASE_URL}/api/chapters/${chapterData.id}`, chapterData);
     dispatch({ type: EDIT_CHAPTER_SUCCEED, payload: data });
   } catch (error) {
     console.log("Api error when trying to add new chapter: ", error.message);
     dispatch({ type: EDIT_CHAPTER_FAILED, payload: error.message });
   }
 };
-export const deleteChapterAction = (bookId, chapterId) => async (dispatch) => {
+export const deleteChapterAction = (chapterId) => async (dispatch) => {
   dispatch({ type: DELETE_CHAPTER_REQUEST });
   try {
-    const { data } = await api.delete(`${API_BASE_URL}/api/books/${bookId}/chapters/${chapterId}`);
+    const { data } = await api.delete(`${API_BASE_URL}/api/chapters/${chapterId}`);
     dispatch({ type: DELETE_CHAPTER_SUCCEED, payload: data });
   } catch (error) {
     console.log("Api error when trying to delete chapter: ", error.message);
     dispatch({ type: DELETE_CHAPTER_FAILED, payload: error.message });
   }
 };
-export const saveChapterProgressAction = (bookId, chapterId, userId, progress) => async (dispatch) => {
+export const saveChapterProgressAction = (chapterId, userId, progress) => async (dispatch) => {
   dispatch({ type: SAVE_PROGRESS_REQUEST });
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters/${chapterId}/progress`, { userId, progress });
+    const { data } = await api.post(`${API_BASE_URL}/api/chapters/${chapterId}/progress`, { userId, progress });
     dispatch({ type: SAVE_PROGRESS_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: SAVE_PROGRESS_FAILED, payload: error.message });

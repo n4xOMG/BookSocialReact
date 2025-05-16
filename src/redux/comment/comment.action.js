@@ -67,7 +67,7 @@ export const createBookCommentAction = (reqData) => async (dispatch) => {
 export const createChapterCommentAction = (reqData) => async (dispatch) => {
   dispatch({ type: CREATE_CHAPTER_COMMENT_REQUEST });
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/books/${reqData.bookId}/chapters/${reqData.chapterId}/comments`, reqData.data);
+    const { data } = await api.post(`${API_BASE_URL}/api/chapters/${reqData.chapterId}/comments`, reqData.data);
     dispatch({ type: CREATE_CHAPTER_COMMENT_SUCCESS, payload: data });
   } catch (error) {
     if (error.response) {
@@ -115,7 +115,7 @@ export const createReplyChapterCommentAction = (reqData) => async (dispatch) => 
   dispatch({ type: CREATE_REPLY_CHAPTER_COMMENT_REQUEST });
   try {
     const { data } = await api.post(
-      `${API_BASE_URL}/api/books/${reqData.bookId}/chapters/${reqData.chapterId}/comments/${reqData.parentCommentId}/reply`,
+      `${API_BASE_URL}/api/chapters/${reqData.chapterId}/comments/${reqData.parentCommentId}/reply`,
       reqData.data
     );
     dispatch({ type: CREATE_REPLY_CHAPTER_COMMENT_SUCCESS, payload: data });
@@ -142,7 +142,10 @@ export const likeCommentAction = (commentId) => async (dispatch) => {
   dispatch({ type: LIKE_COMMENT_REQUEST });
   try {
     const { data } = await api.put(`${API_BASE_URL}/api/comments/${commentId}/like`);
+    console.log("Like comment response:", data); // Debug log
+    console.log("likedByCurrentUser:", data.likedByCurrentUser); // Check this specific property
     dispatch({ type: LIKE_COMMENT_SUCCESS, payload: data });
+    return { payload: data }; // Return the response data for component use
   } catch (error) {
     if (error.response) {
       console.log("Error response data: ", error.response.data);
@@ -153,9 +156,11 @@ export const likeCommentAction = (commentId) => async (dispatch) => {
       } else {
         dispatch({ type: LIKE_COMMENT_FAILED, payload: error.message });
       }
+      return { error: error.response?.data || error.message };
     } else {
       console.log("No response from server");
       dispatch({ type: LIKE_COMMENT_FAILED, payload: "No response from server" });
+      return { error: "No response from server" };
     }
   }
 };
@@ -185,11 +190,12 @@ export const editCommentAction = (commentId, comment) => async (dispatch) => {
 };
 
 export const getAllCommentByBookAction =
-  (bookId, page = 0, size = 10) =>
+  (isAuth, bookId, page = 0, size = 10) =>
   async (dispatch) => {
     dispatch({ type: GET_ALL_BOOK_COMMENT_REQUEST });
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/comments?page=${page}&size=${size}`);
+      const apiClient = isAuth ? api : axios;
+      const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}/comments?page=${page}&size=${size}`);
       dispatch({ type: GET_ALL_BOOK_COMMENT_SUCCESS, payload: data });
       return { payload: data };
     } catch (error) {
@@ -198,10 +204,10 @@ export const getAllCommentByBookAction =
     }
   };
 
-export const getAllCommentByChapterAction = (bookId, chapterId) => async (dispatch) => {
+export const getAllCommentByChapterAction = (chapterId) => async (dispatch) => {
   dispatch({ type: GET_ALL_CHAPTER_COMMENT_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comments`);
+    const { data } = await axios.get(`${API_BASE_URL}/chapters/${chapterId}/comments`);
     dispatch({ type: GET_ALL_CHAPTER_COMMENT_SUCCESS, payload: data });
     console.log("Got chapter comments: ", data);
     return { payload: data };

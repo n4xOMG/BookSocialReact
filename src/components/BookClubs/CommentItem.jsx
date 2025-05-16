@@ -2,26 +2,18 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import { Avatar, Box, Button, IconButton, Menu, MenuItem, TextField, Typography } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import { editCommentAction, likeCommentAction } from "../../redux/comment/comment.action";
-import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
-import LoadingSpinner from "../LoadingSpinner";
-import { formatDate } from "../../utils/formatDate";
 import { createReportAction } from "../../redux/report/report.action";
+import { formatDate } from "../../utils/formatDate";
+import LoadingSpinner from "../LoadingSpinner";
 import ReportModal from "./ReportModal";
 
 const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, handleSubmitReply, handleDeleteComment }) => {
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
-  const [likes, setLikes] = useState(comment.likedUsers.length || 0);
-  const [replyLikes, setReplyLikes] = useState(
-    comment.replyComment.reduce((acc, reply) => {
-      acc[reply?.id] = { likes: reply?.likedUsers.length || 0, isLiked: reply.likedByCurrentUser };
-      return acc;
-    }, {})
-  );
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [isReplyMenuSelected, setIsReplyMenuSelected] = useState(false);
@@ -126,10 +118,8 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
     checkAuth(async () => {
       try {
         setLoading(true);
-        setTimeout(() => {
-          dispatch(likeCommentAction(comment.id));
-          setLikes((prev) => (comment.likedByCurrentUser ? prev - 1 : prev + 1));
-        }, 300);
+        await dispatch(likeCommentAction(comment.id));
+        // No need to update local state; Redux state will update and re-render the component
       } catch (e) {
         console.log("Error liking comment: ", e);
       } finally {
@@ -140,24 +130,20 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
   );
 
   // Handle like for reply comments
-  const handleLikeReply = checkAuth(async (replyId) => {
-    try {
-      setLoading(true);
-      setTimeout(() => {
-        dispatch(likeCommentAction(replyId));
-        setReplyLikes((prevLikes) => ({
-          ...prevLikes,
-          [replyId]: {
-            likes: prevLikes[replyId].isLiked ? prevLikes[replyId].likes - 1 : prevLikes[replyId].likes + 1,
-          },
-        }));
-      }, 300);
-    } catch (e) {
-      console.log("Error liking reply comment: ", e);
-    } finally {
-      setLoading(false);
-    }
-  });
+  const handleLikeReply = useCallback(
+    checkAuth(async (replyId) => {
+      try {
+        setLoading(true);
+        await dispatch(likeCommentAction(replyId));
+        // No need to update local state; Redux state will update and re-render the component
+      } catch (e) {
+        console.log("Error liking reply comment: ", e);
+      } finally {
+        setLoading(false);
+      }
+    }),
+    [dispatch, checkAuth]
+  );
 
   const handleUpdateComment = async () => {
     if (editedContent.trim() === "") {
@@ -257,7 +243,7 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                     <IconButton onClick={handleLikeComment} disabled={loading}>
                       {comment.likedByCurrentUser ? <ThumbUpIcon color="primary" /> : <ThumbUpOffAltIcon />}
                     </IconButton>
-                    <Typography variant="body2">{likes}</Typography>
+                    <Typography variant="body2">{comment.likedUsers?.length || 0}</Typography>
                     <Button size="small" onClick={() => setIsReplying(!isReplying)}>
                       Reply
                     </Button>
@@ -310,8 +296,12 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                       </Typography>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
                         <IconButton size="small" onClick={() => handleLikeReply(reply?.id)} sx={{ gap: 1 }}>
-                          {replyLikes[reply?.id]?.isLiked ? <ThumbUpIcon fontSize="small" /> : <ThumbUpOffAltIcon fontSize="small" />}
-                          <Typography variant="body2">{replyLikes[reply?.id]?.likes || 0}</Typography>
+                          {reply.likedByCurrentUser ? (
+                            <ThumbUpIcon fontSize="small" color="primary" />
+                          ) : (
+                            <ThumbUpOffAltIcon fontSize="small" />
+                          )}
+                          <Typography variant="body2">{reply.likedUsers?.length || 0}</Typography>
                         </IconButton>
                         {!isReplying && (
                           <Button variant="outlined" size="small" onClick={() => setIsReplying(!isReplying)}>

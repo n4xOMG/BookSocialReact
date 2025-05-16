@@ -24,9 +24,11 @@ import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import { getCurrentUserByJwt } from "./redux/auth/auth.action";
 import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
 import PostDetail from "./pages/UserPages/PostDetails";
+import { connectWebSocket, disconnectWebSocket } from "./services/websocket.service";
+
 function App() {
   const dispatch = useDispatch();
-  const { user } = useSelector((store) => store.auth, shallowEqual);
+  const { user, isAuthenticated } = useSelector((store) => store.auth, shallowEqual);
   const jwt = localStorage.getItem("jwt");
   const [loading, setLoading] = useState(false);
   const { AuthDialog } = useAuthCheck();
@@ -46,6 +48,18 @@ function App() {
     fetchUser();
     console.log("App rendered");
   }, [dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      console.log("App.js: Initializing WebSocket connection for user", user.username);
+      connectWebSocket(user.username);
+
+      return () => {
+        console.log("App.js: Cleaning up WebSocket connection");
+        disconnectWebSocket();
+      };
+    }
+  }, [isAuthenticated, user]);
 
   if (loading) {
     return <CircularProgress />;

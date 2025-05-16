@@ -41,7 +41,13 @@ const BookCommentSection = ({ bookId, user }) => {
     async (page = 0, size = 10) => {
       try {
         page === 0 ? setLoading(true) : setLoadingMore(true);
-        await dispatch(getAllCommentByBookAction(bookId, page, size));
+
+        const response = await dispatch(getAllCommentByBookAction(user ? true : false, bookId, page, size));
+
+        if (response && response.error) {
+          setLocalError("Failed to load comments: " + response.error);
+          setOpen(true);
+        }
       } catch (e) {
         console.error("Error fetching comments: ", e);
         setLocalError("Failed to load comments. Please try again later.");
@@ -114,17 +120,18 @@ const BookCommentSection = ({ bookId, user }) => {
           });
           setLocalError(response.error);
           setOpen(true);
+        } else {
+          // Refresh comments after a successful post
+          fetchComments();
+          setNewComment("");
         }
-
-        // Refresh comments after a successful post
-        fetchComments();
       } catch (e) {
         console.log("Error comment: ", e);
         setLocalError("Failed to post comment. Please try again.");
         setOpen(true);
       }
     }),
-    [newComment, bookId, dispatch, fetchComments, user]
+    [newComment, bookId, dispatch, fetchComments, user, checkAuth]
   );
 
   const handleSubmitReply = useCallback(

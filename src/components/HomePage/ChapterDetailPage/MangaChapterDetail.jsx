@@ -72,9 +72,9 @@ export default function MangaChapterDetail({
       if (currentPage + 1 >= totalPages) progress = 100;
     }
 
-    await dispatch(saveChapterProgressAction(bookId, chapter?.id, user.id, progress));
+    await dispatch(saveChapterProgressAction(chapter?.id, user.id, progress));
     setLoading(false);
-  }, [dispatch, bookId, chapter?.id, user, currentPage, totalPages, viewMode]);
+  }, [dispatch, chapter?.id, user, currentPage, totalPages, viewMode]);
 
   const debouncedSaveProgress = useMemo(() => debounce(saveProgress, 300), [saveProgress]);
 

@@ -1,16 +1,15 @@
-import React from "react";
 import { Box, Toolbar } from "@mui/material";
-import { Routes, Route } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
+import BooksTab from "../../components/AdminPage/Dashboard/BooksTab";
+import CategoriesTab from "../../components/AdminPage/Dashboard/CategoriesTab";
+import CreditsManagement from "../../components/AdminPage/Dashboard/CreditsManagement";
+import Overview from "../../components/AdminPage/Dashboard/Overview";
+import ReportsManagement from "../../components/AdminPage/Dashboard/ReportsManagement";
+import TagsTab from "../../components/AdminPage/Dashboard/TagsTab";
+import UserManagement from "../../components/AdminPage/Dashboard/UserManagement";
 import Header from "../../components/AdminPage/Layout/Header";
 import Sidebar from "../../components/AdminPage/Layout/Sidebar";
 import ProtectedRoute from "../../components/ProtectedRoute";
-import Overview from "../../components/AdminPage/Dashboard/Overview";
-import BooksTab from "../../components/AdminPage/Dashboard/BooksTab";
-import CreditsManagement from "../../components/AdminPage/Dashboard/CreditsManagement";
-import CategoriesTab from "../../components/AdminPage/Dashboard/CategoriesTab";
-import TagsTab from "../../components/AdminPage/Dashboard/TagsTab";
-import UserManagement from "../../components/AdminPage/Dashboard/UserManagement";
-import ReportsManagement from "../../components/AdminPage/Dashboard/ReportsManagement";
 
 const AdminDashboard = () => {
   return (

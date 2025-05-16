@@ -56,6 +56,9 @@ import {
   SET_EDIT_CHOICE_FAILED,
   SET_EDIT_CHOICE_REQUEST,
   SET_EDIT_CHOICE_SUCCESS,
+  GET_BOOK_COUNT_FAILED,
+  GET_BOOK_COUNT_REQUEST,
+  GET_BOOK_COUNT_SUCCESS,
 } from "./book.actionType";
 
 export const getAllBookAction = () => async (dispatch) => {
@@ -283,5 +286,17 @@ export const getRelatedBooksAction = (bookId, categoryId, tagIds) => async (disp
   } catch (error) {
     console.log("Error fetching related books:", error.message);
     dispatch({ type: GET_RELATED_BOOKS_FAILED, payload: error.message });
+  }
+};
+
+export const getBookCountAction = () => async (dispatch) => {
+  dispatch({ type: GET_BOOK_COUNT_REQUEST });
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/books/count`);
+    dispatch({ type: GET_BOOK_COUNT_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("error trying to get book count", error.message);
+    dispatch({ type: GET_BOOK_COUNT_FAILED, payload: error });
   }
 };

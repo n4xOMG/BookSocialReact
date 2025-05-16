@@ -16,6 +16,9 @@ import {
   GET_ALL_BOOK_SUCCESS,
   GET_AVG_BOOK_RATING_REQUEST,
   GET_AVG_BOOK_RATING_SUCCESS,
+  GET_BOOK_COUNT_FAILED,
+  GET_BOOK_COUNT_REQUEST,
+  GET_BOOK_COUNT_SUCCESS,
   GET_BOOK_FAILED,
   GET_BOOK_RATING_BY_USER_REQUEST,
   GET_BOOK_RATING_BY_USER_SUCCESS,
@@ -57,6 +60,7 @@ const initialState = {
   favoured: null,
   book: null,
   books: [],
+  bookCount: 0,
   latestUpdateBooks: [],
   userFavouredBooks: [],
   booksByAuthor: [],
@@ -76,6 +80,7 @@ export const bookReducer = (state = initialState, action) => {
     case BOOK_DELETE_REQUEST:
     case GET_BOOK_REQUEST:
     case GET_ALL_BOOK_REQUEST:
+    case GET_BOOK_COUNT_REQUEST:
     case FOLLOW_BOOK_REQUEST:
     case RATING_BOOK_REQUEST:
     case SEARCH_BOOK_REQUEST:
@@ -142,6 +147,9 @@ export const bookReducer = (state = initialState, action) => {
     case GET_READING_PROGRESSES_BY_BOOK_SUCCESS:
       return { ...state, loading: false, error: null, progresses: action.payload };
 
+    case GET_BOOK_COUNT_SUCCESS:
+      return { ...state, loading: false, error: null, bookCount: action.payload };
+
     case GET_BOOKS_BY_AUTHOR_SUCCESS:
       return { ...state, loading: false, booksByAuthor: action.payload };
 
@@ -153,6 +161,7 @@ export const bookReducer = (state = initialState, action) => {
     case BOOK_DELETE_FAILED:
     case GET_BOOK_FAILED:
     case GET_ALL_BOOK_FAILED:
+    case GET_BOOK_COUNT_FAILED:
     case FOLLOW_BOOK_FAILED:
     case RATING_BOOK_FAILED:
     case SEARCH_BOOK_FAILED:

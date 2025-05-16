@@ -10,10 +10,10 @@ import {
   FormControlLabel,
   TextField,
 } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { addChapterAction, addDraftChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
+import { addDraftChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
 
 export default function AddChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();

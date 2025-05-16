@@ -8,9 +8,13 @@ let stompClient = null;
 let subscription = null;
 let isConnecting = false;
 let reconnectTimer = null;
+let activeUsername = null;
 
 export const connectWebSocket = (username) => {
   if (!username || isConnecting) return null;
+
+  // Save username for reconnection purposes
+  activeUsername = username;
 
   try {
     // Clear any existing reconnect timer
@@ -34,12 +38,14 @@ export const connectWebSocket = (username) => {
         console.log("WebSocket connected successfully!");
         isConnecting = false;
 
-        // Subscribe to the user's notification channel (no need to check stompClient.connected here)
+        // Subscribe to the user's notification channel
         const topic = `/user/${username}/notifications`;
         subscription = stompClient.subscribe(topic, (message) => {
           try {
             const notification = JSON.parse(message.body);
-            //   store.dispatch(getNotifications());
+            console.log("New notification received:", notification);
+
+            // Dispatch the notification to Redux store
             store.dispatch(
               receiveNotification({
                 ...notification,
@@ -52,7 +58,7 @@ export const connectWebSocket = (username) => {
             console.error("Error processing WebSocket notification:", error);
           }
         });
-        console.log("Subscription to notifications topic complete.");
+        console.log(`Subscribed to notifications topic: ${topic}`);
       },
       (error) => {
         console.error("WebSocket connection error:", error);
@@ -61,7 +67,9 @@ export const connectWebSocket = (username) => {
         // Set up reconnection
         reconnectTimer = setTimeout(() => {
           console.log("Attempting to reconnect WebSocket...");
-          connectWebSocket(username);
+          if (activeUsername) {
+            connectWebSocket(activeUsername);
+          }
         }, 5000);
       }
     );
@@ -74,7 +82,9 @@ export const connectWebSocket = (username) => {
     // Set up reconnection
     reconnectTimer = setTimeout(() => {
       console.log("Attempting to reconnect WebSocket after error...");
-      connectWebSocket(username);
+      if (activeUsername) {
+        connectWebSocket(activeUsername);
+      }
     }, 5000);
 
     return null;
@@ -98,4 +108,16 @@ export const disconnectWebSocket = () => {
   } catch (error) {
     console.error("Error disconnecting WebSocket:", error);
   }
+};
+
+// Add a health check function that can be called periodically
+export const checkWebSocketConnection = () => {
+  if (!stompClient || !stompClient.connected) {
+    console.log("WebSocket connection lost, attempting to reconnect...");
+    if (activeUsername) {
+      connectWebSocket(activeUsername);
+    }
+    return false;
+  }
+  return true;
 };

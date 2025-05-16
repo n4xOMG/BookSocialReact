@@ -1,20 +1,26 @@
 import { Notifications, MarkChatRead } from "@mui/icons-material";
-import { Badge, Box, Button, Divider, IconButton, Menu, Paper, Tooltip, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { Badge, Box, Button, Divider, IconButton, Menu, Paper, Tooltip, Typography, CircularProgress } from "@mui/material";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "../../../redux/notification/notification.action";
+import {
+  getNotifications,
+  loadMoreNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "../../../redux/notification/notification.action";
 import LoadingSpinner from "../../LoadingSpinner";
-import { connectWebSocket, disconnectWebSocket } from "../../../services/websocket.service";
+import { connectWebSocket, disconnectWebSocket, checkWebSocketConnection } from "../../../services/websocket.service";
 
 export default function NotificationMenu() {
   const dispatch = useDispatch();
-  const { notifications } = useSelector((state) => state.notification);
+  const { notifications, loading, loadingMore, page, hasMore, totalElements } = useSelector((state) => state.notification);
   const { user } = useSelector((state) => state.auth);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const observer = useRef();
+  const wsCheckInterval = useRef(null);
   const open = Boolean(anchorEl);
 
-  // Remove useMemo and compute sortedNotifications inline:
+  // Sort notifications by date
   const sortedNotifications = notifications
     ? [...notifications].sort((a, b) => new Date(b.createdDate || b.time) - new Date(a.createdDate || a.time))
     : [];
@@ -24,6 +30,11 @@ export default function NotificationMenu() {
   // Handle notification menu click
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
+
+    // Refresh notifications when opening the menu
+    if (!anchorEl) {
+      dispatch(getNotifications(0, 10));
+    }
   };
 
   const handleClose = () => {
@@ -41,26 +52,58 @@ export default function NotificationMenu() {
   // Fetch notifications on component mount
   useEffect(() => {
     const fetchNotifications = async () => {
-      setLoading(true);
       try {
-        await dispatch(getNotifications());
+        await dispatch(getNotifications(0, 10));
       } catch (e) {
         console.error("Error fetching notifications:", e);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchNotifications();
   }, [dispatch]);
 
+  // Load more notifications when scrolling
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      dispatch(loadMoreNotifications(page + 1, 10));
+    }
+  }, [dispatch, loadingMore, hasMore, page]);
+
+  // Setup intersection observer for infinite scrolling
+  const lastNotificationRef = useCallback(
+    (node) => {
+      if (loading || loadingMore) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, loadingMore, hasMore, loadMore]
+  );
+
   // Connect to WebSocket when component mounts
   useEffect(() => {
     if (user?.id) {
+      // Connect to WebSocket
+      console.log("Establishing WebSocket connection for user:", user.username);
       connectWebSocket(user.username);
 
+      // Periodically check WebSocket connection health
+      wsCheckInterval.current = setInterval(() => {
+        checkWebSocketConnection();
+      }, 30000); // Check every 30 seconds
+
       return () => {
+        // Clean up on unmount
         disconnectWebSocket();
+        if (wsCheckInterval.current) {
+          clearInterval(wsCheckInterval.current);
+        }
       };
     }
   }, [user]);
@@ -102,7 +145,7 @@ export default function NotificationMenu() {
 
   return (
     <>
-      {loading ? (
+      {loading && !notifications.length ? (
         <LoadingSpinner />
       ) : (
         <div>
@@ -155,7 +198,7 @@ export default function NotificationMenu() {
           >
             <Box sx={{ px: 3, py: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Notifications
+                Notifications {totalElements > 0 && `(${totalElements})`}
               </Typography>
               {notifications?.length > 0 && (
                 <Button startIcon={<MarkChatRead />} size="small" onClick={handleMarkAllAsRead} disabled={unreadCount === 0}>
@@ -181,47 +224,55 @@ export default function NotificationMenu() {
               }}
             >
               {sortedNotifications?.length > 0 ? (
-                sortedNotifications.map((noti, index) => (
-                  <Box
-                    key={noti?.id}
-                    sx={{
-                      position: "relative",
-                      backgroundColor: noti?.read ? "white" : "rgba(25, 118, 210, 0.05)",
-                      color: "black",
-                      cursor: "pointer",
-                      p: 2,
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        backgroundColor: "#f5f5f5",
-                      },
-                      borderLeft: noti?.read ? "none" : "4px solid #1976d2",
-                    }}
-                    onClick={() => !noti.read && handleMarkAsRead(noti.id)}
-                  >
-                    {!noti?.read && (
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          backgroundColor: "error.main",
-                        }}
-                      />
-                    )}
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                      <Typography variant="body1" sx={{ fontWeight: noti?.read ? 400 : 500 }}>
-                        {noti?.message}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {formatTime(noti?.createdDate)}
-                      </Typography>
+                <>
+                  {sortedNotifications.map((noti, index) => (
+                    <Box
+                      key={noti?.id}
+                      ref={index === sortedNotifications.length - 1 ? lastNotificationRef : null}
+                      sx={{
+                        position: "relative",
+                        backgroundColor: noti?.read ? "white" : "rgba(25, 118, 210, 0.05)",
+                        color: "black",
+                        cursor: "pointer",
+                        p: 2,
+                        transition: "all 0.2s",
+                        "&:hover": {
+                          backgroundColor: "#f5f5f5",
+                        },
+                        borderLeft: noti?.read ? "none" : "4px solid #1976d2",
+                      }}
+                      onClick={() => !noti.read && handleMarkAsRead(noti.id)}
+                    >
+                      {!noti?.read && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 10,
+                            right: 10,
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            backgroundColor: "error.main",
+                          }}
+                        />
+                      )}
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                        <Typography variant="body1" sx={{ fontWeight: noti?.read ? 400 : 500 }}>
+                          {noti?.message}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {formatTime(noti?.createdDate)}
+                        </Typography>
+                      </Box>
+                      {index < sortedNotifications?.length - 1 && <Divider sx={{ mt: 2 }} />}
                     </Box>
-                    {index < sortedNotifications?.length - 1 && <Divider sx={{ mt: 2 }} />}
-                  </Box>
-                ))
+                  ))}
+                  {loadingMore && (
+                    <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  )}
+                </>
               ) : (
                 <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 4, px: 2 }}>
                   <Notifications sx={{ fontSize: 40, color: "text.disabled", mb: 2 }} />

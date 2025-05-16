@@ -5,8 +5,6 @@ import { updateUserProfile } from "../../redux/auth/auth.action";
 import CakeIcon from "@mui/icons-material/Cake";
 import WcIcon from "@mui/icons-material/Wc";
 import SaveIcon from "@mui/icons-material/Save";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 const genders = [
   { value: "Male", label: "Male" },
@@ -16,7 +14,7 @@ const genders = [
 ];
 
 const PersonalInfo = ({ user, setUser }) => {
-  const initialBirthdate = user.birthdate ? new Date(user.birthdate) : null;
+  const initialBirthdate = user.birthdate ? user.birthdate.slice(0, 10) : "";
   const [birthdate, setBirthdate] = useState(initialBirthdate);
   const [gender, setGender] = useState(user.gender || "");
   const [error, setError] = useState(null);
@@ -113,21 +111,27 @@ const PersonalInfo = ({ user, setUser }) => {
                   Date of Birth
                 </Typography>
               </Box>
-              <Box sx={datePickerWrapperStyles}>
-                <DatePicker
-                  selected={birthdate}
-                  onChange={(date) => setBirthdate(date)}
-                  dateFormat="MMMM d, yyyy"
-                  showYearDropdown
-                  scrollableYearDropdown
-                  yearDropdownItemNumber={100}
-                  placeholderText="Select your birthdate"
-                  className="date-picker-input"
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                  This helps us personalize your experience
-                </Typography>
-              </Box>
+              <TextField
+                type="date"
+                value={birthdate}
+                onChange={(e) => setBirthdate(e.target.value)}
+                fullWidth
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                inputProps={{
+                  max: new Date().toISOString().split("T")[0],
+                }}
+                variant="outlined"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                This helps us personalize your experience
+              </Typography>
             </Grid>
 
             <Grid item xs={12} md={6}>

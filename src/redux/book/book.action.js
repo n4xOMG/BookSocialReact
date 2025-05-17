@@ -97,17 +97,37 @@ export const getBookByIdAction = (bookId) => async (dispatch) => {
   }
 };
 
-export const getBooksByAuthorAction = (authorId) => async (dispatch) => {
-  dispatch({ type: GET_BOOKS_BY_AUTHOR_REQUEST });
-  try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/author/${authorId}`);
-    dispatch({ type: GET_BOOKS_BY_AUTHOR_SUCCESS, payload: data });
-    return { payload: data };
-  } catch (error) {
-    console.log("Error fetching books by author:", error.message);
-    dispatch({ type: GET_BOOKS_BY_AUTHOR_FAILED, payload: error });
-  }
-};
+export const getBooksByAuthorAction =
+  (authorId, page = 0, size = 10, filters = {}) =>
+  async (dispatch) => {
+    dispatch({ type: GET_BOOKS_BY_AUTHOR_REQUEST });
+    try {
+      const params = new URLSearchParams();
+
+      // Add pagination parameters
+      params.append("page", page);
+      params.append("size", size);
+
+      // Add any filter parameters if provided
+      if (filters.query) params.append("query", filters.query);
+      if (filters.categories && filters.categories.length) {
+        filters.categories.forEach((catId) => params.append("categoryIds", catId));
+      }
+      if (filters.tags && filters.tags.length) {
+        filters.tags.forEach((tagId) => params.append("tagIds", tagId));
+      }
+      if (filters.sortBy) params.append("sortBy", filters.sortBy);
+      if (filters.sortOrder) params.append("sortDir", filters.sortOrder);
+
+      const url = `${API_BASE_URL}/books/author/${authorId}${params.toString() ? `?${params.toString()}` : ""}`;
+      const { data } = await axios.get(url);
+      dispatch({ type: GET_BOOKS_BY_AUTHOR_SUCCESS, payload: data });
+      return { payload: data };
+    } catch (error) {
+      console.log("Error fetching books by author:", error.message);
+      dispatch({ type: GET_BOOKS_BY_AUTHOR_FAILED, payload: error });
+    }
+  };
 
 export const getFeaturedBooks = () => async (dispatch) => {
   dispatch({ type: GET_FEATURED_BOOKS_REQUEST });
@@ -202,18 +222,26 @@ export const followBookAction = (bookId) => async (dispatch) => {
   }
 };
 
-export const searchBookAction = (params) => async (dispatch) => {
-  dispatch({ type: SEARCH_BOOK_REQUEST });
-  try {
-    console.log("Params", params);
-    const { data } = await api.get(`${API_BASE_URL}/books/search`, { params });
-    dispatch({ type: SEARCH_BOOK_SUCCESS, payload: data });
-    return { payload: data };
-  } catch (error) {
-    console.log("Error searching books:", error.message);
-    dispatch({ type: SEARCH_BOOK_FAILED, payload: error.message });
-  }
-};
+export const searchBookAction =
+  (params, forDropdown = false) =>
+  async (dispatch) => {
+    dispatch({ type: SEARCH_BOOK_REQUEST });
+    try {
+      console.log("Params", params);
+      const { data } = await api.get(`${API_BASE_URL}/books/search`, { params });
+
+      // If this is for dropdown, we use a different action type to not affect the search results page
+      if (forDropdown) {
+        return { payload: data };
+      } else {
+        dispatch({ type: SEARCH_BOOK_SUCCESS, payload: data });
+        return { payload: data };
+      }
+    } catch (error) {
+      console.log("Error searching books:", error.message);
+      dispatch({ type: SEARCH_BOOK_FAILED, payload: error.message });
+    }
+  };
 
 export const ratingBookAction = (bookId, rating) => async (dispatch) => {
   dispatch({ type: RATING_BOOK_REQUEST });

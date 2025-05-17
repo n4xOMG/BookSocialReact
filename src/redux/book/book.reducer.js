@@ -64,6 +64,8 @@ const initialState = {
   latestUpdateBooks: [],
   userFavouredBooks: [],
   booksByAuthor: [],
+  booksByAuthorPage: 0,
+  booksByAuthorHasMore: true,
   featuredBooks: [],
   trendingBooks: [],
   searchResults: [],
@@ -151,7 +153,17 @@ export const bookReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null, bookCount: action.payload };
 
     case GET_BOOKS_BY_AUTHOR_SUCCESS:
-      return { ...state, loading: false, booksByAuthor: action.payload };
+      const newPage = action.payload.pageable?.pageNumber || 0;
+      const hasMore = !action.payload.last;
+      const content = action.payload.content || action.payload;
+
+      return {
+        ...state,
+        loading: false,
+        booksByAuthor: newPage > 0 ? [...state.booksByAuthor, ...content] : content,
+        booksByAuthorPage: newPage,
+        booksByAuthorHasMore: hasMore,
+      };
 
     case SEARCH_BOOK_SUCCESS:
       return { ...state, loading: false, searchResults: action.payload };

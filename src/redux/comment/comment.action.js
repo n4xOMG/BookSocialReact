@@ -37,6 +37,9 @@ import {
   LIKE_COMMENT_FAILED,
   LIKE_COMMENT_REQUEST,
   LIKE_COMMENT_SUCCESS,
+  GET_BOOK_COMMENT_COUNT_REQUEST,
+  GET_BOOK_COMMENT_COUNT_SUCCESS,
+  GET_BOOK_COMMENT_COUNT_FAILED,
 } from "./comment.actionType";
 
 export const createBookCommentAction = (reqData) => async (dispatch) => {
@@ -258,5 +261,18 @@ export const deleteSensitiveWord = (wordId) => async (dispatch) => {
   } catch (error) {
     console.log("error", error);
     dispatch({ type: ADD_SENSITIVE_WORD_FAILED, payload: error });
+  }
+};
+
+export const getBookCommentCountAction = (bookId) => async (dispatch) => {
+  dispatch({ type: GET_BOOK_COMMENT_COUNT_REQUEST });
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/comments-count`);
+    dispatch({ type: GET_BOOK_COMMENT_COUNT_SUCCESS, payload: { bookId, count: data } });
+    return { payload: data };
+  } catch (error) {
+    console.log("error trying to get book comment count", error);
+    dispatch({ type: GET_BOOK_COMMENT_COUNT_FAILED, payload: error });
+    return { error };
   }
 };

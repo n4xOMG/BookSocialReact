@@ -26,23 +26,27 @@ import { useNavigate } from "react-router-dom";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import { Close, FilterAlt, Search } from "@mui/icons-material";
+import SearchDropdown from "./SearchDropdown";
 
 const SearchBar = memo(({ tags = [], categories = [] }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const searchRef = useRef(null);
+  const inputRef = useRef(null);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTitle, setSearchTitle] = useState("");
   const [open, setOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     // Close popper when clicking outside
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setOpen(false);
+        setShowDropdown(false);
       }
     }
 
@@ -63,11 +67,17 @@ const SearchBar = memo(({ tags = [], categories = [] }) => {
 
     navigate(`/search-results?${params}`);
     setOpen(false);
+    setShowDropdown(false);
   };
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
     setOpen(true);
+  };
+
+  const handleInputFocus = (event) => {
+    setAnchorEl(event.currentTarget);
+    setShowDropdown(true);
   };
 
   const clearFilters = () => {
@@ -87,6 +97,15 @@ const SearchBar = memo(({ tags = [], categories = [] }) => {
     if (e.key === "Enter") {
       handleSearch();
     }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTitle(e.target.value);
+    setShowDropdown(true);
+  };
+
+  const closeDropdown = () => {
+    setShowDropdown(false);
   };
 
   const hasFilters = selectedTags.length > 0 || selectedCategory;
@@ -112,10 +131,12 @@ const SearchBar = memo(({ tags = [], categories = [] }) => {
         <InputBase
           placeholder="Search for books..."
           value={searchTitle}
-          onChange={(e) => setSearchTitle(e.target.value)}
-          onClick={handleClick}
+          onChange={handleSearchChange}
+          onClick={handleInputFocus}
+          onFocus={handleInputFocus}
           onKeyPress={handleKeyPress}
           fullWidth
+          ref={inputRef}
           sx={{
             fontSize: "0.95rem",
           }}
@@ -156,6 +177,8 @@ const SearchBar = memo(({ tags = [], categories = [] }) => {
           }
         />
       </Paper>
+
+      <SearchDropdown anchorEl={showDropdown ? inputRef.current : null} searchQuery={searchTitle} onClose={closeDropdown} />
 
       <Popper
         open={open}

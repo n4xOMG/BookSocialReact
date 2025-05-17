@@ -26,6 +26,9 @@ import {
   GET_ALL_SENSITIVE_WORDS_SUCCESS,
   LIKE_COMMENT_FAILED,
   LIKE_COMMENT_SUCCESS,
+  GET_BOOK_COMMENT_COUNT_FAILED,
+  GET_BOOK_COMMENT_COUNT_REQUEST,
+  GET_BOOK_COMMENT_COUNT_SUCCESS,
 } from "./comment.actionType";
 
 const initialState = {
@@ -36,6 +39,7 @@ const initialState = {
   sensitiveWords: [],
   newSensitiveWord: null,
   likedComment: null,
+  commentCounts: {}, // Store comment counts by book ID
   pagination: {
     page: 0,
     size: 10,
@@ -54,6 +58,7 @@ export const commentReducer = (state = initialState, action) => {
     case DELETE_COMMENT_REQUEST:
     case ADD_SENSITIVE_WORD_REQUEST:
     case DELETE_SENSITIVE_WORD_REQUEST:
+    case GET_BOOK_COMMENT_COUNT_REQUEST:
       return { ...state, error: null };
 
     case GET_ALL_BOOK_COMMENT_SUCCESS:
@@ -176,6 +181,16 @@ export const commentReducer = (state = initialState, action) => {
         chapterComments: state.chapterComments.filter((comment) => comment.id !== action.payload),
       };
 
+    case GET_BOOK_COMMENT_COUNT_SUCCESS:
+      return {
+        ...state,
+        error: null,
+        commentCounts: {
+          ...state.commentCounts,
+          [action.payload.bookId]: action.payload.count,
+        },
+      };
+
     case GET_ALL_BOOK_COMMENT_FAILED:
     case GET_ALL_SENSITIVE_WORDS_FAILED:
     case CREATE_BOOK_COMMENT_FAILED:
@@ -184,6 +199,7 @@ export const commentReducer = (state = initialState, action) => {
     case DELETE_COMMENT_FAILED:
     case ADD_SENSITIVE_WORD_FAILED:
     case DELETE_SENSITIVE_WORD_FAILED:
+    case GET_BOOK_COMMENT_COUNT_FAILED:
       return { ...state, error: action.payload };
     default:
       return state;

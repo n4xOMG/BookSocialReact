@@ -30,7 +30,7 @@ import {
 export const getCategories = () => async (dispatch) => {
   dispatch({ type: GET_CATEGORIES_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/categories`);
+    const { data } = await axios.get(`${API_BASE_URL}/categories`);
     dispatch({ type: GET_CATEGORIES_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: GET_CATEGORIES_FAILED, payload: error.message });
@@ -40,7 +40,7 @@ export const getCategories = () => async (dispatch) => {
 export const getCategoryById = (categoryId) => async (dispatch) => {
   dispatch({ type: GET_CATEGORY_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/categories/${categoryId}`);
+    const { data } = await axios.get(`${API_BASE_URL}/categories/${categoryId}`);
     dispatch({ type: GET_CATEGORY_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: GET_CATEGORY_FAILED, payload: error.message });
@@ -62,10 +62,10 @@ export const getBooksByCategories = (categoryIds) => async (dispatch) => {
   }
 };
 
-export const getCategoryByBook = (bookId) => async (dispatch) => {
+export const getCategoriesByBook = (bookId) => async (dispatch) => {
   dispatch({ type: GET_CATEGORY_BY_BOOK_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/category`);
+    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/categories`);
     dispatch({ type: GET_CATEGORY_BY_BOOK_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: GET_CATEGORY_BY_BOOK_FAILED, payload: error.message });
@@ -83,7 +83,7 @@ export const getTopCategoriesWithBooks = () => async (dispatch) => {
 export const addCategory = (category) => async (dispatch) => {
   dispatch({ type: ADD_CATEGORY_REQUEST });
   try {
-    const { data } = await api.post(`${API_BASE_URL}/admin/books/categories`, category);
+    const { data } = await api.post(`${API_BASE_URL}/admin/categories`, category);
     dispatch({ type: ADD_CATEGORY_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: ADD_CATEGORY_FAILED, payload: error.message });
@@ -93,7 +93,7 @@ export const addCategory = (category) => async (dispatch) => {
 export const editCategory = (categoryId, category) => async (dispatch) => {
   dispatch({ type: EDIT_CATEGORY_REQUEST });
   try {
-    const { data } = await api.put(`${API_BASE_URL}/admin/books/categories/${categoryId}`, category);
+    const { data } = await api.put(`${API_BASE_URL}/admin/categories/${categoryId}`, category);
     dispatch({ type: EDIT_CATEGORY_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: EDIT_CATEGORY_FAILED, payload: error.message });
@@ -103,7 +103,7 @@ export const editCategory = (categoryId, category) => async (dispatch) => {
 export const deleteCategory = (categoryId) => async (dispatch) => {
   dispatch({ type: DELETE_CATEGORY_REQUEST });
   try {
-    await api.delete(`${API_BASE_URL}/admin/books/categories/${categoryId}`);
+    await api.delete(`${API_BASE_URL}/admin/categories/${categoryId}`);
     dispatch({ type: DELETE_CATEGORY_SUCCESS, payload: categoryId });
   } catch (error) {
     dispatch({ type: DELETE_CATEGORY_FAILED, payload: error.message });

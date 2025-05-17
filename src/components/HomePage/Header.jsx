@@ -18,7 +18,7 @@ import {
   useScrollTrigger,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getCategories } from "../../redux/category/category.action";
@@ -30,6 +30,7 @@ import NotificationMenu from "./Header/NotificationMenu";
 import ProfileMenu from "./Header/ProfileMenu";
 import SearchBar from "./SearchBar";
 import { searchBookAction } from "../../redux/book/book.action";
+import SearchDropdown from "./SearchDropdown";
 
 // Hide AppBar on scroll down, show on scroll up
 function HideOnScroll(props) {
@@ -60,6 +61,8 @@ const Header = () => {
   const [loading, setLoading] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,10 +87,26 @@ const Header = () => {
         navigate(`/search-results?${params}`);
         setSearchQuery("");
         setShowSearchBar(false);
+        setShowDropdown(false);
       }
     },
     [searchQuery, navigate]
   );
+
+  const handleSearchFocus = () => {
+    if (searchQuery.trim().length >= 2) {
+      setShowDropdown(true);
+    }
+  };
+
+  const closeDropdown = () => {
+    setShowDropdown(false);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setShowDropdown(e.target.value.trim().length >= 2);
+  };
 
   // Toggle search bar on mobile
   const toggleSearchBar = () => {
@@ -167,15 +186,16 @@ const Header = () => {
 
               {/* Desktop Search Input */}
               {!isMobile && (
-                <Box sx={{ flex: 1, maxWidth: 440, mx: 2 }}>
+                <Box sx={{ flex: 1, maxWidth: 440, mx: 2, position: "relative" }}>
                   <TextField
                     placeholder="Quick search for books..."
                     size="small"
                     fullWidth
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
                     onKeyPress={handleQuickSearch}
-                    onClick={() => navigate("/advanced-search")}
+                    onFocus={handleSearchFocus}
+                    ref={searchInputRef}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -192,7 +212,10 @@ const Header = () => {
                               textTransform: "none",
                               py: 0,
                             }}
-                            onClick={() => setSearchQuery("")}
+                            onClick={() => {
+                              setSearchQuery("");
+                              setShowDropdown(false);
+                            }}
                           >
                             Clear
                           </Button>
@@ -224,6 +247,7 @@ const Header = () => {
                       },
                     }}
                   />
+                  <SearchDropdown anchorEl={searchInputRef.current} searchQuery={searchQuery} onClose={closeDropdown} />
                 </Box>
               )}
 
@@ -236,8 +260,10 @@ const Header = () => {
                     fullWidth
                     autoFocus
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
                     onKeyPress={handleQuickSearch}
+                    onFocus={handleSearchFocus}
+                    ref={searchInputRef}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -260,6 +286,7 @@ const Header = () => {
                       },
                     }}
                   />
+                  <SearchDropdown anchorEl={searchInputRef.current} searchQuery={searchQuery} onClose={closeDropdown} />
                 </Box>
               )}
 

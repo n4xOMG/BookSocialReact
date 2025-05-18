@@ -5,6 +5,7 @@ import { Route, Routes } from "react-router-dom";
 import "./App.css";
 import { CollaborativeEditorWrapper } from "./components/AdminPage/Dashboard/BooksTab/ChapterModal/CollaborativeEditor";
 import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
+import RateLimitAlert from "./components/common/RateLimitAlert";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
 import ResetPassword from "./pages/Authentication/ResetPassword";
@@ -25,6 +26,7 @@ import { getCurrentUserByJwt } from "./redux/auth/auth.action";
 import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
 import PostDetail from "./pages/UserPages/PostDetails";
 import { connectWebSocket, disconnectWebSocket } from "./services/websocket.service";
+import { apiEvents } from "./services/api.service";
 
 function App() {
   const dispatch = useDispatch();
@@ -32,6 +34,27 @@ function App() {
   const jwt = localStorage.getItem("jwt");
   const [loading, setLoading] = useState(false);
   const { AuthDialog } = useAuthCheck();
+  const [rateLimitAlert, setRateLimitAlert] = useState({
+    open: false,
+    retryAfter: null,
+  });
+
+  useEffect(() => {
+    // Rate limit event listener
+    const handleRateLimit = (data) => {
+      setRateLimitAlert({
+        open: true,
+        retryAfter: data.retryAfter,
+      });
+    };
+
+    apiEvents.on("rateLimitExceeded", handleRateLimit);
+
+    return () => {
+      apiEvents.off("rateLimitExceeded", handleRateLimit);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -61,6 +84,13 @@ function App() {
     }
   }, [isAuthenticated, user]);
 
+  const handleCloseRateLimitAlert = () => {
+    setRateLimitAlert({
+      ...rateLimitAlert,
+      open: false,
+    });
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -88,6 +118,7 @@ function App() {
         <Route path="/edit-chapter/:roomId" element={<CollaborativeEditorWrapper />} />
       </Routes>
       <AuthDialog />
+      <RateLimitAlert open={rateLimitAlert.open} handleClose={handleCloseRateLimitAlert} retryAfter={rateLimitAlert.retryAfter} />
     </div>
   );
 }

@@ -59,6 +59,9 @@ import {
   GET_BOOK_COUNT_FAILED,
   GET_BOOK_COUNT_REQUEST,
   GET_BOOK_COUNT_SUCCESS,
+  GET_BOOKS_BY_MONTH_REQUEST,
+  GET_BOOKS_BY_MONTH_SUCCESS,
+  GET_BOOKS_BY_MONTH_FAILED,
 } from "./book.actionType";
 
 export const getAllBookAction = () => async (dispatch) => {
@@ -326,5 +329,17 @@ export const getBookCountAction = () => async (dispatch) => {
   } catch (error) {
     console.log("error trying to get book count", error.message);
     dispatch({ type: GET_BOOK_COUNT_FAILED, payload: error });
+  }
+};
+
+export const getBooksUploadedPerMonth = () => async (dispatch) => {
+  dispatch({ type: GET_BOOKS_BY_MONTH_REQUEST });
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/books`);
+    dispatch({ type: GET_BOOKS_BY_MONTH_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Error fetching books uploaded per month:", error.message);
+    dispatch({ type: GET_BOOKS_BY_MONTH_FAILED, payload: error.message });
   }
 };

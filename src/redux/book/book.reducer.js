@@ -52,6 +52,9 @@ import {
   SET_EDIT_CHOICE_FAILED,
   SET_EDIT_CHOICE_REQUEST,
   SET_EDIT_CHOICE_SUCCESS,
+  GET_BOOKS_BY_MONTH_REQUEST,
+  GET_BOOKS_BY_MONTH_SUCCESS,
+  GET_BOOKS_BY_MONTH_FAILED,
 } from "./book.actionType";
 
 const initialState = {
@@ -73,6 +76,7 @@ const initialState = {
   avgRating: null,
   progresses: [],
   rating: null,
+  booksByMonth: [],
 };
 
 export const bookReducer = (state = initialState, action) => {
@@ -94,6 +98,7 @@ export const bookReducer = (state = initialState, action) => {
     case GET_TRENDING_BOOKS_REQUEST:
     case GET_RELATED_BOOKS_REQUEST:
     case SET_EDIT_CHOICE_REQUEST:
+    case GET_BOOKS_BY_MONTH_REQUEST:
       return { ...state, loading: true, error: null };
 
     case GET_FEATURED_BOOKS_SUCCESS:
@@ -168,6 +173,9 @@ export const bookReducer = (state = initialState, action) => {
     case SEARCH_BOOK_SUCCESS:
       return { ...state, loading: false, searchResults: action.payload };
 
+    case GET_BOOKS_BY_MONTH_SUCCESS:
+      return { ...state, loading: false, error: null, booksByMonth: action.payload };
+
     case BOOK_UPLOAD_FAILED:
     case BOOK_EDIT_FAILED:
     case BOOK_DELETE_FAILED:
@@ -185,6 +193,7 @@ export const bookReducer = (state = initialState, action) => {
     case GET_TRENDING_BOOKS_FAILED:
     case SET_EDIT_CHOICE_FAILED:
     case GET_RELATED_BOOKS_FAILED:
+    case GET_BOOKS_BY_MONTH_FAILED:
       return { ...state, loading: false, error: action.payload };
 
     default:

@@ -85,7 +85,7 @@ export default function ChapterDetailPage() {
 
   const handleChapterChange = (nextChapterId) => {
     setChapterId(nextChapterId);
-    navigate(`/chapters/${nextChapterId}`);
+    navigate(`/books/${bookId}/chapters/${nextChapterId}`);
   };
   const toggleSideDrawer = useCallback(() => {
     console.log("Toggling Drawer");

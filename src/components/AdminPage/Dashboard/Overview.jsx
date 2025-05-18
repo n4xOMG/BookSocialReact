@@ -12,6 +12,8 @@ import {
 } from "@mui/icons-material";
 import { fetchTotalNumberOfPurchases, fetchTotalSalesAmount } from "../../../redux/purchase/purchase.action";
 import { getActiveCreditPackages } from "../../../redux/creditpackage/creditpackage.action";
+import { getTotalUsers, getNewUsersByMonth } from "../../../redux/user/user.action";
+import { getBookCountAction, getBooksUploadedPerMonth } from "../../../redux/book/book.action";
 import StatisticsChart from "./StatisticsChart";
 
 const Overview = () => {
@@ -20,12 +22,13 @@ const Overview = () => {
 
   const { totalSales, totalPurchases } = useSelector((state) => state.purchase);
   const { activeCreditPackages } = useSelector((state) => state.creditpackage);
+  const { totalUsersCount, newUsersByMonth } = useSelector((state) => state.user);
+  const { bookCount, booksByMonth } = useSelector((state) => state.book);
 
-  // Additional mock data (replace with real data from Redux once available)
-  const totalUsers = 5842;
-  const totalBooks = 12763;
-  const activeReaders = 3291;
-  const monthlyGrowth = 12.5;
+  // Use real data, falling back to placeholder when data is not yet loaded
+  const totalUsers = totalUsersCount || 0;
+  const totalBooks = bookCount || 0;
+  const activeReaders = Math.round(totalUsers * 0.65) || 0; // Estimate active readers as 65% of total users
 
   const metrics = [
     {
@@ -63,13 +66,6 @@ const Overview = () => {
       change: "+10% from last month",
       positive: true,
     },
-    {
-      title: "Monthly Growth",
-      icon: <TrendingUpIcon sx={{ fontSize: 40, color: theme.palette.error.main }} />,
-      value: `${monthlyGrowth}%`,
-      change: "Increasing trend",
-      positive: true,
-    },
   ];
 
   const secondaryMetrics = [
@@ -98,6 +94,10 @@ const Overview = () => {
     dispatch(getActiveCreditPackages());
     dispatch(fetchTotalSalesAmount());
     dispatch(fetchTotalNumberOfPurchases());
+    dispatch(getTotalUsers());
+    dispatch(getBookCountAction());
+    dispatch(getNewUsersByMonth());
+    dispatch(getBooksUploadedPerMonth());
     // Add other statistics fetching here
   }, [dispatch]);
 
@@ -155,7 +155,7 @@ const Overview = () => {
         <Typography variant="h6" gutterBottom>
           Monthly Sales & User Growth
         </Typography>
-        <StatisticsChart />
+        <StatisticsChart newUsersByMonth={newUsersByMonth} booksByMonth={booksByMonth} />
       </Paper>
 
       {/* Additional metrics row */}

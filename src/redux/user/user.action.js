@@ -44,6 +44,12 @@ import {
   UPDATE_USER_ROLE_REQUEST,
   UPDATE_USER_ROLE_SUCCESS,
   UPDATE_USER_SUCCESS,
+  GET_TOTAL_USERS_REQUEST,
+  GET_TOTAL_USERS_SUCCESS,
+  GET_TOTAL_USERS_FAILED,
+  GET_NEW_USERS_BY_MONTH_REQUEST,
+  GET_NEW_USERS_BY_MONTH_SUCCESS,
+  GET_NEW_USERS_BY_MONTH_FAILED,
 } from "./user.actionType";
 
 export const getAllUsers = (page, size, searchTerm) => async (dispatch) => {
@@ -244,5 +250,29 @@ export const getUserFollowings = (userId) => async (dispatch) => {
   } catch (error) {
     console.log("Api error: ", error);
     dispatch({ type: GET_USER_FOLLOWING_FAILURE, payload: error.message });
+  }
+};
+
+export const getTotalUsers = () => async (dispatch) => {
+  dispatch({ type: GET_TOTAL_USERS_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/admin/users/total`);
+    dispatch({ type: GET_TOTAL_USERS_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error getting total users: ", error);
+    dispatch({ type: GET_TOTAL_USERS_FAILED, payload: error.message });
+  }
+};
+
+export const getNewUsersByMonth = () => async (dispatch) => {
+  dispatch({ type: GET_NEW_USERS_BY_MONTH_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/admin/users/new-by-month`);
+    dispatch({ type: GET_NEW_USERS_BY_MONTH_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("Api error getting new users by month: ", error);
+    dispatch({ type: GET_NEW_USERS_BY_MONTH_FAILED, payload: error.message });
   }
 };

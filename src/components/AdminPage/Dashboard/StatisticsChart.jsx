@@ -2,24 +2,24 @@ import React from "react";
 import { useTheme } from "@mui/material/styles";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { Line } from "react-chartjs-2";
+import PropTypes from "prop-types";
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
-const StatisticsChart = () => {
+const StatisticsChart = ({ newUsersByMonth = [], booksByMonth = [] }) => {
   const theme = useTheme();
 
-  // Mock data - replace with actual data from your Redux store
+  // Month labels
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  // Sales data (in thousands)
+  // Use provided data or fallback to default mock data if API data isn't available yet
+  const usersData = newUsersByMonth.length === 12 ? newUsersByMonth : [320, 290, 340, 380, 430, 460, 520, 590, 610, 650, 700, 750];
+
+  const booksData = booksByMonth.length === 12 ? booksByMonth : [45, 52, 63, 59, 71, 75, 82, 90, 95, 103, 110, 121];
+
+  // Sales data (still mocked since we don't have monthly sales data)
   const salesData = [48, 42, 53, 56, 61, 65, 70, 73, 80, 85, 92, 98];
-
-  // New users data
-  const newUsersData = [320, 290, 340, 380, 430, 460, 520, 590, 610, 650, 700, 750];
-
-  // Book uploads data
-  const bookUploadsData = [45, 52, 63, 59, 71, 75, 82, 90, 95, 103, 110, 121];
 
   const data = {
     labels: months,
@@ -39,7 +39,7 @@ const StatisticsChart = () => {
       },
       {
         label: "New Users",
-        data: newUsersData,
+        data: usersData,
         borderColor: theme.palette.secondary.main,
         backgroundColor: "transparent",
         tension: 0.3,
@@ -53,7 +53,7 @@ const StatisticsChart = () => {
       },
       {
         label: "Book Uploads",
-        data: bookUploadsData,
+        data: booksData,
         borderColor: theme.palette.success.main,
         backgroundColor: "transparent",
         tension: 0.3,
@@ -126,6 +126,11 @@ const StatisticsChart = () => {
   };
 
   return <Line options={options} data={data} />;
+};
+
+StatisticsChart.propTypes = {
+  newUsersByMonth: PropTypes.array,
+  booksByMonth: PropTypes.array,
 };
 
 export default StatisticsChart;

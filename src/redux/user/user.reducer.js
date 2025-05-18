@@ -39,6 +39,12 @@ import {
   UPDATE_USER_ROLE_REQUEST,
   UPDATE_USER_ROLE_SUCCESS,
   UPDATE_USER_SUCCESS,
+  GET_TOTAL_USERS_REQUEST,
+  GET_TOTAL_USERS_SUCCESS,
+  GET_TOTAL_USERS_FAILED,
+  GET_NEW_USERS_BY_MONTH_REQUEST,
+  GET_NEW_USERS_BY_MONTH_SUCCESS,
+  GET_NEW_USERS_BY_MONTH_FAILED,
 } from "./user.actionType";
 
 const initialState = {
@@ -53,6 +59,8 @@ const initialState = {
   readingProgresses: [],
   preferredCategories: [],
   preferredTags: [],
+  totalUsersCount: 0,
+  newUsersByMonth: [],
 };
 
 export const userReducer = (state = initialState, action) => {
@@ -70,6 +78,8 @@ export const userReducer = (state = initialState, action) => {
     case GET_USER_PREFERENCES_REQUEST:
     case GET_USER_FOLLOWERS_REQUEST:
     case GET_USER_FOLLOWING_REQUEST:
+    case GET_TOTAL_USERS_REQUEST:
+    case GET_NEW_USERS_BY_MONTH_REQUEST:
       return { ...state, loading: true, error: null };
     case GET_ALL_USERS_SUCCESS:
       return { ...state, loading: false, error: null, users: action.payload };
@@ -77,7 +87,6 @@ export const userReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null, user: action.payload };
     case GET_READING_PROGRESS_BY_USER_SUCCESS:
       return { ...state, loading: false, error: null, readingProgresses: action.payload };
-
     case GET_USER_FOLLOWERS_SUCCESS:
       return { ...state, loading: false, error: null, userFollowers: action.payload };
     case GET_USER_FOLLOWING_SUCCESS:
@@ -121,6 +130,10 @@ export const userReducer = (state = initialState, action) => {
           followedByCurrentUser: action.payload.followedByCurrentUser,
         },
       };
+    case GET_TOTAL_USERS_SUCCESS:
+      return { ...state, loading: false, error: null, totalUsersCount: action.payload };
+    case GET_NEW_USERS_BY_MONTH_SUCCESS:
+      return { ...state, loading: false, error: null, newUsersByMonth: action.payload };
     case GET_ALL_USERS_FAILED:
     case GET_USER_BY_ID_FAILED:
     case SUSPEND_USER_FAILED:
@@ -133,6 +146,8 @@ export const userReducer = (state = initialState, action) => {
     case GET_USER_PREFERENCES_FAILURE:
     case GET_USER_FOLLOWERS_FAILURE:
     case GET_USER_FOLLOWING_FAILURE:
+    case GET_TOTAL_USERS_FAILED:
+    case GET_NEW_USERS_BY_MONTH_FAILED:
       return { ...state, loading: true, error: action.payload };
     default:
       return state;

@@ -50,8 +50,14 @@ export default function ChapterDetailPage() {
         setUnlockDialogOpen(true);
       }
       await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
-      await dispatch(getTags());
-      await dispatch(getBookByIdAction(bookId));
+      if (!tags) {
+        await dispatch(getTags());
+      }
+
+      if (!book) {
+        await dispatch(getBookByIdAction(jwt, bookId));
+      }
+
       if (user) {
         await dispatch(getReadingProgressByUserAndChapter(chapterId));
       }

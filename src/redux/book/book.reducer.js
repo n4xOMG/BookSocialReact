@@ -55,6 +55,7 @@ import {
   GET_BOOKS_BY_MONTH_REQUEST,
   GET_BOOKS_BY_MONTH_SUCCESS,
   GET_BOOKS_BY_MONTH_FAILED,
+  RESET_BOOK_DETAIL,
 } from "./book.actionType";
 
 const initialState = {
@@ -66,6 +67,7 @@ const initialState = {
   bookCount: 0,
   latestUpdateBooks: [],
   userFavouredBooks: [],
+  userFavouredBooksHasMore: true,
   booksByAuthor: [],
   booksByAuthorPage: 0,
   booksByAuthorHasMore: true,
@@ -109,8 +111,20 @@ export const bookReducer = (state = initialState, action) => {
     case GET_RELATED_BOOKS_SUCCESS:
       return { ...state, loading: false, relatedBooks: action.payload };
     case GET_BOOK_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        book: action.payload,
+      };
     case BOOK_UPLOAD_SUCCEED:
-      return { ...state, loading: false, error: null, book: action.payload, books: [...state.books, action.payload] };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        book: action.payload,
+        books: state.books ? [...state.books, action.payload] : [action.payload],
+      };
 
     case BOOK_DELETE_SUCCEED:
       return {
@@ -139,14 +153,34 @@ export const bookReducer = (state = initialState, action) => {
     case FOLLOW_BOOK_SUCCESS:
       return { ...state, loading: false, error: null, favoured: action.payload };
     case GET_ALL_BOOK_SUCCESS:
-      return { ...state, loading: false, error: null, books: action.payload };
+      // If payload is paginated (Spring style), use .content, else fallback to array
+      const booksRes = Array.isArray(action.payload) ? action.payload : action.payload.content || [];
+      // If page > 0, append; else, replace
+      const page = action.payload.pageable?.pageNumber ?? 0;
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        books: page > 0 ? [...(state.books || []), ...booksRes] : booksRes,
+      };
 
     case GET_BOOK_RATING_BY_USER_SUCCESS:
     case RATING_BOOK_SUCCESS:
       return { ...state, loading: false, error: null, rating: action.payload };
 
-    case GET_FAVOURED_BOOK_SUCCESS:
-      return { ...state, loading: false, userFavouredBooks: action.payload };
+    case GET_FAVOURED_BOOK_SUCCESS: {
+      // Support Spring Page<BookDTO> or array fallback
+      const payload = action.payload;
+      let content = Array.isArray(payload) ? payload : payload.content || [];
+      let page = payload.pageable?.pageNumber ?? 0;
+      let last = payload.last ?? true;
+      return {
+        ...state,
+        loading: false,
+        userFavouredBooks: page > 0 ? [...(state.userFavouredBooks || []), ...content] : content,
+        userFavouredBooksHasMore: !last,
+      };
+    }
 
     case GET_AVG_BOOK_RATING_SUCCESS:
       return { ...state, loading: false, error: null, avgRating: action.payload };
@@ -175,6 +209,17 @@ export const bookReducer = (state = initialState, action) => {
 
     case GET_BOOKS_BY_MONTH_SUCCESS:
       return { ...state, loading: false, error: null, booksByMonth: action.payload };
+
+    case RESET_BOOK_DETAIL:
+      return {
+        ...state,
+        book: null,
+        rating: null,
+        progresses: [],
+        relatedBooks: [],
+        avgRating: null,
+        error: null,
+      };
 
     case BOOK_UPLOAD_FAILED:
     case BOOK_EDIT_FAILED:

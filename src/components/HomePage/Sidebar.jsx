@@ -18,7 +18,7 @@ import {
   AppBar,
   Toolbar,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
@@ -33,47 +33,56 @@ export const Sidebar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(!isMobile);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Access authentication state from Redux store
   const { user } = useSelector((state) => state.auth);
 
-  // Define menu items, conditionally including "My Stories" and "Library" if logged in
-  const menuItems = [
-    { text: "Home", icon: <Explore />, link: "/" },
-    ...(user
-      ? [
-          { text: "My Stories", icon: <Person />, link: "/stories" },
-          { text: "Library", icon: <Bookmark />, link: "/library" },
-          { text: "Credit Packages", icon: <Money />, link: "/credit-packages" },
-        ]
-      : []),
-    { text: "Book Clubs", icon: <Chat />, link: "/book-clubs" },
-  ];
+  const menuItems = useMemo(
+    () => [
+      { text: "Home", icon: <Explore />, link: "/" },
+      ...(user
+        ? [
+            { text: "My Stories", icon: <Book />, link: "/stories" },
+            { text: "Library", icon: <Bookmark />, link: "/library" },
+            { text: "Credit Packages", icon: <Money />, link: "/credit-packages" },
+          ]
+        : []),
+      { text: "Book Clubs", icon: <Chat />, link: "/book-clubs" },
+    ],
+    [user]
+  );
 
   useEffect(() => {
-    if (user) {
+    // Only fetch reading progress when the user is logged in and the history is expanded
+    if (user && historyExpanded && readingProgresses.length === 0 && !isLoadingHistory) {
+      setIsLoadingHistory(true);
       try {
-        dispatch(getReadingProgressByUser());
+        dispatch(getReadingProgressByUser()).finally(() => setIsLoadingHistory(false));
       } catch (error) {
         console.error("Error trying to get reading progress: ", error);
+        setIsLoadingHistory(false);
       }
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, historyExpanded, readingProgresses.length, isLoadingHistory]);
 
-  const toggleDrawer = () => {
+  const toggleDrawer = useCallback(() => {
     setMobileOpen(!mobileOpen);
-  };
+  }, [mobileOpen]);
 
-  const handleHistoryToggle = () => {
+  const handleHistoryToggle = useCallback(() => {
     setHistoryExpanded(!historyExpanded);
-  };
+  }, [historyExpanded]);
 
-  const handleNavigation = (link) => {
-    navigate(link);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
-  };
+  const handleNavigation = useCallback(
+    (link) => {
+      navigate(link);
+      if (isMobile) {
+        setMobileOpen(false);
+      }
+    },
+    [navigate, isMobile]
+  );
 
   const drawerContent = (
     <>
@@ -97,7 +106,7 @@ export const Sidebar = () => {
           onClick={() => handleNavigation("/")}
         >
           <Avatar
-            src="/logo.png"
+            src={user?.avatarUrl || "https://via.placeholder.com/32?text=B"}
             alt="BookSocial"
             sx={{
               width: 32,
@@ -214,7 +223,7 @@ export const Sidebar = () => {
           </ListItemButton>
 
           <Collapse in={historyExpanded} timeout="auto" unmountOnExit>
-            <ReadingHistoryCard readingProgresses={readingProgresses} />
+            <ReadingHistoryCard readingProgresses={readingProgresses} loading={isLoadingHistory} />
           </Collapse>
         </Box>
       )}
@@ -239,12 +248,22 @@ export const Sidebar = () => {
               py: isMobile ? 1.5 : 1,
             }}
           >
-            <Avatar src={user.avatar} alt={user.name} sx={{ width: 32, height: 32, mr: 1.5 }} />
+            <Avatar src={user.avatarUrl} alt={user.name} sx={{ width: 32, height: 32, mr: 1.5 }} />
             <Box>
               <Typography variant="body2" fontWeight="medium" noWrap>
                 {user.name}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                noWrap
+                sx={{
+                  maxWidth: 120,
+                  display: "block",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
                 {user.email}
               </Typography>
             </Box>

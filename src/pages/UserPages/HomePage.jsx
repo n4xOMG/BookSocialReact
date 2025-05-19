@@ -1,5 +1,5 @@
 import { Box, Alert, Fade, useMediaQuery, useTheme } from "@mui/material";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "../../components/HomePage/Header";
 import { MainContent } from "../../components/HomePage/MainContent";
@@ -14,11 +14,26 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isInitialMount = useRef(true);
 
   const fetchData = useCallback(async () => {
+    // Avoid refetching if we already have data
+    if (featuredBooks?.length && trendingBooks?.length) {
+      return;
+    }
+
     setLoading(true);
     try {
-      await Promise.all([dispatch(getFeaturedBooks()), dispatch(getTrendingBooks())]);
+      // Use Promise.all to fetch data in parallel
+      const promises = [];
+      if (!featuredBooks?.length) {
+        promises.push(dispatch(getFeaturedBooks()));
+      }
+      if (!trendingBooks?.length) {
+        promises.push(dispatch(getTrendingBooks()));
+      }
+
+      await Promise.all(promises);
       setErrorMessage(null);
     } catch (e) {
       console.error("Error fetching book data:", e);
@@ -26,10 +41,14 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [dispatch]);
+  }, [dispatch, featuredBooks, trendingBooks]);
 
   useEffect(() => {
-    fetchData();
+    // Only fetch on initial mount
+    if (isInitialMount.current) {
+      fetchData();
+      isInitialMount.current = false;
+    }
   }, [fetchData]);
 
   useEffect(() => {

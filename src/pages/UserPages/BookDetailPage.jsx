@@ -60,17 +60,27 @@ export const BookDetailPage = () => {
 
   const fetchBookAndChapterDetails = useCallback(async () => {
     setLoading(true);
-    await dispatch(getBookByIdAction(bookId));
-    await dispatch(getAvgBookRating(bookId));
-    if (user && !isTokenExpired(jwt)) {
-      await dispatch(getAllReadingProgressesByBook(bookId));
-      await dispatch(getBookRatingByUserAction(bookId));
+    try {
+      const bookResponse = await dispatch(getBookByIdAction(jwt, bookId));
+      if (!bookResponse?.payload) {
+        console.error("Failed to fetch book data");
+        return;
+      }
+
+      await dispatch(getAvgBookRating(bookId));
+      if (user && !isTokenExpired(jwt)) {
+        await dispatch(getAllReadingProgressesByBook(bookId));
+        await dispatch(getBookRatingByUserAction(bookId));
+      }
+
+      // Use the fresh book data from response to fetch related books
+      dispatch(getRelatedBooksAction(bookId, bookResponse.payload.categoryId, bookResponse.payload.tagIds));
+    } catch (error) {
+      console.error("Error fetching book details:", error);
+    } finally {
+      setLoading(false);
     }
-    if (book) {
-      dispatch(getRelatedBooksAction(bookId, book.categoryId, book.tagIds));
-    }
-    setLoading(false);
-  }, [user, bookId, jwt, dispatch]);
+  }, [bookId, user, jwt, dispatch]);
 
   const calculateOverallProgress = useCallback(() => {
     if (!book || book.chapterCount === 0) {
@@ -144,13 +154,23 @@ export const BookDetailPage = () => {
   });
 
   useEffect(() => {
+    // Reset state when bookId changes
+    setOverallProgress(0);
+    setIsFavorite(false);
+    setFirstChapterId(null);
+
+    // Fetch new book data
     fetchBookAndChapterDetails();
-    console.log("Book detail rerendered");
-  }, [fetchBookAndChapterDetails]);
+
+    return () => {
+      // Clean up when component unmounts or bookId changes
+      dispatch({ type: "RESET_BOOK_DETAIL" });
+    };
+  }, [bookId, fetchBookAndChapterDetails, dispatch]);
 
   useEffect(() => {
     if (book && user) {
-      setIsFavorite(isFavouredByReqUser(user, book));
+      setIsFavorite(book.followedByCurrentUser);
     }
   }, [book, user]);
 

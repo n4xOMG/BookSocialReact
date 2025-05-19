@@ -1,5 +1,5 @@
-import { CircularProgress } from "@mui/material";
-import { useEffect, useState } from "react";
+import { CircularProgress, Box } from "@mui/material";
+import { useEffect, useState, useMemo } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
@@ -30,7 +30,7 @@ import { apiEvents } from "./services/api.service";
 
 function App() {
   const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector((store) => store.auth, shallowEqual);
+  const { user, isAuthenticated, loading: authLoading } = useSelector((store) => store.auth, shallowEqual);
   const jwt = localStorage.getItem("jwt");
   const [loading, setLoading] = useState(false);
   const { AuthDialog } = useAuthCheck();
@@ -57,31 +57,37 @@ function App() {
 
   useEffect(() => {
     const fetchUser = async () => {
+      if (loading || authLoading) return;
+
       try {
         setLoading(true);
         if (jwt && !isTokenExpired(jwt) && !user) {
           await dispatch(getCurrentUserByJwt(jwt));
         }
       } catch (e) {
-        console.log("Error loading app: ", e);
+        console.error("Error loading app: ", e);
       } finally {
         setLoading(false);
       }
     };
     fetchUser();
-    console.log("App rendered");
-  }, [dispatch]);
+  }, [dispatch, jwt, user, authLoading]);
 
+  // WebSocket connection - only initialize when user is authenticated
   useEffect(() => {
+    let wsCleanup;
+
     if (isAuthenticated && user?.id) {
       console.log("App.js: Initializing WebSocket connection for user", user.username);
-      connectWebSocket(user.username);
-
-      return () => {
-        console.log("App.js: Cleaning up WebSocket connection");
-        disconnectWebSocket();
-      };
+      wsCleanup = connectWebSocket(user.username);
     }
+
+    return () => {
+      if (wsCleanup) {
+        console.log("App.js: Cleaning up WebSocket connection");
+        wsCleanup();
+      }
+    };
   }, [isAuthenticated, user]);
 
   const handleCloseRateLimitAlert = () => {
@@ -91,9 +97,22 @@ function App() {
     });
   };
 
+  // Simple loading component
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
+
   return (
     <div className="App">
       <Routes>

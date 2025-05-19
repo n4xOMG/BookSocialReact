@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -16,7 +16,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUserByJwt, loginUserAction } from "../../redux/auth/auth.action";
 import { Alert } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 function Copyright(props) {
@@ -32,24 +32,48 @@ const defaultTheme = createTheme();
 export default function SignIn() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const error = useSelector((store) => store.auth.error);
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
+  // Check for redirect state
+  useEffect(() => {
+    if (location.state?.message) {
+      setLoginError(location.state.message);
+    }
+  }, [location]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    try {
-      localStorage.removeItem("jwt");
+    setLoginError("");
 
+    try {
       const data = new FormData(event.currentTarget);
-      const json = Object.fromEntries(data.entries());
-      const rememberMe = data.get("remember");
+      const json = {
+        email: data.get("email"),
+        password: data.get("password"),
+      };
+
+      const rememberMe = data.get("remember") === "remember";
+
       const result = await dispatch(loginUserAction({ data: json, rememberMe }));
-      if (result) {
-        await dispatch(getCurrentUserByJwt(result.payload.token));
-        navigate("/");
+      if (result?.payload?.token) {
+        const userResult = await dispatch(getCurrentUserByJwt(result.payload.token));
+        if (userResult?.payload) {
+          // Redirect to the intended page or home
+          const redirectTo = location.state?.from || "/";
+          navigate(redirectTo);
+        } else if (userResult?.error === "UNAUTHORIZED") {
+          setLoginError("Session expired. Please try logging in again.");
+        }
+      } else if (error) {
+        setLoginError(error);
       }
     } catch (e) {
-      console.log("Error signing in: ", e);
+      console.error("Error signing in: ", e);
+      setLoginError("An unexpected error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -98,8 +122,8 @@ export default function SignIn() {
                   id="password"
                   autoComplete="current-password"
                 />
-                {error && <Alert severity="error">{error}</Alert>}
-                <FormControlLabel control={<Checkbox value="remember" color="primary" />} label="Remember me" />
+                {loginError && <Alert severity="error">{loginError}</Alert>}
+                <FormControlLabel control={<Checkbox value="remember" name="remember" color="primary" />} label="Remember me" />
                 <Button
                   type="submit"
                   fullWidth

@@ -216,9 +216,10 @@ const UserBooks = () => {
     const fetchBookInfo = async () => {
       setLoading(true);
       try {
-        dispatch(getCategories());
-        dispatch(getTags());
-
+        if (!tags || !categories) {
+          await dispatch(getTags());
+          await dispatch(getCategories());
+        }
         // Use pagination when fetching initial books
         await dispatch(getBooksByAuthorAction(user?.id, 0, PAGE_SIZE, filterOptions));
       } catch (e) {
@@ -275,7 +276,7 @@ const UserBooks = () => {
       const fetchBookInfo = async () => {
         setLoading(true);
         try {
-          await dispatch(getBookByIdAction(selectedBookId));
+          await dispatch(getBookByIdAction(null, selectedBookId));
         } catch (e) {
           console.log("Error trying to book by id in manage book page: ", e);
         } finally {

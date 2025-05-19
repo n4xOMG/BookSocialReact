@@ -2,7 +2,6 @@ import { Menu, Search, Upload } from "@mui/icons-material";
 import {
   AppBar,
   Avatar,
-  Badge,
   Box,
   Button,
   Divider,
@@ -18,7 +17,7 @@ import {
   useScrollTrigger,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getCategories } from "../../redux/category/category.action";
@@ -28,8 +27,6 @@ import LoadingSpinner from "../LoadingSpinner";
 import MessageMenu from "./Header/MessageMenu";
 import NotificationMenu from "./Header/NotificationMenu";
 import ProfileMenu from "./Header/ProfileMenu";
-import SearchBar from "./SearchBar";
-import { searchBookAction } from "../../redux/book/book.action";
 import SearchDropdown from "./SearchDropdown";
 
 // Hide AppBar on scroll down, show on scroll up
@@ -46,12 +43,28 @@ function HideOnScroll(props) {
   );
 }
 
+// Debounce function to limit API calls
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 const Header = () => {
   const navigate = useNavigate();
   const { checkAuth, AuthDialog } = useAuthCheck();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
   const { user } = useSelector((state) => state.auth);
   const { categories } = useSelector((state) => state.category);
@@ -61,23 +74,35 @@ const Header = () => {
   const [loading, setLoading] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
   const searchInputRef = useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([dispatch(getCategories()), dispatch(getTags())]);
-      } catch (e) {
-        console.error("Error loading categories or tags:", e);
-      } finally {
-        setLoading(false);
+      // Only fetch if we don't already have the data
+      if (categories.length === 0 || tags.length === 0) {
+        setLoading(true);
+        try {
+          // Fetch in parallel with Promise.all
+          await Promise.all([
+            categories.length === 0 ? dispatch(getCategories()) : Promise.resolve(),
+            tags.length === 0 ? dispatch(getTags()) : Promise.resolve(),
+          ]);
+        } catch (e) {
+          console.error("Error loading categories or tags:", e);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
-    fetchData();
-  }, [dispatch]);
+    if (isInitialMount.current) {
+      fetchData();
+      isInitialMount.current = false;
+    }
+  }, [dispatch, categories.length, tags.length]);
 
   const handleQuickSearch = useCallback(
     (e) => {
@@ -93,6 +118,15 @@ const Header = () => {
     [searchQuery, navigate]
   );
 
+  // Update dropdown visibility based on debounced query
+  useEffect(() => {
+    if (debouncedSearchQuery.trim().length >= 2) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [debouncedSearchQuery]);
+
   const handleSearchFocus = () => {
     if (searchQuery.trim().length >= 2) {
       setShowDropdown(true);
@@ -105,7 +139,7 @@ const Header = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setShowDropdown(e.target.value.trim().length >= 2);
+    // Dropdown visibility will be handled by the useEffect with debounced query
   };
 
   // Toggle search bar on mobile

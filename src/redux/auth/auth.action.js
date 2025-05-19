@@ -21,13 +21,29 @@ import {
   UPDATE_PROFILE_SUCCESS,
 } from "./auth.actionType";
 import { api, API_BASE_URL } from "../../api/api";
+
 export const loginUserAction = (loginData) => async (dispatch) => {
   dispatch({ type: LOGIN_REQUEST });
   try {
-    const { data } = await axios.post(`${API_BASE_URL}/auth/signin`, loginData.data);
+    const { data } = await axios.post(`${API_BASE_URL}/auth/signin`, {
+      ...loginData.data,
+      rememberMe: loginData.rememberMe,
+    });
+
     if (data.token) {
       localStorage.setItem("jwt", data.token);
+
+      // Store token creation time for expiry checks
+      localStorage.setItem("tokenTimestamp", Date.now().toString());
+
+      // If rememberMe, store a flag
+      if (loginData.rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        localStorage.removeItem("rememberMe");
+      }
     }
+
     dispatch({ type: LOGIN_SUCCEED, payload: data.token });
     return { payload: data };
   } catch (error) {
@@ -38,7 +54,7 @@ export const loginUserAction = (loginData) => async (dispatch) => {
       if (error.response.status === 403) {
         dispatch({ type: LOGIN_FAILED, payload: error.response.data.message });
       } else {
-        dispatch({ type: LOGIN_FAILED, payload: error.response.data });
+        dispatch({ type: LOGIN_FAILED, payload: error.response.data.message || "Authentication failed" });
       }
     } else {
       console.log("No response from server");
@@ -46,9 +62,17 @@ export const loginUserAction = (loginData) => async (dispatch) => {
     }
   }
 };
-export const logoutAction = () => ({
-  type: LOGOUT,
-});
+
+export const logoutAction = () => {
+  localStorage.removeItem("jwt");
+  localStorage.removeItem("tokenTimestamp");
+  localStorage.removeItem("rememberMe");
+
+  return {
+    type: LOGOUT,
+  };
+};
+
 export const registerUserAction = (registerData) => async (dispatch) => {
   dispatch({ type: REGISTER_REQUEST });
   try {
@@ -137,5 +161,35 @@ export const updateUserProfile = (reqData) => async (dispatch) => {
   } catch (error) {
     console.log("Api error: ", error.message);
     dispatch({ type: UPDATE_PROFILE_FAILED, payload: error.response.data });
+  }
+};
+
+export const refreshToken = () => async (dispatch) => {
+  try {
+    const currentToken = localStorage.getItem("jwt");
+    if (!currentToken) return null;
+
+    const { data } = await axios.post(
+      `${API_BASE_URL}/auth/refresh-token`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${currentToken}`,
+        },
+      }
+    );
+
+    if (data.token) {
+      localStorage.setItem("jwt", data.token);
+      localStorage.setItem("tokenTimestamp", Date.now().toString());
+      dispatch({ type: LOGIN_SUCCEED, payload: data.token });
+      return data.token;
+    }
+    return null;
+  } catch (error) {
+    console.log("Token refresh failed:", error);
+    // If refresh fails, log the user out
+    dispatch(logoutAction());
+    return null;
   }
 };

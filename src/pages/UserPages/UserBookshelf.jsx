@@ -1,6 +1,6 @@
-import { Book, Search, Sort } from "@mui/icons-material";
-import { Avatar, Box, Card, CardContent, CardMedia, Fade, MenuItem, Rating, Select, TextField, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { Book, Search } from "@mui/icons-material";
+import { Avatar, Box, Button, Card, CardContent, CardMedia, Fade, Rating, TextField, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "../../components/HomePage/Sidebar";
@@ -8,30 +8,37 @@ import { getUserFavouredBooksAction } from "../../redux/book/book.action";
 
 export default function UserBookshelf() {
   const { user } = useSelector((store) => store.auth);
-  const { userFavouredBooks } = useSelector((store) => store.book);
+  const { userFavouredBooks, userFavouredBooksHasMore = true } = useSelector((store) => store.book);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const size = 12;
 
+  // Fetch books on mount changes
   useEffect(() => {
     setLoading(true);
-    try {
-      dispatch(getUserFavouredBooksAction());
-    } catch (e) {
-      console.log("Error trying to get all books by user: ", e);
-    } finally {
-      setLoading(false);
-    }
+    setPage(0);
+    dispatch(getUserFavouredBooksAction({ page: 0, size })).finally(() => setLoading(false));
   }, [dispatch]);
 
-  const filteredAndSortedBooks = userFavouredBooks
-    ?.filter(
+  // Load more handler
+  const handleLoadMore = useCallback(() => {
+    setLoading(true);
+    dispatch(getUserFavouredBooksAction({ page: page + 1, size })).finally(() => {
+      setPage((prev) => prev + 1);
+      setLoading(false);
+    });
+  }, [dispatch, page]);
+
+  // Memoize filtered and sorted books
+  const filteredAndSortedBooks = useMemo(() => {
+    return (userFavouredBooks || []).filter(
       (book) =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) || book.authorName.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => (sortOrder === "asc" ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title)));
+    );
+  }, [userFavouredBooks, searchTerm]);
 
   return (
     <Box sx={{ display: "flex", overscrollBehavior: "contain" }}>
@@ -47,7 +54,7 @@ export default function UserBookshelf() {
               <Box display="flex" alignItems="center" gap={2} mt={1} color="text.secondary">
                 <Box display="flex" alignItems="center" gap={1}>
                   <Book color="primary" />
-                  {user?.book?.length} favourited books
+                  {userFavouredBooks?.length || 0} favourited books
                 </Box>
               </Box>
             </Box>
@@ -63,18 +70,10 @@ export default function UserBookshelf() {
               }}
               fullWidth
             />
-            <Select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} variant="outlined" displayEmpty sx={{ width: 150 }}>
-              <MenuItem value="asc">
-                <Sort /> Sort A-Z
-              </MenuItem>
-              <MenuItem value="desc">
-                <Sort /> Sort Z-A
-              </MenuItem>
-            </Select>
           </Box>
         </Box>
 
-        {loading ? (
+        {loading && page === 0 ? (
           <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3}>
             {[...Array(8)].map((_, index) => (
               <Card
@@ -103,36 +102,68 @@ export default function UserBookshelf() {
           </Box>
         ) : (
           <Fade in={!loading}>
-            <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3}>
-              {filteredAndSortedBooks.map((book) => (
-                <Card
-                  onClick={() => navigate(`/books/${book.id}`)}
-                  key={book.id}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    boxShadow: 3,
-                    transition: "box-shadow 0.2s",
-                    "&:hover": { boxShadow: 6 },
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    image={book.bookCover}
-                    alt={`Cover of ${book.title}`}
-                    sx={{ height: 240, objectFit: "cover" }}
-                  />
-                  <CardContent>
-                    <Typography variant="h6" fontWeight="medium" color="text.primary" gutterBottom>
-                      {book.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {book.authorName}
-                    </Typography>
-                    <Rating value={book.avgRating} readOnly size="small" sx={{ mb: 1 }} />
-                  </CardContent>
-                </Card>
-              ))}
+            <Box>
+              <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3}>
+                {filteredAndSortedBooks.map((book) => (
+                  <Card
+                    onClick={() => navigate(`/books/${book.id}`)}
+                    key={book.id}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      boxShadow: 3,
+                      transition: "box-shadow 0.2s",
+                      "&:hover": { boxShadow: 6 },
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      image={book.bookCover}
+                      alt={`Cover of ${book.title}`}
+                      sx={{ height: 240, objectFit: "cover" }}
+                    />
+                    <CardContent>
+                      <Typography
+                        variant="h6"
+                        fontWeight="medium"
+                        color="text.primary"
+                        gutterBottom
+                        sx={{
+                          maxWidth: "220px",
+                          width: "100%",
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {book.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                        sx={{
+                          maxWidth: "220px",
+                          width: "100%",
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {book.authorName}
+                      </Typography>
+                      <Rating value={book.avgRating} readOnly size="small" sx={{ mb: 1 }} />
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+              {userFavouredBooksHasMore && filteredAndSortedBooks.length > 0 && (
+                <Box display="flex" justifyContent="center" mt={3}>
+                  <Button variant="contained" onClick={handleLoadMore} disabled={loading}>
+                    {loading ? "Loading..." : "Load More"}
+                  </Button>
+                </Box>
+              )}
             </Box>
           </Fade>
         )}

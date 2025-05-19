@@ -62,41 +62,60 @@ import {
   GET_BOOKS_BY_MONTH_REQUEST,
   GET_BOOKS_BY_MONTH_SUCCESS,
   GET_BOOKS_BY_MONTH_FAILED,
+  RESET_BOOK_DETAIL,
 } from "./book.actionType";
 
-export const getAllBookAction = () => async (dispatch) => {
-  dispatch({ type: GET_ALL_BOOK_REQUEST });
-  try {
-    const { data } = await axios.get(`${API_BASE_URL}/books`);
-    dispatch({ type: GET_ALL_BOOK_SUCCESS, payload: data });
-    return { payload: data };
-  } catch (error) {
-    console.log("error trying to get all books", error.message);
-    dispatch({ type: GET_ALL_BOOK_FAILED, payload: error });
-  }
-};
+export const getAllBookAction =
+  (page = 0, size = 10) =>
+  async (dispatch) => {
+    dispatch({ type: GET_ALL_BOOK_REQUEST });
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/books`, {
+        params: { page, size },
+      });
+      dispatch({ type: GET_ALL_BOOK_SUCCESS, payload: data });
+      return { payload: data };
+    } catch (error) {
+      console.log("error trying to get all books", error.message);
+      dispatch({ type: GET_ALL_BOOK_FAILED, payload: error });
+    }
+  };
 
-export const getUserFavouredBooksAction = () => async (dispatch) => {
-  dispatch({ type: GET_FAVOURED_BOOK_REQUEST });
-  try {
-    const { data } = await api.get(`${API_BASE_URL}/api/books/favoured`);
-    dispatch({ type: GET_FAVOURED_BOOK_SUCCESS, payload: data });
-    return { payload: data };
-  } catch (error) {
-    console.log("error trying to get all user favoured books", error.message);
-    dispatch({ type: GET_FAVOURED_BOOK_FAILED, payload: error });
-  }
-};
+export const getUserFavouredBooksAction =
+  ({ page = 0, size = 10 } = {}) =>
+  async (dispatch) => {
+    dispatch({ type: GET_FAVOURED_BOOK_REQUEST });
+    try {
+      const { data } = await api.get(`${API_BASE_URL}/api/books/favoured`, {
+        params: { page, size },
+      });
+      dispatch({ type: GET_FAVOURED_BOOK_SUCCESS, payload: data });
+      return { payload: data };
+    } catch (error) {
+      console.log("error trying to get all user favoured books", error.message);
+      dispatch({ type: GET_FAVOURED_BOOK_FAILED, payload: error });
+    }
+  };
 
-export const getBookByIdAction = (bookId) => async (dispatch) => {
+export const getBookByIdAction = (jwt, bookId) => async (dispatch) => {
   dispatch({ type: GET_BOOK_REQUEST });
+  const apiClient = jwt ? api : axios;
+  if (!bookId) {
+    dispatch({ type: GET_BOOK_FAILED, payload: "Invalid book ID" });
+    return { error: "Invalid book ID" };
+  }
+
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}`);
+    // Reset book detail before fetching new one
+    dispatch({ type: RESET_BOOK_DETAIL });
+
+    const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}`);
     dispatch({ type: GET_BOOK_SUCCESS, payload: data });
     return { payload: data };
   } catch (error) {
-    console.log("Api error when trying to retreiving book: ", error.message);
+    console.log("Api error when trying to retrieve book: ", error.message);
     dispatch({ type: GET_BOOK_FAILED, payload: error.message });
+    return { error: error.message };
   }
 };
 

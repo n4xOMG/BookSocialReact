@@ -58,13 +58,14 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
                       overflow: "hidden",
                       whiteSpace: "nowrap",
                       color: theme.palette.primary.dark,
-                      maxWidth: "100%",
+                      maxWidth: "220px", // limit width
+                      width: "100%",
                     }}
                   >
                     {book.title}
                   </Typography>
                 </Tooltip>
-                <Box sx={{ position: "relative", height: "40px", overflow: "hidden" }}>
+                <Box sx={{ position: "relative", height: "40px", overflow: "hidden", maxWidth: "220px", width: "100%" }}>
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -76,7 +77,8 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
                       textOverflow: "ellipsis",
                       mb: 1.5,
                       lineHeight: 1.4,
-                      maxWidth: "100%",
+                      maxWidth: "220px", // limit width
+                      width: "100%",
                     }}
                   >
                     {book.description || "No description available"}

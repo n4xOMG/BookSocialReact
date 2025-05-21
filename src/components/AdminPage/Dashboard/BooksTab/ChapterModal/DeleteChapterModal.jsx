@@ -15,7 +15,7 @@ export default function DeleteChapterModal({ open, onClose, bookId, deleteChapte
     event.preventDefault();
     console.log("bookId: ", deleteChapter.id);
     setLoading(true);
-    await dispatch(deleteChapterAction(bookId, deleteChapter.id));
+    await dispatch(deleteChapterAction(deleteChapter.id));
     await dispatch(getAllChaptersByBookIdAction(bookId));
     setLoading(false);
     onClose();

@@ -1,6 +1,6 @@
 import { Backdrop, Box, useTheme } from "@mui/material";
 import { debounce } from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../LoadingSpinner";
@@ -98,10 +98,13 @@ export default function MangaChapterDetail({
     };
   }, [debouncedSaveProgress]);
 
-  const handlePageChange = (newPage) => {
-    const newCurrentPage = Math.max(0, Math.min(newPage, totalPages - 1));
-    setCurrentPage(newCurrentPage);
-  };
+  const handlePageChange = useCallback(
+    (newPage) => {
+      const newCurrentPage = Math.max(0, Math.min(newPage, totalPages - 1));
+      setCurrentPage(newCurrentPage);
+    },
+    [totalPages]
+  );
 
   const handleViewModeChange = (value) => {
     setViewMode(value);
@@ -110,21 +113,23 @@ export default function MangaChapterDetail({
 
   const handleKeyDown = useCallback(
     (e) => {
-      if (viewMode === "double") {
-        if (e.key === "ArrowLeft") {
-          handlePageChange(currentPage - 2);
-        } else if (e.key === "ArrowRight") {
-          handlePageChange(currentPage + 2);
+      window.requestAnimationFrame(() => {
+        if (viewMode === "double") {
+          if (e.key === "ArrowLeft") {
+            handlePageChange(currentPage - 2);
+          } else if (e.key === "ArrowRight") {
+            handlePageChange(currentPage + 2);
+          }
+        } else {
+          if (e.key === "ArrowLeft") {
+            handlePageChange(currentPage - 1);
+          } else if (e.key === "ArrowRight") {
+            handlePageChange(currentPage + 1);
+          }
         }
-      } else {
-        if (e.key === "ArrowLeft") {
-          handlePageChange(currentPage - 1);
-        } else if (e.key === "ArrowRight") {
-          handlePageChange(currentPage + 1);
-        }
-      }
+      });
     },
-    [currentPage, viewMode]
+    [currentPage, viewMode, handlePageChange]
   );
   const handleBackToBookPage = () => {
     saveProgress();

@@ -1,11 +1,9 @@
-import { Box, CircularProgress, Tabs, Typography, useTheme, Paper, Divider, LinearProgress } from "@mui/material";
+import { MenuBook } from "@mui/icons-material";
+import { Box, CircularProgress, Divider, Tabs, Typography, useTheme } from "@mui/material";
 import Tab from "@mui/material/Tab";
-import { useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
+import { useEffect, useState } from "react";
 import { TabChapters } from "./ChapterListComponent/TabChapters";
 import { TabPanel } from "./ChapterListComponent/TabPanel";
-import { MenuBook } from "@mui/icons-material";
 
 function a11yProps(index) {
   return {
@@ -14,51 +12,21 @@ function a11yProps(index) {
   };
 }
 
-export const ChapterList = ({ progresses, onCalculateProgress, onNavigate, bookId, user, onFirstChapterId }) => {
+export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, user, onFirstChapterId }) => {
   const [value, setValue] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { chapters } = useSelector((store) => store.chapter);
   const theme = useTheme();
-  const dispatch = useDispatch();
-  const jwt = localStorage.getItem("jwt");
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
-  const handleClick = () => {
-    setOpen(!open);
-  };
-
-  const fetchChapters = useCallback(async () => {
-    setLoading(true);
-    try {
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
-    } catch (error) {
-      console.error("Error fetching chapters:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [bookId, dispatch]);
-
+  // Set first chapter id if chapters change
   useEffect(() => {
-    fetchChapters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      onCalculateProgress(chapters, progresses);
-    }
     if (chapters?.length > 0) {
-      onFirstChapterId(chapters[0].id);
+      onFirstChapterId && onFirstChapterId(chapters[0].id);
     }
-  }, [chapters, dispatch, onFirstChapterId, user]);
-
-  useEffect(() => {
-    onCalculateProgress(chapters, progresses);
-  }, [chapters, progresses, onCalculateProgress]);
+    // eslint-disable-next-line
+  }, [chapters]);
 
   return (
     <Box>
@@ -71,7 +39,7 @@ export const ChapterList = ({ progresses, onCalculateProgress, onNavigate, bookI
 
       <Divider sx={{ mb: 3 }} />
 
-      {loading ? (
+      {chapters === undefined ? (
         <Box sx={{ py: 4, textAlign: "center" }}>
           <CircularProgress size={30} thickness={4} />
           <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>

@@ -54,22 +54,30 @@ export default function NovelChapterDetail({
     navigate(`/books/${bookId}`);
   };
 
+  const parsedContent = useMemo(() => (chapter && chapter.content ? parse(chapter.content) : "No content"), [chapter]);
+
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = window.innerHeight;
-      const newProgress = (scrollTop / (scrollHeight - clientHeight)) * 100;
-      progressRef.current = newProgress;
-      setProgress(newProgress);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollTop = window.scrollY;
+          const scrollHeight = document.documentElement.scrollHeight;
+          const clientHeight = window.innerHeight;
+          const newProgress = (scrollTop / (scrollHeight - clientHeight)) * 100;
+          progressRef.current = newProgress;
+          setProgress(newProgress);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-
-    window.addEventListener("scroll", handleScroll);
-
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
   useEffect(() => {
     if (readingProgress) {
       const scrollHeight = document.documentElement.scrollHeight;
@@ -155,7 +163,7 @@ export default function NovelChapterDetail({
                 },
               }}
             >
-              {chapter && chapter.content ? parse(chapter?.content) : "No content"}
+              {parsedContent}
             </Box>
           </Box>
           {isFloatingMenuVisible && (

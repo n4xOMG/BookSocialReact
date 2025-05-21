@@ -1,20 +1,7 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Box,
-  Rating,
-  Autocomplete,
-  IconButton,
-  Typography,
-  CircularProgress,
-} from "@mui/material";
 import ImageIcon from "@mui/icons-material/Image";
-import UploadToCloudinary from "../../utils/uploadToCloudinary";
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { UploadToServer } from "../../utils/uploadToServer";
 
 const PostDialog = ({ open, onClose, onSubmit, editingPost, user }) => {
   const [selectedImages, setSelectedImages] = useState([]);
@@ -54,7 +41,7 @@ const PostDialog = ({ open, onClose, onSubmit, editingPost, user }) => {
     try {
       // Upload images to Cloudinary
       const uploadedImageUrls = await Promise.all(
-        selectedImages.map((image) => (typeof image === "string" ? image : UploadToCloudinary(image, "postimages")))
+        selectedImages.map((image) => (typeof image === "string" ? image : UploadToServer(image, user?.username, `post_${Date.now()}`)))
       );
 
       const postData = {

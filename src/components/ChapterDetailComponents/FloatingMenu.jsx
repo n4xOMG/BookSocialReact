@@ -22,7 +22,7 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import HeightIcon from "@mui/icons-material/Height";
 import ChatIcon from "@mui/icons-material/Chat";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 const viewModeIcon = {
   single: <Layers />,
   double: <MenuBook />,
@@ -80,7 +80,7 @@ export default function FloatingMenu({
     handleModeChange(modes, themeMode, onThemeModeChange);
   };
 
-  const currentChapterIndex = chapters.findIndex((chapter) => chapter.id === currentChapterId);
+  const currentChapterIndex = useMemo(() => chapters.findIndex((chapter) => chapter.id === currentChapterId), [chapters, currentChapterId]);
 
   const renderIconButton = (tooltipText, ariaLabel, onClick, icon, disabled = false) => (
     <Tooltip title={<p>{tooltipText}</p>} disableHoverListener={disabled}>
@@ -90,6 +90,7 @@ export default function FloatingMenu({
           onClick={onClick}
           disabled={disabled}
           sx={{ color: "white", "&.Mui-disabled": { color: "grey" } }}
+          tabIndex={disabled ? -1 : 0}
         >
           {icon}
         </IconButton>
@@ -142,9 +143,9 @@ export default function FloatingMenu({
           {renderIconButton(
             "Previous chapter",
             "Previous chapter",
-            () => handleChapterNavigation(chapters[currentChapterIndex - 1]),
+            () => chapters.length > 0 && handleChapterNavigation(chapters[currentChapterIndex - 1]),
             <ChevronLeft />,
-            currentChapterIndex === 0
+            currentChapterIndex <= 0 || chapters.length === 0
           )}
 
           {renderIconButton("Chapter List", "Chapters list", onChapterListOpen, <ListIcon />)}
@@ -187,9 +188,9 @@ export default function FloatingMenu({
           {renderIconButton(
             "Next chapter",
             "Next chapter",
-            () => handleChapterNavigation(chapters[currentChapterIndex + 1]),
+            () => chapters.length > 0 && handleChapterNavigation(chapters[currentChapterIndex + 1]),
             <ChevronRight />,
-            currentChapterIndex === chapters.length - 1
+            currentChapterIndex === chapters.length - 1 || chapters.length === 0
           )}
         </Box>
       </Fade>

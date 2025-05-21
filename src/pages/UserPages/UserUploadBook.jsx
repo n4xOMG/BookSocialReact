@@ -1,7 +1,7 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { Alert, Box, Button, IconButton, LinearProgress, Snackbar, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -10,7 +10,7 @@ import BookCoverStep from "../../components/UserUploadBook/BookCoverStep";
 import CategoriesAndTagsStep from "../../components/UserUploadBook/CategoriesAndTagsStep";
 import SettingsStep from "../../components/UserUploadBook/SettingsStep";
 import { addNewBookAction } from "../../redux/book/book.action";
-import UploadToCloudinary from "../../utils/uploadToCloudinary";
+import { UploadToServer } from "../../utils/uploadToServer";
 
 export default function UserUploadBook() {
   const navigate = useNavigate();
@@ -21,11 +21,11 @@ export default function UserUploadBook() {
   const [bookInfo, setBookInfo] = useState({
     author: user,
     title: "",
-    authorName: user.username ? user.username : "Author name",
+    authorName: user?.username ? user?.username : "Author name",
     artistName: "",
     description: "",
     bookCover: null, // Preview URL
-    coverFile: null, // Actual File Object
+    coverFile: null,
     language: "",
     status: "",
     category: null,
@@ -117,7 +117,8 @@ export default function UserUploadBook() {
     try {
       setLoading(true);
       // Upload the cover image to Cloudinary
-      const imageUrl = await UploadToCloudinary(bookInfo.coverFile, "books");
+      //const imageUrl = await UploadToCloudinary(bookInfo.coverFile, "books");
+      const imageUrl = await UploadToServer(bookInfo.coverFile, user.username, `book_${bookInfo.title}_${Date.now()}`);
       // Prepare the book data with the image URL
       const bookData = {
         ...bookInfo,
@@ -129,7 +130,7 @@ export default function UserUploadBook() {
       dispatch(addNewBookAction(bookData));
       setSnackbarMessage("Book uploaded successfully!");
       setSnackbarOpen(true);
-      // Optionally navigate to another page
+
       navigate("/");
     } catch (error) {
       console.error("Upload Error:", error);

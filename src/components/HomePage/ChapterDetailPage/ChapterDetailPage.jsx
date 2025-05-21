@@ -50,7 +50,8 @@ export default function ChapterDetailPage() {
         setUnlockDialogOpen(true);
       }
       await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
-      if (!tags) {
+      // Fix: Fetch tags if not loaded (empty array or undefined)
+      if (!tags || tags.length === 0) {
         await dispatch(getTags());
       }
 
@@ -66,7 +67,7 @@ export default function ChapterDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [dispatch, chapterId]);
+  }, [dispatch, chapterId, tags, book, user, jwt, bookId]);
 
   useEffect(() => {
     fetchChapterDetail();
@@ -98,15 +99,16 @@ export default function ChapterDetailPage() {
     setIsSideDrawerOpen((prev) => !prev);
   }, []);
 
+  // Only compute isManga/isNovel when both book and tags are available and tags is not empty
   const getTagsByIds = (tagIds = []) => {
     if (!Array.isArray(tagIds)) {
       console.warn("Expected tagIds to be an array, but got:", tagIds);
       return [];
     }
-    return tags.filter((tag) => tagIds.includes(tag.id));
+    return tags && tags.length > 0 ? tags.filter((tag) => tagIds.includes(tag.id)) : [];
   };
-  const isManga = getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "manga");
-  const isNovel = getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "novel");
+  const isManga = book && tags && tags.length > 0 && getTagsByIds(book.tagIds || []).some((tag) => tag.name?.toLowerCase() === "manga");
+  const isNovel = book && tags && tags.length > 0 && getTagsByIds(book.tagIds || []).some((tag) => tag.name?.toLowerCase() === "novel");
 
   // Check if chapter is locked and not unlocked by user
   const isLocked = chapter?.locked && !chapter?.unlockedByUser && chapter?.price > 0;
@@ -159,7 +161,7 @@ export default function ChapterDetailPage() {
 
   return (
     <>
-      {loading ? (
+      {loading || !book || !tags || tags.length === 0 ? (
         <LoadingSpinner />
       ) : (
         <>
@@ -250,6 +252,12 @@ export default function ChapterDetailPage() {
                   handleChapterListClose={handleChapterListClose}
                   onToggleSideDrawer={toggleSideDrawer}
                 />
+              )}
+              {/* Fallback: If neither isManga nor isNovel, show a message */}
+              {!isManga && !isNovel && (
+                <Alert severity="warning" sx={{ m: 4 }}>
+                  This book does not have a valid type (manga or novel). Please check the book's tags.
+                </Alert>
               )}
               {isSideDrawerOpen && (
                 <CommentDrawer open={isSideDrawerOpen} user={user} chapterId={chapter.id} onToggleDrawer={toggleSideDrawer} />

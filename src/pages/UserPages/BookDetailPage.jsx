@@ -1,12 +1,13 @@
 import { FavoriteBorder, MenuBook, Report } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { Box, Button, Grid, IconButton, Rating, Typography, Paper, Container, Divider } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography } from "@mui/material";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import BookCommentSection from "../../components/BookDetailPageComponents/BookCommentSection";
-import { BookDetails } from "../../components/BookDetailPageComponents/BookDetails";
+
+import ReportModal from "../../components/BookClubs/ReportModal";
 import AuthorCard from "../../components/BookDetailPageComponents/AuthorCard";
+import { BookDetails } from "../../components/BookDetailPageComponents/BookDetails";
 import { ChapterList } from "../../components/BookDetailPageComponents/ChapterList";
 import { ProgressBar } from "../../components/BookDetailPageComponents/ProgressBar";
 import Sidebar from "../../components/HomePage/Sidebar";
@@ -20,26 +21,29 @@ import {
   getRelatedBooksAction,
   ratingBookAction,
 } from "../../redux/book/book.action";
-import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
-import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
-import { clearChapters } from "../../redux/chapter/chapter.action";
-import RelatedBooks from "../../components/BookDetailPageComponents/RelatedBooks";
+import { clearChapters, getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
-import ReportModal from "../../components/BookClubs/ReportModal";
 import { getOptimizedImageUrl } from "../../utils/optimizeImages";
-
+import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
+// Lazy load heavy components
+const BookCommentSection = React.lazy(() => import("../../components/BookDetailPageComponents/BookCommentSection"));
+const RelatedBooks = React.lazy(() => import("../../components/BookDetailPageComponents/RelatedBooks"));
 export const BookDetailPage = () => {
   const navigate = useNavigate();
   const { bookId } = useParams();
   const dispatch = useDispatch();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [firstChapterId, setFirstChapterId] = useState(null);
+
+  // Centralized state
   const {
     book,
     relatedBooks,
     rating,
     progresses = [],
-    chapterCounts,
     categories,
     tags,
   } = useSelector((store) => ({
@@ -51,72 +55,82 @@ export const BookDetailPage = () => {
     tags: store.tag.tags,
   }));
   const { user } = useSelector((store) => store.auth);
+  const { chapters } = useSelector((store) => store.chapter);
   const jwt = localStorage.getItem("jwt");
   const { checkAuth, AuthDialog } = useAuthCheck();
-  const [loading, setLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [overallProgress, setOverallProgress] = useState(0);
-  const [firstChapterId, setFirstChapterId] = useState(null);
 
-  const fetchBookAndChapterDetails = useCallback(async () => {
+  // Fetch all book-related data in one effect
+  useEffect(() => {
+    let isMounted = true;
     setLoading(true);
-    try {
-      const bookResponse = await dispatch(getBookByIdAction(jwt, bookId));
-      if (!bookResponse?.payload) {
-        console.error("Failed to fetch book data");
-        return;
+    setIsFavorite(false);
+    setFirstChapterId(null);
+
+    const fetchAll = async () => {
+      try {
+        // Fetch book
+        const bookRes = await dispatch(getBookByIdAction(jwt, bookId));
+        if (!bookRes?.payload) return;
+
+        // Fetch chapters
+        const chaptersRes = await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+        const chapterList = chaptersRes?.payload || [];
+        if (chapterList.length > 0) setFirstChapterId(chapterList[0].id);
+
+        // Fetch ratings and progresses only if user is logged in
+        await Promise.all([
+          dispatch(getAvgBookRating(bookId)),
+          user && !isTokenExpired(jwt)
+            ? Promise.all([dispatch(getAllReadingProgressesByBook(bookId)), dispatch(getBookRatingByUserAction(bookId))])
+            : null,
+        ]);
+
+        // Related books (use fresh book data)
+        dispatch(getRelatedBooksAction(bookId, bookRes.payload.categoryId, bookRes.payload.tagIds));
+      } catch (e) {
+        // ignore
+      } finally {
+        if (isMounted) setLoading(false);
       }
+    };
 
-      await dispatch(getAvgBookRating(bookId));
-      if (user && !isTokenExpired(jwt)) {
-        await dispatch(getAllReadingProgressesByBook(bookId));
-        await dispatch(getBookRatingByUserAction(bookId));
-      }
+    fetchAll();
 
-      // Use the fresh book data from response to fetch related books
-      dispatch(getRelatedBooksAction(bookId, bookResponse.payload.categoryId, bookResponse.payload.tagIds));
-    } catch (error) {
-      console.error("Error fetching book details:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [bookId, user, jwt, dispatch]);
+    return () => {
+      isMounted = false;
+      dispatch({ type: "RESET_BOOK_DETAIL" });
+      dispatch(clearChapters());
+    };
+    // eslint-disable-next-line
+  }, [bookId, dispatch, jwt, user]);
 
-  const calculateOverallProgress = useCallback(() => {
-    if (!book || book.chapterCount === 0) {
-      setOverallProgress(0);
-      return;
-    }
+  // Keep isFavorite in sync with book.followedByCurrentUser
+  useEffect(() => {
+    if (book && user) setIsFavorite(book.followedByCurrentUser);
+  }, [book, user]);
 
+  // Memoized overall progress calculation
+  const overallProgress = useMemo(() => {
+    if (!book || !book.chapterCount || !progresses?.length) return 0;
     const totalChapters = book.chapterCount;
-
-    // Sum the progress from all progresses
-    const sumProgress = progresses.reduce((acc, progress) => {
-      return acc + (progress.progress || 0);
-    }, 0);
-
-    // Calculate average progress
-    const averageProgress = Math.floor(sumProgress / totalChapters);
-
-    // Ensure progress does not exceed 100%
-    setOverallProgress(averageProgress > 100 ? 100 : averageProgress);
+    const sumProgress = progresses.reduce((acc, progress) => acc + (progress.progress || 0), 0);
+    const avg = Math.floor(sumProgress / totalChapters);
+    return avg > 100 ? 100 : avg;
   }, [book, progresses]);
 
   const handleFollowBook = checkAuth(async () => {
     try {
       setLoading(true);
       await dispatch(followBookAction(bookId));
-      setIsFavorite(!isFavorite);
+      setIsFavorite((prev) => !prev);
     } catch (error) {
-      console.error("Error following book:", error);
+      // ignore
     } finally {
       setLoading(false);
     }
   });
-  const handleOpenReportModal = () => {
-    setIsReportModalOpen(true);
-  };
 
+  const handleOpenReportModal = () => setIsReportModalOpen(true);
   const handleCloseReportModal = () => {
     setIsReportModalOpen(false);
     setReportReason("");
@@ -127,62 +141,26 @@ export const BookDetailPage = () => {
       alert("Please enter a reason for reporting.");
       return;
     }
-
-    const reportData = {
-      reason: reportReason,
-      book: { id: bookId },
-    };
-
+    const reportData = { reason: reportReason, book: { id: bookId } };
     try {
-      console.log("Report data:", reportData);
       await dispatch(createReportAction(reportData));
       alert("Report submitted successfully.");
       handleCloseReportModal();
-    } catch (error) {
+    } catch {
       alert("Failed to submit report.");
     }
   });
+
   const handleRating = checkAuth(async (value) => {
     try {
       setLoading(true);
       await dispatch(ratingBookAction(bookId, value));
-    } catch (error) {
-      console.error("Error rating book:", error);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
   });
-
-  useEffect(() => {
-    // Reset state when bookId changes
-    setOverallProgress(0);
-    setIsFavorite(false);
-    setFirstChapterId(null);
-
-    // Fetch new book data
-    fetchBookAndChapterDetails();
-
-    return () => {
-      // Clean up when component unmounts or bookId changes
-      dispatch({ type: "RESET_BOOK_DETAIL" });
-    };
-  }, [bookId, fetchBookAndChapterDetails, dispatch]);
-
-  useEffect(() => {
-    if (book && user) {
-      setIsFavorite(book.followedByCurrentUser);
-    }
-  }, [book, user]);
-
-  useEffect(() => {
-    calculateOverallProgress();
-  }, [calculateOverallProgress]);
-
-  useEffect(() => {
-    return () => {
-      dispatch(clearChapters());
-    };
-  }, [dispatch]);
 
   if (loading || !book) {
     return (
@@ -320,9 +298,8 @@ export const BookDetailPage = () => {
 
               <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
                 <ChapterList
-                  chapterCounts={chapterCounts}
+                  chapters={chapters}
                   progresses={progresses}
-                  onCalculateProgress={calculateOverallProgress}
                   onNavigate={navigate}
                   bookId={bookId}
                   user={user ? user : null}
@@ -330,13 +307,14 @@ export const BookDetailPage = () => {
                 />
               </Paper>
 
-              <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
-                <BookCommentSection bookId={book.id} user={user} />
-              </Paper>
-
-              <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
-                <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
-              </Paper>
+              <Suspense fallback={<LoadingSpinner />}>
+                <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                  <BookCommentSection bookId={book.id} user={user} />
+                </Paper>
+                <Paper elevation={2} sx={{ p: 4, borderRadius: 2, mb: 3 }}>
+                  <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
+                </Paper>
+              </Suspense>
             </Grid>
           </Grid>
         </Container>

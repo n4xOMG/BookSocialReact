@@ -17,6 +17,8 @@ const MangaPageNavigation = ({ totalPages, viewMode, currentPage, handlePageChan
             marks={marks}
             min={0}
             max={totalPages - 1}
+            valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `Page ${value + 1}`}
             sx={{
               "& .MuiSlider-thumb": {
                 bgcolor: "primary.main",
@@ -31,6 +33,9 @@ const MangaPageNavigation = ({ totalPages, viewMode, currentPage, handlePageChan
               bottom: { xs: "5%", sm: "5%", md: "2%", lg: "2%" },
             }}
           />
+          <Box sx={{ color: "white", textAlign: "center", mt: 1 }}>
+            Page {currentPage + 1} / {totalPages}
+          </Box>
         </Box>
       </Fade>
     </>

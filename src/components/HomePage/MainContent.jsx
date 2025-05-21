@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { getAllBookAction } from "../../redux/book/book.action";
 import { BookCard } from "./BookCard";
 
-// Main content component
 export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();

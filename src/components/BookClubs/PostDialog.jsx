@@ -39,15 +39,15 @@ const PostDialog = ({ open, onClose, onSubmit, editingPost, user }) => {
     setSubmissionError("");
 
     try {
-      // Upload images to Cloudinary
+
       const uploadedImageUrls = await Promise.all(
         selectedImages.map((image) => (typeof image === "string" ? image : UploadToServer(image, user?.username, `post_${Date.now()}`)))
       );
 
       const postData = {
         content: userCaption,
-        images: uploadedImageUrls, // Array of image URLs
-        user: user, // Assuming user object is available
+        images: uploadedImageUrls,
+        user: user,
       };
 
       if (editingPost) {

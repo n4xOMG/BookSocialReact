@@ -19,13 +19,22 @@ import {
   Toolbar,
 } from "@mui/material";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
 import ReadingHistoryCard from "./ReadingHistoryCard";
 
 export const Sidebar = () => {
-  const { readingProgresses = [] } = useSelector((state) => state.user);
+  // Use a single selector for all needed state
+  const { user } = useSelector((state) => state.auth, shallowEqual);
+  const { readingProgresses, loading: userLoading } = useSelector(
+    (state) => ({
+      readingProgresses: state.user.readingProgresses,
+      loading: state.user.loading,
+    }),
+    shallowEqual
+  );
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
@@ -33,11 +42,8 @@ export const Sidebar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(!isMobile);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Access authentication state from Redux store
-  const { user } = useSelector((state) => state.auth);
-
+  // Memoize menu items
   const menuItems = useMemo(
     () => [
       { text: "Home", icon: <Explore />, link: "/" },
@@ -53,27 +59,25 @@ export const Sidebar = () => {
     [user]
   );
 
+  // Only fetch reading progress when user logs in and readingProgresses is empty
   useEffect(() => {
-    // Only fetch reading progress when the user is logged in and the history is expanded
-    if (user && historyExpanded && readingProgresses.length === 0 && !isLoadingHistory) {
-      setIsLoadingHistory(true);
-      try {
-        dispatch(getReadingProgressByUser()).finally(() => setIsLoadingHistory(false));
-      } catch (error) {
-        console.error("Error trying to get reading progress: ", error);
-        setIsLoadingHistory(false);
-      }
+    if (user && readingProgresses.length === 0) {
+      dispatch(getReadingProgressByUser());
     }
-  }, [dispatch, user, historyExpanded, readingProgresses.length, isLoadingHistory]);
+    // Only run when user or readingProgresses changes
+  }, [dispatch, user, readingProgresses.length]);
 
+  // Toggle drawer for mobile
   const toggleDrawer = useCallback(() => {
-    setMobileOpen(!mobileOpen);
-  }, [mobileOpen]);
+    setMobileOpen((prev) => !prev);
+  }, []);
 
+  // Toggle reading history section
   const handleHistoryToggle = useCallback(() => {
-    setHistoryExpanded(!historyExpanded);
-  }, [historyExpanded]);
+    setHistoryExpanded((prev) => !prev);
+  }, []);
 
+  // Navigation handler
   const handleNavigation = useCallback(
     (link) => {
       navigate(link);
@@ -223,7 +227,7 @@ export const Sidebar = () => {
           </ListItemButton>
 
           <Collapse in={historyExpanded} timeout="auto" unmountOnExit>
-            <ReadingHistoryCard readingProgresses={readingProgresses} loading={isLoadingHistory} />
+            <ReadingHistoryCard readingProgresses={readingProgresses} loading={userLoading} />
           </Collapse>
         </Box>
       )}

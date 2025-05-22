@@ -1,7 +1,7 @@
-import { Autorenew, Explore, MenuBook, Recommend, TrendingUp } from "@mui/icons-material";
+import { Explore, MenuBook, Recommend, TrendingUp } from "@mui/icons-material";
 import { Box, Button, CircularProgress, Container, Fade, Grid, Tab, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getAllBookAction } from "../../redux/book/book.action";
 import { BookCard } from "./BookCard";
@@ -16,11 +16,15 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const { books, categories, tags } = useSelector((state) => ({
-    books: state.book.books,
-    categories: state.category.categories,
-    tags: state.tag.tags,
-  }));
+  // Use shallowEqual to avoid unnecessary rerenders
+  const { books, categories, tags } = useSelector(
+    (state) => ({
+      books: state.book.books,
+      categories: state.category.categories,
+      tags: state.tag.tags,
+    }),
+    shallowEqual
+  );
 
   const loader = useRef(null);
   const prevTabRef = useRef(tabValue);
@@ -40,28 +44,21 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     if (tabValue !== "all" || !hasMore) return;
     setIsLoading(true);
     dispatch(getAllBookAction(page, 10)).then((result) => {
-      if (!result?.payload || result.payload.length === 0) {
+      if (!result?.payload || (Array.isArray(result.payload) ? result.payload.length === 0 : result.payload.content?.length === 0)) {
         setHasMore(false);
       }
       setIsLoading(false);
     });
   }, [page, tabValue, dispatch, hasMore]);
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = useCallback((event, newValue) => {
     setTabValue(newValue);
-  };
+  }, []);
 
   const navigateToBook = useCallback(
     (bookId) => {
-      if (!bookId) {
-        console.error("Invalid book ID:", bookId);
-        return;
-      }
-
-      // Reset book data in Redux before navigation
+      if (!bookId) return;
       dispatch({ type: "RESET_BOOK_DETAIL" });
-
-      // Navigate to book detail page
       navigate(`/books/${bookId}`);
     },
     [navigate, dispatch]
@@ -75,7 +72,7 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
       rootMargin: "100px",
       threshold: 0.5,
     };
-    const observer = new IntersectionObserver((entities) => {
+    const observer = new window.IntersectionObserver((entities) => {
       const target = entities[0];
       if (target.isIntersecting && !isLoading && hasMore) {
         setPage((prev) => prev + 1);
@@ -87,12 +84,12 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     };
   }, [tabValue, isLoading, hasMore]);
 
-  // Memoize the book arrays to prevent unnecessary renders
+  // Memoize book arrays
   const featuredBooksArray = useMemo(() => (Array.isArray(featuredBooks) ? featuredBooks : []), [featuredBooks]);
   const trendingBooksArray = useMemo(() => (Array.isArray(trendingBooks) ? trendingBooks : []), [trendingBooks]);
   const allBooksArray = useMemo(() => (Array.isArray(books) ? books : []), [books]);
 
-  // Use memo for book card grids to prevent unnecessary rerenders
+  // Memoize book grid rendering
   const renderBookGrid = useCallback(
     (bookList) => (
       <Grid container spacing={3}>
@@ -156,7 +153,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 <Recommend sx={{ mr: 1.5, color: "primary.main" }} />
                 Editor's Choices
               </Typography>
-
               {renderBookGrid(featuredBooksArray)}
             </Box>
           )}
@@ -205,7 +201,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
           {tabValue === "trending" && (
             <Box sx={{ mb: { xs: 4, md: 6 } }}>
               {renderBookGrid(trendingBooksArray)}
-
               {trendingBooksArray.length > 0 && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                   <Button
@@ -242,7 +237,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 <MenuBook sx={{ mr: 1.5, color: "primary.main" }} />
                 Explore All Books
               </Typography>
-
               {allBooksArray.length > 0 ? (
                 renderBookGrid(allBooksArray)
               ) : (
@@ -250,7 +244,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                   <CircularProgress size={30} />
                 </Box>
               )}
-
               <Box
                 ref={loader}
                 sx={{
@@ -275,21 +268,7 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                     You've reached the end of the list
                   </Typography>
                 )}
-                {!isLoading && hasMore && allBooksArray.length > 0 && !isMobile && (
-                  <Button
-                    startIcon={<Autorenew />}
-                    variant="outlined"
-                    sx={{
-                      borderRadius: "30px",
-                      px: 4,
-                      py: 1,
-                      textTransform: "none",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Load More Books
-                  </Button>
-                )}
+                {/* Remove Load More button for infinite scroll practicality */}
               </Box>
             </Box>
           )}

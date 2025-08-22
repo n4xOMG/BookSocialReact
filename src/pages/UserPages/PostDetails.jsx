@@ -1,23 +1,22 @@
 import { Delete, Favorite, Message, Share as ShareIcon } from "@mui/icons-material";
 import { Avatar, Box, Card, CardContent, CardHeader, Grid, IconButton, Tooltip, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import ViewImageModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
 import CommentSection from "../../components/BookClubs/CommentSection";
 import ShareModal from "../../components/BookClubs/ShareModal";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { addPost, deletePost, fetchPostById, likePost } from "../../redux/post/post.action";
-import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
-import ViewImageModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
 
 const PostDetail = () => {
   const { postId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
   const { post } = useSelector((state) => state.post);
+  const { user } = useSelector((state) => state.auth.user);
   const [loading, setLoading] = useState(false);
-  const [isLiked, setIsLiked] = useState(user && post ? isFavouredByReqUser(user, post) : false);
+  const [isLiked, setIsLiked] = useState(post ? post.likedByCurrentUser : false);
   const [openShareModal, setOpenShareModal] = useState(false);
   const [shareContent, setShareContent] = useState("");
   const [copySuccess, setCopySuccess] = useState("");
@@ -36,12 +35,6 @@ const PostDetail = () => {
   useEffect(() => {
     getPostById();
   }, [dispatch, postId]);
-
-  useEffect(() => {
-    if (post && user) {
-      setIsLiked(isFavouredByReqUser(user, post));
-    }
-  }, [user, post]);
 
   const handleLike = async () => {
     try {

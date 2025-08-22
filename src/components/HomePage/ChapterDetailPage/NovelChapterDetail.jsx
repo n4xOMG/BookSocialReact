@@ -1,15 +1,16 @@
 import { Backdrop, LinearProgress, useMediaQuery, useTheme } from "@mui/material";
 import { Box } from "@mui/system";
 import { debounce } from "lodash";
-import parse from "html-react-parser";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import FloatingMenu from "../../ChapterDetailComponents/FloatingMenu";
 import Headbar from "../../ChapterDetailComponents/Headbar";
 import LoadingSpinner from "../../LoadingSpinner";
+import JsonContentRenderer from "../../common/JsonContentRenderer";
 import { saveChapterProgressAction } from "../../../redux/chapter/chapter.action";
 import { useAuthCheck } from "../../../utils/useAuthCheck";
+import { isValidSlateContent, normalizeSlateContent, convertHtmlToSlateJson } from "../../../utils/JsonContentUtils";
 export default function NovelChapterDetail({
   anchorEl,
   bookId,
@@ -54,7 +55,33 @@ export default function NovelChapterDetail({
     navigate(`/books/${bookId}`);
   };
 
-  const parsedContent = useMemo(() => (chapter && chapter.content ? parse(chapter.content) : "No content"), [chapter]);
+  // Process chapter content - handle both JSON and legacy HTML
+  const processedContent = useMemo(() => {
+    if (!chapter || !chapter.content) {
+      return null;
+    }
+
+    // Check if content is already JSON (array)
+    if (Array.isArray(chapter.content)) {
+      return isValidSlateContent(chapter.content) ? normalizeSlateContent(chapter.content) : null;
+    }
+
+    // If content is a string, try to parse as JSON first
+    if (typeof chapter.content === "string") {
+      try {
+        const jsonContent = JSON.parse(chapter.content);
+        if (Array.isArray(jsonContent) && isValidSlateContent(jsonContent)) {
+          return normalizeSlateContent(jsonContent);
+        }
+      } catch (e) {
+        // Not JSON, treat as HTML and convert
+        console.log("Converting HTML content to JSON for chapter:", chapter.id);
+        return convertHtmlToSlateJson(chapter.content);
+      }
+    }
+
+    return null;
+  }, [chapter]);
 
   useEffect(() => {
     let ticking = false;
@@ -127,44 +154,11 @@ export default function NovelChapterDetail({
             ref={contentRef}
             sx={{ flex: 1, p: 3, typography: "body1", lineHeight: 1.75, px: isSmallScreen ? 2 : 10 }}
           >
-            <Box
-              sx={{
-                color: themeMode === "light" ? "#242424" : "white",
-                "& p": {
-                  marginBottom: "1em",
-                },
-                "& strong": {
-                  fontWeight: "bold",
-                },
-                "& em": {
-                  fontStyle: "italic",
-                },
-                "& u": {
-                  textDecoration: "underline",
-                },
-                "& a": {
-                  color: "#1e90ff",
-                  textDecoration: "none",
-                  "&:hover": {
-                    textDecoration: "underline",
-                  },
-                },
-                "& img": {
-                  maxWidth: "100%",
-                  height: "auto",
-                  display: "block",
-                  margin: "0 auto",
-                },
-                "& blockquote": {
-                  borderLeft: "4px solid #ccc",
-                  paddingLeft: "1em",
-                  color: "#666",
-                  fontStyle: "italic",
-                },
-              }}
-            >
-              {parsedContent}
-            </Box>
+            {processedContent ? (
+              <JsonContentRenderer content={processedContent} themeMode={themeMode} />
+            ) : (
+              <Box sx={{ textAlign: "center", color: "text.secondary", py: 4 }}>No content available</Box>
+            )}
           </Box>
           {isFloatingMenuVisible && (
             <>

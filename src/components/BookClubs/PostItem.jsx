@@ -1,19 +1,18 @@
-import { Delete, Edit, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon } from "@mui/icons-material";
+import { Delete, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon } from "@mui/icons-material";
 import { Avatar, Box, Card, CardContent, CardHeader, Chip, Divider, Grid, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addPost, deletePost, likePost } from "../../redux/post/post.action";
-import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
+import ViewImageModal from "../AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
 import CommentSection from "./CommentSection";
 import ShareModal from "./ShareModal";
-import ViewImageModal from "../AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
-import { formatDistanceToNow } from "date-fns";
 
 const PostItem = ({ post, checkAuth }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const [isLiked, setIsLiked] = useState(user ? isFavouredByReqUser(user, post) : false);
+  const [isLiked, setIsLiked] = useState(post ? post.likedByCurrentUser : false);
   const [openShareModal, setOpenShareModal] = useState(false);
   const [shareContent, setShareContent] = useState("");
   const [copySuccess, setCopySuccess] = useState("");

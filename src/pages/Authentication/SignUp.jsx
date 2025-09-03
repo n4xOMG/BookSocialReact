@@ -16,13 +16,15 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { registerUserAction } from "../../redux/auth/auth.action";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
 
 export default function SignUp() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const error = useSelector((store) => store.auth.error);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -134,12 +136,22 @@ export default function SignUp() {
           ...registerData,
           avatarUrl,
         };
-        await dispatch(registerUserAction({ data: formData }));
+        const result = await dispatch(registerUserAction({ data: formData }));
+
+        if (result.payload) {
+          // Redirect to OTP verification page
+          navigate("/verify-otp", {
+            state: {
+              email: registerData.email,
+              context: "register",
+            },
+          });
+        }
       } catch (e) {
         console.error("Error signing up", e);
         setError("Error signing up: ", e);
-      } finally {
         setOpen(true);
+      } finally {
         setIsLoading(false);
         setError("");
       }

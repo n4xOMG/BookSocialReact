@@ -42,11 +42,8 @@ export const fetchPosts =
   async (dispatch) => {
     dispatch({ type: FETCH_POSTS_REQUEST });
     try {
-      const response = await axios.get(`${API_BASE_URL}/posts`, {
+      const response = await api.get(`${API_BASE_URL}/posts`, {
         params: { page, size, sort },
-        headers: {
-          Authorization: localStorage.getItem("token"), // Make sure to send JWT if available
-        },
       });
       dispatch({
         type: FETCH_POSTS_SUCCESS,

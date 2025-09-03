@@ -1,9 +1,9 @@
 import { ArrowBack, Favorite, FavoriteBorder } from "@mui/icons-material";
-import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import React, { useState, useCallback } from "react";
-import { likeChapterAction, unlikeChapterAction } from "../../redux/chapter/chapter.action";
-import { useDispatch } from "react-redux";
 import ReportIcon from "@mui/icons-material/Report";
+import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
+import { useCallback, useState } from "react";
+import { useDispatch } from "react-redux";
+import { likeChapterAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
 import ReportModal from "../BookClubs/ReportModal";
 
@@ -18,11 +18,7 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
     useCallback(async () => {
       setLikeLoading(true);
       try {
-        if (chapter?.likedByCurrentUser) {
-          await dispatch(unlikeChapterAction(chapter.id));
-        } else {
-          await dispatch(likeChapterAction(chapter.id));
-        }
+        await dispatch(likeChapterAction(chapter.id));
       } finally {
         setLikeLoading(false);
       }

@@ -1,5 +1,5 @@
 import { Alert, Box, Chip, CircularProgress, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategories } from "../../redux/category/category.action";
 import { getTags } from "../../redux/tag/tag.action";
@@ -8,7 +8,6 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
   const dispatch = useDispatch();
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.category);
   const { tags, loading: tagsLoading, error: tagsError } = useSelector((state) => state.tag);
-  const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
     dispatch(getCategories());
@@ -24,17 +23,6 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
       ...prev,
       tags: newTags,
     }));
-
-    const hasManga = newTags.some((tag) => tag.name.toLowerCase() === "novel");
-    const hasNovel = newTags.some((tag) => tag.name.toLowerCase() === "manga");
-
-    if (!hasManga && !hasNovel) {
-      setValidationError("You must select either 'novel' or 'manga' tag.");
-    } else if (hasManga && hasNovel) {
-      setValidationError("A book cannot have both 'manga' and 'novel' tags.");
-    } else {
-      setValidationError("");
-    }
   };
 
   const handleDeleteTag = (tagToDelete) => () => {
@@ -43,16 +31,6 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
       ...prev,
       tags: newTags,
     }));
-    const hasManga = newTags.some((tag) => tag.name.toLowerCase() === "novel");
-    const hasNovel = newTags.some((tag) => tag.name.toLowerCase() === "manga");
-
-    if (!hasManga && !hasNovel) {
-      setValidationError("You must select either 'novel' or 'manga' tag.");
-    } else if (hasManga && hasNovel) {
-      setValidationError("A book cannot have both 'manga' and 'novel' tags.");
-    } else {
-      setValidationError("");
-    }
   };
 
   return (
@@ -81,7 +59,7 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
 
       {/* Tags Section */}
       <Box>
-        <FormControl fullWidth error={!!validationError}>
+        <FormControl fullWidth>
           <InputLabel id="tags-label">Tags</InputLabel>
           <Select
             labelId="tags-label"
@@ -115,7 +93,6 @@ export default function CategoriesAndTagsStep({ bookInfo, setBookInfo }) {
               ))
             )}
           </Select>
-          {validationError && <Typography color="error">{validationError}</Typography>}
         </FormControl>
         {/* Display Selected Tags as Chips */}
         {bookInfo.tags.length > 0 && (

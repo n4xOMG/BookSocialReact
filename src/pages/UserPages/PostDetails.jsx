@@ -14,7 +14,7 @@ const PostDetail = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { post } = useSelector((state) => state.post);
-  const { user } = useSelector((state) => state.auth.user);
+  const { user } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
   const [isLiked, setIsLiked] = useState(post ? post.likedByCurrentUser : false);
   const [openShareModal, setOpenShareModal] = useState(false);
@@ -224,7 +224,7 @@ const PostDetail = () => {
                     <Message />
                   </IconButton>
                 </Tooltip>
-                <Typography variant="body2">{post?.comments.length || 0}</Typography>
+                <Typography variant="body2">{post?.comments?.length || 0}</Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Tooltip title="Share">

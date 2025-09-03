@@ -49,7 +49,6 @@ export default function UserUploadBook() {
         break;
       case 1:
         if (!bookInfo.coverFile) {
-          // Check for the file object
           setSnackbarMessage("Please upload a book cover.");
           return false;
         }
@@ -65,19 +64,7 @@ export default function UserUploadBook() {
           setSnackbarMessage("Please select a category.");
           return false;
         }
-        const hasManga = bookInfo.tags.some((tag) => tag.name.toLowerCase() === "manga");
-        const hasNovel = bookInfo.tags.some((tag) => tag.name.toLowerCase() === "novel");
-        const hasMandatoryTag = bookInfo.tags.some((tag) => tag.name.toLowerCase() === "novel" || tag.name.toLowerCase() === "manga");
-        if (!hasMandatoryTag) {
-          setSnackbarMessage("You must select either 'novel' or 'manga' tag.");
-          return false;
-        }
-        if (hasManga && hasNovel) {
-          setSnackbarMessage("A book cannot have both 'manga' and 'novel' tags.");
-          return false;
-        }
         break;
-
       default:
         return true;
     }
@@ -116,8 +103,6 @@ export default function UserUploadBook() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      // Upload the cover image to Cloudinary
-      //const imageUrl = await UploadToCloudinary(bookInfo.coverFile, "books");
       const imageUrl = await UploadToServer(bookInfo.coverFile, user.username, `book_${bookInfo.title}_${Date.now()}`);
       // Prepare the book data with the image URL
       const bookData = {

@@ -31,9 +31,6 @@ import {
   SAVE_PROGRESS_FAILED,
   SAVE_PROGRESS_REQUEST,
   SAVE_PROGRESS_SUCCESS,
-  UNLIKE_CHAPTER_FAILED,
-  UNLIKE_CHAPTER_REQUEST,
-  UNLIKE_CHAPTER_SUCCESS,
   UNLOCK_CHAPTER_FAILED,
   UNLOCK_CHAPTER_REQUEST,
   UNLOCK_CHAPTER_SUCCESS,
@@ -134,7 +131,7 @@ export const publishChapterAction = (bookId, chapterData) => async (dispatch) =>
 };
 export const editChapterAction = (chapterData) => async (dispatch) => {
   dispatch({ type: EDIT_CHAPTER_REQUEST });
-  console.log("Edit Chapter Data: ", chapterData);
+  console.log("Edit Chapter Data: ", chapterData.id);
   try {
     const { data } = await api.put(`${API_BASE_URL}/api/chapters/${chapterData.id}`, chapterData);
     dispatch({ type: EDIT_CHAPTER_SUCCEED, payload: data });
@@ -211,23 +208,11 @@ export const clearChapters = () => ({
 export const likeChapterAction = (chapterId) => async (dispatch) => {
   dispatch({ type: LIKE_CHAPTER_REQUEST });
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/chapters/${chapterId}/like`);
+    const { data } = await api.put(`${API_BASE_URL}/api/chapters/${chapterId}/like`);
     dispatch({ type: LIKE_CHAPTER_SUCCESS, payload: data });
     return { payload: data };
   } catch (error) {
     dispatch({ type: LIKE_CHAPTER_FAILED, payload: error.message });
-    throw error;
-  }
-};
-
-export const unlikeChapterAction = (chapterId, token) => async (dispatch) => {
-  dispatch({ type: UNLIKE_CHAPTER_REQUEST });
-  try {
-    const { data } = await api.delete(`${API_BASE_URL}/api/chapters/${chapterId}/like`);
-    dispatch({ type: UNLIKE_CHAPTER_SUCCESS, payload: data });
-    return { payload: data };
-  } catch (error) {
-    dispatch({ type: UNLIKE_CHAPTER_FAILED, payload: error.message });
     throw error;
   }
 };

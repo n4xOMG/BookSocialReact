@@ -27,6 +27,7 @@ import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
 import PostDetail from "./pages/UserPages/PostDetails";
 import { connectWebSocket, disconnectWebSocket } from "./services/websocket.service";
 import { apiEvents } from "./services/api.service";
+import OtpVerification from "./pages/Authentication/OtpVerification";
 
 function App() {
   const dispatch = useDispatch();
@@ -118,7 +119,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/sign-in" element={<SignIn />} />
-        <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/sign-up" element={user ? <HomePage /> : <SignUp />} />
+        <Route path="/verify-otp" element={user ? <HomePage /> : <OtpVerification />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/profile/:userId" element={<OtherUserProfile />} />
         <Route path="/chats/:chatId" element={user ? <MessagesPage /> : <HomePage />} />

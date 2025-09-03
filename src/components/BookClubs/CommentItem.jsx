@@ -296,12 +296,12 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                       </Typography>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
                         <IconButton size="small" onClick={() => handleLikeReply(reply?.id)} sx={{ gap: 1 }}>
-                          {reply.likedByCurrentUser ? (
+                          {reply?.likedByCurrentUser ? (
                             <ThumbUpIcon fontSize="small" color="primary" />
                           ) : (
                             <ThumbUpOffAltIcon fontSize="small" />
                           )}
-                          <Typography variant="body2">{reply.likedUsers?.length || 0}</Typography>
+                          <Typography variant="body2">{reply?.likedUsers?.length || 0}</Typography>
                         </IconButton>
                         {!isReplying && (
                           <Button variant="outlined" size="small" onClick={() => setIsReplying(!isReplying)}>

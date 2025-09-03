@@ -22,7 +22,7 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import HeightIcon from "@mui/icons-material/Height";
 import ChatIcon from "@mui/icons-material/Chat";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 const viewModeIcon = {
   single: <Layers />,
   double: <MenuBook />,
@@ -55,6 +55,14 @@ export default function FloatingMenu({
   const [targetChapter, setTargetChapter] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Load theme from localStorage on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("readerThemeMode");
+    if (savedTheme && savedTheme !== themeMode) {
+      onThemeModeChange(savedTheme);
+    }
+  }, []);
+
   const handleFullScreen = () => {
     if (document.fullscreenElement) {
       document.exitFullscreen();
@@ -77,7 +85,15 @@ export default function FloatingMenu({
 
   const handleThemeModeChange = () => {
     const modes = ["light", "dark"];
-    handleModeChange(modes, themeMode, onThemeModeChange);
+    const currentIndex = modes.indexOf(themeMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const newTheme = modes[nextIndex];
+
+    // Save to localStorage
+    localStorage.setItem("readerThemeMode", newTheme);
+
+    // Call the parent's onChange handler
+    onThemeModeChange(newTheme);
   };
 
   const currentChapterIndex = useMemo(() => chapters.findIndex((chapter) => chapter.id === currentChapterId), [chapters, currentChapterId]);

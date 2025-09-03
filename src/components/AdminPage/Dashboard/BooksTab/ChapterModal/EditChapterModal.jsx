@@ -78,7 +78,7 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
     setLoading(true);
     console.log("Form Data:", chapterData);
     try {
-      await dispatch(editChapterAction(bookId, chapterData));
+      await dispatch(editChapterAction(chapterData));
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {

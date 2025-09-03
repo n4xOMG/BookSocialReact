@@ -18,6 +18,9 @@ import {
   UPDATE_PROFILE_FAILED,
   UPDATE_PROFILE_REQUEST,
   UPDATE_PROFILE_SUCCESS,
+  VERIFY_OTP_REQUEST,
+  VERIFY_OTP_SUCCEED,
+  VERIFY_OTP_FAILED,
 } from "./auth.actionType";
 
 const initialState = {
@@ -26,6 +29,7 @@ const initialState = {
   user: null,
   loading: false,
   forgotPasswordMessage: null,
+  otpVerificationMessage: null,
 };
 
 export const authReducer = (state = initialState, action) => {
@@ -36,6 +40,7 @@ export const authReducer = (state = initialState, action) => {
     case FORGOT_PASSWORD_REQUEST:
     case RESET_PASSWORD_REQUEST:
     case UPDATE_PROFILE_REQUEST:
+    case VERIFY_OTP_REQUEST:
       return { ...state, loading: true, error: null };
 
     case GET_PROFILE_SUCCESS:
@@ -48,6 +53,8 @@ export const authReducer = (state = initialState, action) => {
 
     case FORGOT_PASSWORD_SUCCEED:
       return { ...state, loading: false, forgotPasswordMessage: action.payload };
+    case VERIFY_OTP_SUCCEED:
+      return { ...state, loading: false, error: null, otpVerificationMessage: action.payload };
 
     case LOGIN_FAILED:
     case REGISTER_FAILED:
@@ -55,6 +62,7 @@ export const authReducer = (state = initialState, action) => {
     case FORGOT_PASSWORD_FAILED:
     case RESET_PASSWORD_FAILED:
     case UPDATE_PROFILE_FAILED:
+    case VERIFY_OTP_FAILED:
       return { ...state, loading: false, error: action.payload };
     case LOGOUT:
       return {

@@ -23,6 +23,7 @@ import UploadToCloudinary from "../../utils/uploadToCloudinary";
 import Sidebar from "../../components/HomePage/Sidebar";
 import PostList from "../../components/BookClubs/PostList";
 import { useAuthCheck } from "../../utils/useAuthCheck";
+import { UploadToServer } from "../../utils/uploadToServer";
 
 const BookClubs = () => {
   const theme = useTheme();
@@ -70,7 +71,7 @@ const BookClubs = () => {
     setSubmissionError("");
 
     try {
-      const uploadedImageUrls = await Promise.all(selectedImages.map((image) => UploadToCloudinary(image, "bookposts")));
+      const uploadedImageUrls = await Promise.all(selectedImages.map((image) => UploadToServer(image, user.username, "bookposts")));
 
       const postData = {
         content: postContent,

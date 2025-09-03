@@ -114,8 +114,10 @@ export const chapterReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        chapters: state.chapters.map((chapter) => (chapter.id === action.payload.id ? { ...chapter, likedByCurrentUser: true } : chapter)),
-        chapter: state.chapter && state.chapter.id === action.payload.id ? { ...state.chapter, likedByCurrentUser: true } : state.chapter,
+        chapter:
+          state.chapter.id === action.payload.id
+            ? { ...state.chapter, likedByCurrentUser: action.payload.likedByCurrentUser }
+            : state.chapter,
       };
 
     case UNLIKE_CHAPTER_SUCCESS:

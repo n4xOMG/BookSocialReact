@@ -19,6 +19,9 @@ import {
   UPDATE_PROFILE_FAILED,
   UPDATE_PROFILE_REQUEST,
   UPDATE_PROFILE_SUCCESS,
+  VERIFY_OTP_FAILED,
+  VERIFY_OTP_REQUEST,
+  VERIFY_OTP_SUCCEED,
 } from "./auth.actionType";
 import { api, API_BASE_URL } from "../../api/api";
 
@@ -78,6 +81,7 @@ export const registerUserAction = (registerData) => async (dispatch) => {
   try {
     const { data } = await axios.post(`${API_BASE_URL}/auth/signup`, registerData.data);
     dispatch({ type: REGISTER_SUCCEED, payload: data.token });
+    return { payload: data };
   } catch (error) {
     if (error.response) {
       console.log("Error response data: ", error.response.data);
@@ -191,5 +195,24 @@ export const refreshToken = () => async (dispatch) => {
     // If refresh fails, log the user out
     dispatch(logoutAction());
     return null;
+  }
+};
+
+export const verifyOtpAction = (email, otp, context) => async (dispatch) => {
+  dispatch({ type: VERIFY_OTP_REQUEST });
+  try {
+    const { data } = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
+      email,
+      otp,
+      context,
+    });
+
+    dispatch({ type: VERIFY_OTP_SUCCEED, payload: data });
+    return { payload: data };
+  } catch (error) {
+    console.log("OTP verification error: ", error.response);
+    const errorMessage = error.response?.data || "OTP verification failed";
+    dispatch({ type: VERIFY_OTP_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };

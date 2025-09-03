@@ -129,19 +129,25 @@ export default function CommentDrawer({ open, user, chapterId, onToggleDrawer })
             Comments
           </Typography>
           <List>
-            {chapterComments?.map((comment, index) => (
-              <ListItem key={index} alignItems="flex-start">
-                <CommentItem
-                  comment={comment}
-                  newReply={newReply}
-                  checkAuth={checkAuth}
-                  handleReplyChange={handleReplyChange}
-                  handleSubmitReply={handleSubmitReply}
-                  handleDeleteComment={handleDeleteComment}
-                  user={user}
-                />
-              </ListItem>
-            ))}
+            {Array.isArray(chapterComments) && chapterComments.length > 0 ? (
+              chapterComments.map((comment, index) => (
+                <ListItem key={index} alignItems="flex-start">
+                  <CommentItem
+                    comment={comment}
+                    newReply={newReply}
+                    checkAuth={checkAuth}
+                    handleReplyChange={handleReplyChange}
+                    handleSubmitReply={handleSubmitReply}
+                    handleDeleteComment={handleDeleteComment}
+                    user={user}
+                  />
+                </ListItem>
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 2 }}>
+                No comments yet. Be the first to comment!
+              </Typography>
+            )}
           </List>
           <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
             <TextField

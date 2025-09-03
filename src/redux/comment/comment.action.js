@@ -211,12 +211,16 @@ export const getAllCommentByChapterAction = (chapterId) => async (dispatch) => {
   dispatch({ type: GET_ALL_CHAPTER_COMMENT_REQUEST });
   try {
     const { data } = await axios.get(`${API_BASE_URL}/chapters/${chapterId}/comments`);
-    dispatch({ type: GET_ALL_CHAPTER_COMMENT_SUCCESS, payload: data });
-    console.log("Got chapter comments: ", data);
-    return { payload: data };
+    // Handle paginated response format
+    const comments = data.comments || data.content || (Array.isArray(data) ? data : []);
+    dispatch({ type: GET_ALL_CHAPTER_COMMENT_SUCCESS, payload: comments });
+    console.log("Got chapter comments: ", comments);
+    return { payload: comments };
   } catch (error) {
     console.log("error trying to get all chapter comments", error);
     dispatch({ type: GET_ALL_CHAPTER_COMMENT_FAILED, payload: error });
+    // Return empty array on error
+    return { payload: [] };
   }
 };
 export const getAllCommentByPostAction = (postId) => async (dispatch) => {

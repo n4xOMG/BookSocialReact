@@ -34,7 +34,7 @@ import {
 const initialState = {
   error: null,
   bookComments: [],
-  chapterComments: [],
+  chapterComments: [], // Ensure this is always an array
   newComment: null,
   sensitiveWords: [],
   newSensitiveWord: null,
@@ -77,7 +77,7 @@ export const commentReducer = (state = initialState, action) => {
     case GET_ALL_CHAPTER_COMMENT_SUCCESS:
       return {
         ...state,
-        chapterComments: action.payload,
+        chapterComments: Array.isArray(action.payload) ? action.payload : [], // Ensure it's always an array
         error: null,
       };
     case GET_ALL_SENSITIVE_WORDS_SUCCESS:

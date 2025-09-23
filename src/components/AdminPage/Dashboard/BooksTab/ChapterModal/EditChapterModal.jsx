@@ -9,6 +9,7 @@ import {
   DialogTitle,
   FormControlLabel,
   TextField,
+  useTheme,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -18,6 +19,7 @@ import { editChapterAction, getChapterByRoomId } from "../../../../../redux/chap
 export default function EditChapterModal({ open, onClose, bookId, chapterDetails }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [chapterData, setChapterData] = useState({
     chapterNum: "",
@@ -95,8 +97,8 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: "bold" }}>Edit Chapter</DialogTitle>
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2, p: 2 }}>
+      <DialogTitle sx={{ fontWeight: "bold", color: theme.palette.primary.main  }}>Edit Chapter</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 1, p: 2 }}>
         <TextField
           margin="normal"
           required
@@ -139,10 +141,13 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
           label="Content Preview"
           name="contentPreview"
           multiline
-          rows={4}
+          rows={5}
           value={chapterData.contentPreview}
           InputProps={{
             readOnly: true,
+          }}
+          InputLabelProps={{
+            shrink: true, 
           }}
           fullWidth
           variant="outlined"
@@ -150,6 +155,9 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "pre-wrap",
+            '& .MuiInputLabel-root': {
+              transform: 'translate(14px, -9px) scale(0.75)',
+            },
           }}
         />
         <DialogActions sx={{ px: 3, pb: 2, display: "flex", justifyContent: "space-between" }}>
@@ -160,7 +168,7 @@ export default function EditChapterModal({ open, onClose, bookId, chapterDetails
             <Button type="submit" variant="contained" color="primary">
               Update Chapter
             </Button>
-            <Button type="button" variant="contained" color="secondary" onClick={handleNavigateToWriting}>
+            <Button type="button" variant="contained" color="secondary" onClick={handleNavigateToWriting} sx={{ fontWeight: "bold", color: "white", "&:hover": { color: theme.palette.primary.dark } }}>
               Continue Writing
             </Button>
           </Box>

@@ -20,7 +20,6 @@ import SendIcon from "@mui/icons-material/Send";
 import { useDispatch, useSelector } from "react-redux";
 import { addPost, fetchPosts } from "../../redux/post/post.action";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
-import Sidebar from "../../components/HomePage/Sidebar";
 import PostList from "../../components/BookClubs/PostList";
 import { useAuthCheck } from "../../utils/useAuthCheck";
 import { UploadToServer } from "../../utils/uploadToServer";
@@ -95,8 +94,7 @@ const BookClubs = () => {
   });
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
-      <Sidebar />
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <Container maxWidth="md" sx={{ mt: 3, mb: 3 }}>
         <Paper
           elevation={3}

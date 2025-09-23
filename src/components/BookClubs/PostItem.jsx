@@ -1,4 +1,4 @@
-import { Delete, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon } from "@mui/icons-material";
+import { Delete, Edit, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon } from "@mui/icons-material";
 import { Avatar, Box, Card, CardContent, CardHeader, Chip, Divider, Grid, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useState } from "react";
@@ -7,10 +7,12 @@ import { addPost, deletePost, likePost } from "../../redux/post/post.action";
 import ViewImageModal from "../AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
 import CommentSection from "./CommentSection";
 import ShareModal from "./ShareModal";
+import { Link, useNavigate } from "react-router-dom";
 
 const PostItem = ({ post, checkAuth }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const [isLiked, setIsLiked] = useState(post ? post.likedByCurrentUser : false);
   const [openShareModal, setOpenShareModal] = useState(false);
@@ -19,6 +21,78 @@ const PostItem = ({ post, checkAuth }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showComments, setShowComments] = useState(false);
+  const [imageSource, setImageSource] = useState("post");
+
+  const handleImageClick = (index, source = "post") => {
+    setImageSource(source);
+    setCurrentImageIndex(index);
+    setIsModalOpen(true);
+  }
+
+  const getImages = () => imageSource === "shared" ? post.sharedPostImages : post.images;
+
+  const renderImages = (images, source = "post") => {
+    if (!images || images.length === 0) return null;
+
+    const count = images.length;
+
+    return (
+      <Grid container spacing={1} sx={{mt: 2, mb: 1}}>
+        {images.slice(0,4).map((url, index) => (
+          <Grid
+            key={index}
+            item
+            xs={
+              count === 1 ? 12 :
+              count === 2 ? 6 :
+              count === 3 && index === 0 ? 12 : 6
+            }
+            sx={{
+              position: "relative",
+              height: 
+                count === 1 ? "auto"
+                : count === 2 ? (400)
+                : count === 3 && index === 0 ? 250
+                : 200,
+            }}
+          >
+            <Box 
+              component="img"
+              src={url}
+              onClick={() => handleImageClick(index, source)}
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: 2,
+                cursor: "pointer",
+              }}
+            />
+            {index === 3 && count > 4 && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  bgcolor: "rgab(0,0,0,0.5)",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "#fff",
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  borderRadius: 2,
+                  cursor: "pointer",
+                }}
+                onClick={() => handleImageClick(index, source)}
+              >
+                +{count -4} more
+              </Box>
+            )}
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "";
@@ -44,6 +118,10 @@ const PostItem = ({ post, checkAuth }) => {
     dispatch(deletePost(post.id));
   };
 
+  const handleEdit = () => {
+    navigate(`/posts/${post.id}`, { state: { editMode: true } });
+  }
+
   const handleShareClick = () => {
     setOpenShareModal(true);
   };
@@ -63,17 +141,16 @@ const PostItem = ({ post, checkAuth }) => {
     setTimeout(() => setCopySuccess(""), 2000);
   };
 
-  const handleImageClick = (index) => {
-    setCurrentImageIndex(index);
-    setIsModalOpen(true);
-  };
-
   const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex === post.images.length - 1 ? 0 : prevIndex + 1));
+    setCurrentImageIndex(prev =>
+      prev === getImages().length - 1 ? 0 : prev + 1
+    )
   };
 
   const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? post.images.length - 1 : prevIndex - 1));
+    setCurrentImageIndex(prev =>
+      prev === 0 ? getImages().length - 1 : prev - 1
+    )  
   };
 
   const toggleComments = () => {
@@ -96,14 +173,45 @@ const PostItem = ({ post, checkAuth }) => {
       }}
     >
       <CardHeader
-        avatar={<Avatar src={post.user.avatarUrl || "/placeholder.svg"} alt={post.user.fullname} sx={{ width: 48, height: 48 }} />}
+        avatar={<Avatar src={post.user.avatarUrl || "/placeholder.svg"} alt={post.user.username} sx={{ width: 48, height: 48 }} />}
         title={
-          <Typography variant="subtitle1" fontWeight="600">
-            {post.user.fullname}
+          <Typography 
+            component={Link}
+            to={`/profile/${post.user.id}`}
+            variant="subtitle1" 
+            fontWeight="600" 
+            sx={{ 
+              cursor: "pointer", 
+              lineHeight: 1, 
+              display: "block",
+              mb: 0,
+              textDecoration: "none",
+              color: "inherit",
+              "&:hover": {
+                        textDecoration: "underline",
+                        color: "primary.main",
+                      }
+              }}
+          >
+            {post.user.username} 
           </Typography>
         }
         subheader={
-          <Typography variant="caption" color="text.secondary">
+          <Typography 
+            component={Link}
+            to={`/posts/${post.id}`}
+            variant="caption" 
+            color="text.secondary" 
+            sx={{
+              mt: 0, 
+              lineHeight: 1,
+              textDecoration: "none",
+              "&:hover": {
+                        textDecoration: "underline",
+                        color: "primary.main",
+                      }
+            }}
+          >
             {formatTimestamp(post.timestamp)}
           </Typography>
         }
@@ -111,6 +219,9 @@ const PostItem = ({ post, checkAuth }) => {
           user &&
           user.id === post.user.id && (
             <>
+              <IconButton onClick={handleEdit} size="small">
+                <Edit fontSize="small" />
+              </IconButton>
               <IconButton onClick={handleDelete} size="small">
                 <Delete fontSize="small" />
               </IconButton>
@@ -121,133 +232,100 @@ const PostItem = ({ post, checkAuth }) => {
       <CardContent sx={{ pt: 0 }}>
         {/* Original post content */}
         {post.content && (
-          <Typography variant="body1" gutterBottom sx={{ mb: 2, whiteSpace: "pre-line" }}>
+          <Typography 
+            gutterBottom 
+            sx={{ 
+              mb: 2, 
+              whiteSpace: "pre-line",
+              fontSize: (post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length) ? "1.5rem" : "1rem", 
+              fontWeight: (post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length) ? "bold" : "normal",
+            }}
+          >
             {post.content}
           </Typography>
         )}
 
         {/* Display shared post information */}
-        {post.sharePostImages && post.sharePostImages.length > 0 && (
-          <Box sx={{ mt: 2, mb: 2 }}>
-            <Grid container spacing={1}>
-              {post.sharePostImages.slice(0, 3).map((imageUrl, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: "100%",
-                      height: 200,
-                      overflow: "hidden",
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={imageUrl}
-                      alt={`Shared Post Image ${index + 1}`}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        cursor: "pointer",
-                        transition: "transform 0.3s ease",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                        },
+        {post.sharedPostId && (
+          <Card
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              borderColor: theme.palette.divider,
+              mb: 2,
+              boxShadow: "inset 0 0 10px rgba(0,0,0,0.2)"
+            }}
+          >
+            <CardHeader  
+              avatar={
+                <Avatar 
+                  src={post.sharedPostUser?.avatarUrl || "/placeholder.svg"} 
+                  alt={post.sharedPostUser?.username || "User"} 
+                  sx={{ width: 30, height: 30 }} 
+                />
+              }
+              title={
+                  <Typography 
+                    component={Link}
+                    to={`/profile/${post.sharedPostUser.id}`}
+                    variant="subtitle2" 
+                    fontWeight="600" 
+                    sx={{ 
+                      cursor: "pointer", 
+                      lineHeight: 1, 
+                      display: "block",
+                      mb: 0,
+                      textDecoration: "none",
+                      color: "inherit",
+                      "&:hover": {
+                                textDecoration: "underline",
+                                color: "primary.main",
+                              }
                       }}
-                      onClick={() => handleImageClick(index)}
-                    />
-                    {/* Overlay for additional images in shared post */}
-                    {index === 2 && post.sharePostImages.length > 3 && (
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          bgcolor: "rgba(0, 0, 0, 0.5)",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          color: "white",
-                          fontSize: "1.2rem",
-                          fontWeight: "bold",
-                          borderRadius: 2,
-                          cursor: "pointer",
-                        }}
-                        onClick={() => handleImageClick(index)}
-                      >
-                        +{post.sharePostImages.length - 3} more
-                      </Box>
-                    )}
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
+                  >
+                    {post.sharedPostUser?.username || "User"}
+                  </Typography>
+                
+              }
+              subheader={
+                <Typography 
+                  component={Link}
+                  to={`/posts/${post.sharedPostId}`}
+                  variant="caption" 
+                  color="text.secondary" 
+                  sx={{
+                    mt: 0, 
+                    lineHeight: 1,
+                    textDecoration: "none",
+                    "&:hover": {
+                              textDecoration: "underline",
+                              color: "primary.main",
+                            }
+                  }}
+                >
+                  {formatTimestamp(post.sharedPostTimestamp)}
+                </Typography>
+              }
+            />
+            <CardContent sx={{ pt: 0 }}>
+              {post.sharedPostContent && (
+                <Typography
+                  sx={{
+                    mb: 2,
+                    whiteSpace: "pre-line",
+                    fontSize: "1rem", 
+                    fontWeight: "normal",
+                  }}
+                >
+                  {post.sharedPostContent}
+                </Typography>
+              )}
+              {post.sharedPostImages?.length > 0 && renderImages(post.sharedPostImages, "shared")}      
+            </CardContent>
+          </Card>
         )}
 
-        {post.images && post.images.length > 0 && (
-          <Box sx={{ mt: 2, mb: 1 }}>
-            <Grid container spacing={1}>
-              {post.images.slice(0, 3).map((imageUrl, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: "100%",
-                      height: 200,
-                      overflow: "hidden",
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={imageUrl}
-                      alt={`Post Image ${index + 1}`}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        cursor: "pointer",
-                        transition: "transform 0.3s ease",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                        },
-                      }}
-                      onClick={() => handleImageClick(index)}
-                    />
-                    {/* Overlay for additional images */}
-                    {index === 2 && post.images.length > 3 && (
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          bgcolor: "rgba(0, 0, 0, 0.5)",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          color: "white",
-                          fontSize: "1.2rem",
-                          fontWeight: "bold",
-                          borderRadius: 2,
-                          cursor: "pointer",
-                        }}
-                        onClick={() => handleImageClick(index)}
-                      >
-                        +{post.images.length - 3} more
-                      </Box>
-                    )}
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
+        {post.images?.length > 0 && renderImages(post.images, "post")}
       </CardContent>
 
       <Divider />
@@ -339,11 +417,11 @@ const PostItem = ({ post, checkAuth }) => {
       )}
 
       {/* View Image Modal for Shared Post Images */}
-      {post.sharePostImages && post.sharePostImages.length > 0 && (
+      {post.sharedPostImages && post.sharedPostImages.length > 0 && (
         <ViewImageModal
           open={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          image={post.sharePostImages[currentImageIndex] || post.images[currentImageIndex]}
+          image={post.sharedPostImages[currentImageIndex] || post.images[currentImageIndex]}
           onNext={handleNextImage}
           onPrev={handlePrevImage}
         />

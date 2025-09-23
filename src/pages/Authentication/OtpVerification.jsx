@@ -1,23 +1,35 @@
-import { Alert, Box, Button, Card, CardContent, CardHeader, CircularProgress, Snackbar, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, Snackbar, TextField, Typography, Paper, IconButton, CssBaseline } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { verifyOtpAction } from "../../redux/auth/auth.action";
+import background from "../../assets/images/signin_background.png";
+import { useTheme } from "@emotion/react";
+import { Brightness7, Brightness4 } from "@mui/icons-material";
 
-export default function OtpVerification() {
+function Copyright(props) {
+  return (
+    <Typography variant="body2" color="white" align="center" {...props}>
+      ©️ CopyRight {new Date().getFullYear()} TailVerse | All rights reserved.
+    </Typography>
+  );
+}
+
+export default function OtpVerification({toggleTheme}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { loading, error, otpVerificationMessage } = useSelector((store) => store.auth);
+  const { error, otpVerificationMessage } = useSelector((store) => store.auth);
+  const theme = useTheme();
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const inputRefs = useRef([]);
 
-  // Get email and context from navigation state
   const email = location.state?.email;
   const context = location.state?.context || "register";
+  const isDarkMode = theme.palette.mode === "dark";
 
   useEffect(() => {
     if (!email) {
@@ -31,7 +43,6 @@ export default function OtpVerification() {
       newOtp[index] = value;
       setOtp(newOtp);
 
-      // Auto-focus next input
       if (value && index < 5) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -81,7 +92,6 @@ export default function OtpVerification() {
   };
 
   const handleResendOtp = () => {
-    // You might want to implement resend OTP functionality here
     console.log("Resend OTP for:", email);
   };
 
@@ -92,17 +102,48 @@ export default function OtpVerification() {
   return (
     <Box
       sx={{
+        backgroundImage: `url(${background})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        p: 4,
-        background: "linear-gradient(to bottom, #f0f4f8, #d9e2ec)",
+        flexDirection: "column",
       }}
     >
-      <Card sx={{ width: "100%", maxWidth: 400, p: 4, borderRadius: 2, boxShadow: 3 }}>
-        <CardHeader title="Verify Your Email" subheader={`Enter the 6-digit code sent to ${email}`} sx={{ textAlign: "center" }} />
-        <CardContent>
+      <CssBaseline />
+      <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+        <IconButton onClick={toggleTheme} color="inherit">
+          {isDarkMode ? <Brightness7 sx={{ color: "text.primary"  }} /> : <Brightness4 sx={{ color: "text.primary" }} />}
+        </IconButton>
+      </Box>
+
+      {isLoading ? (
+        <CircularProgress />
+      ) : (
+        <Paper
+          elevation={10}
+          sx={{
+            p: 4,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+            maxWidth: 400,
+            mt: 4,
+          }}
+        >
+          <Typography component="h1" variant="h5" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+            Verify Your Email
+          </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary", mt: 1, mb: 2, textAlign: "center" }}>
+            Enter the 6-digit code sent to{" "}
+            <Typography component="span" fontWeight="bold" color="primary.main">
+              {email}
+            </Typography>
+          </Typography>
           <form onSubmit={handleSubmit}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
@@ -153,15 +194,16 @@ export default function OtpVerification() {
               </Box>
 
               <Box sx={{ textAlign: "center" }}>
-                <Button variant="text" onClick={() => navigate(-1)} sx={{ textTransform: "none" }}>
+                <Button variant="text" onClick={() => navigate("/sign-up")} sx={{ textTransform: "none" }}>
                   Back to Sign Up
                 </Button>
               </Box>
             </Box>
           </form>
-        </CardContent>
-      </Card>
+        </Paper>
+      )}
 
+      <Copyright sx={{ mt: 8, mb: 4 }} />
       <Snackbar open={open} autoHideDuration={3000} onClose={handleClose}>
         <Alert onClose={handleClose} severity="success" variant="filled" sx={{ width: "100%" }}>
           {otpVerificationMessage || "OTP verified successfully!"}

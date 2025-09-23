@@ -100,8 +100,10 @@ export const updatePost = (postId, postData) => async (dispatch) => {
   try {
     const response = await api.put(`${API_BASE_URL}/api/posts/${postId}`, postData);
     dispatch({ type: UPDATE_POST_SUCCESS, payload: response.data });
+    return response.data;
   } catch (error) {
     dispatch({ type: UPDATE_POST_FAILURE, payload: error.message });
+    return {error: error.message };
   }
 };
 

@@ -3,7 +3,6 @@ import { Avatar, Box, Button, Card, CardContent, CardMedia, Fade, Rating, TextFi
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "../../components/HomePage/Sidebar";
 import { getUserFavouredBooksAction } from "../../redux/book/book.action";
 
 export default function UserBookshelf() {
@@ -42,8 +41,7 @@ export default function UserBookshelf() {
 
   return (
     <Box sx={{ display: "flex", overscrollBehavior: "contain" }}>
-      <Sidebar />
-      <Box sx={{ width: "100%", px: 2, mx: "auto", py: 4, minHeight: "100vh", background: "linear-gradient(to right, #f7f7f7, #e0e0e0)" }}>
+      <Box sx={{ width: "100%", px: 2, mx: "auto", py: 4, minHeight: "100vh" }}>
         <Box display="flex" flexDirection={{ xs: "column", md: "row" }} alignItems="center" justifyContent="space-between" mb={4} gap={3}>
           <Box display="flex" alignItems="center" gap={3}>
             <Avatar src={user?.avatarUrl} alt={user?.username} sx={{ width: 96, height: 96, border: 2, borderColor: "primary.main" }} />

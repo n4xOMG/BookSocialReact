@@ -22,6 +22,7 @@ import {
   DELETE_POST_COMMENT_SUCCESS,
   FETCH_POSTS_BY_ID_SUCCESS,
   FETCH_POSTS_BY_ID_REQUEST,
+  FETCH_POSTS_BY_ID_FAILURE,
 } from "./post.actionType";
 
 const initialState = {
@@ -42,6 +43,7 @@ export const postReducer = (state = initialState, action) => {
   switch (action.type) {
     case FETCH_POSTS_REQUEST:
     case FETCH_POSTS_BY_ID_REQUEST:
+      return { ...state, loading: true, error: null, post: null };
     case FETCH_POSTS_BY_USER_REQUEST:
     case ADD_POST_REQUEST:
     case UPDATE_POST_REQUEST:
@@ -56,6 +58,7 @@ export const postReducer = (state = initialState, action) => {
         ...state,
         error: null,
         post: action.payload,
+        loading: false,
         posts: state.posts.map((post) => (post.id === action.payload.id ? action.payload : post)),
       };
     case FETCH_POSTS_SUCCESS:
@@ -90,6 +93,8 @@ export const postReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        error: null,
+        post: action.payload,
         posts: state.posts.map((post) => (post.id === action.payload.id ? action.payload : post)),
       };
     case DELETE_POST_SUCCESS:
@@ -137,10 +142,16 @@ export const postReducer = (state = initialState, action) => {
         })),
         error: null,
       };
+    case FETCH_POSTS_BY_ID_FAILURE:
+      return { ...state, loading: false, error: action.payload };
     case FETCH_POSTS_FAILURE:
+      return { ...state, loading: false, error: action.payload };
     case FETCH_POSTS_BY_USER_FAILURE:
+      return { ...state, loading: false, error: action.payload };
     case ADD_POST_FAILURE:
+      return { ...state, loading: false, error: action.payload };
     case UPDATE_POST_FAILURE:
+      return { ...state, loading: false, error: action.payload };
     case DELETE_POST_FAILURE:
       return {
         ...state,

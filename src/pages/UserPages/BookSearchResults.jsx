@@ -2,8 +2,6 @@ import { Alert, Box, Card, CardContent, CardMedia, Chip, CircularProgress, Grid,
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import Header from "../../components/HomePage/Header";
-import Sidebar from "../../components/HomePage/Sidebar";
 import { searchBookAction } from "../../redux/book/book.action";
 import { getCategories } from "../../redux/category/category.action";
 import { getTags } from "../../redux/tag/tag.action";
@@ -58,10 +56,8 @@ const BookSearchResults = () => {
 
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
-      <Sidebar />
 
       <Box sx={{ width: "100%" }}>
-        <Header />
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", marginY: 4 }}>
             <CircularProgress />

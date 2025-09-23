@@ -1,15 +1,18 @@
-import { Check, Error, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Brightness7, Brightness4, Check, Error, Visibility, VisibilityOff } from "@mui/icons-material";
 import DangerousIcon from "@mui/icons-material/Dangerous";
 import {
   Alert,
-  Card,
-  CardContent,
-  CardHeader,
   CircularProgress,
+  Container,
+  CssBaseline,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
   IconButton,
   InputAdornment,
-  MenuItem,
-  Select,
+  Paper,
+  Radio,
+  RadioGroup,
   Snackbar,
 } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -21,8 +24,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { registerUserAction } from "../../redux/auth/auth.action";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
+import { useTheme } from "@emotion/react";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import background from "../../assets/images/signin_background.png";
 
-export default function SignUp() {
+function Copyright(props) {
+  return (
+    <Typography variant="body2" color="white" align="center" {...props}>
+      ©️ CopyRight {new Date().getFullYear()} TailVerse | All rights reserved.
+    </Typography>
+  );
+}
+
+export default function SignUp({toggleTheme}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const error = useSelector((store) => store.auth.error);
@@ -54,6 +68,7 @@ export default function SignUp() {
     url: "",
     error: "",
   });
+  const theme = useTheme();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -169,208 +184,255 @@ export default function SignUp() {
     localStorage.removeItem("jwt");
     setPasswordsMatch(registerData.password === confirmPassword);
   }, [registerData.password, confirmPassword]);
+
+  const isDarkMode = theme.palette.mode === "dark";
+
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 4,
-        background: "linear-gradient(to bottom, #f0f4f8, #d9e2ec)",
-      }}
-    >
-      <Card sx={{ width: "100%", maxWidth: 400, p: 4, borderRadius: 2, boxShadow: 3 }}>
-        <CardHeader title="Create an account" subheader="Sign up to get started" sx={{ textAlign: "center" }} />
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextField
-                name="username"
-                label="Username"
-                variant="outlined"
-                fullWidth
-                required
-                value={registerData.username}
-                onChange={handleInputChange}
-              />
+    <>
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <Box
+          sx={{
+            backgroundImage:
+              `url(${background})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          <CssBaseline />
+          <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+            <IconButton onClick={toggleTheme} color="inherit">
+            {isDarkMode ? <Brightness7 sx={{ color: "text.primary"  }} /> : <Brightness4 sx={{ color: "text.primary"  }} />}
+            </IconButton>
+          </Box>
+          
+          <Container component="main" maxWidth="xs">
+            <Paper
+              elevation={10}
+              sx={{
+                p: 4,
+                display: "flex",
+                flexDirection: "column", 
+                alignItems: "center",
+                marginTop: 8,
+              }}
+            >
+              <Typography component="h1" variant="h5" sx={{color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+                Create an account
+              </Typography>
+              <Typography component="h2" variant="subTitle1" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+                Sign up to get started
+              </Typography>
+              <form onSubmit={handleSubmit}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <TextField
+                    name="username"
+                    label="Username"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    value={registerData.username}
+                    onChange={handleInputChange}
+                  />
 
-              <TextField
-                name="email"
-                label="Email address"
-                type="email"
-                variant="outlined"
-                fullWidth
-                required
-                value={registerData.email}
-                onChange={handleInputChange}
-              />
+                  <TextField
+                    name="email"
+                    label="Email address"
+                    type="email"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    value={registerData.email}
+                    onChange={handleInputChange}
+                  />
 
-              <TextField
-                name="fullname"
-                label="Full Name"
-                variant="outlined"
-                fullWidth
-                required
-                value={registerData.fullname}
-                onChange={handleInputChange}
-              />
+                  <TextField
+                    name="fullname"
+                    label="Full Name"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    value={registerData.fullname}
+                    onChange={handleInputChange}
+                  />
 
-              <TextField
-                label="Date of Birth"
-                type="date"
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                value={registerData.birthdate}
-                onChange={(e) => setRegisterData((prev) => ({ ...prev, birthdate: e.target.value }))}
-              />
+                  <TextField
+                    label="Date of Birth"
+                    type="date"
+                    fullWidth
+                    required
+                    slotProps={{ 
+                      inputLabel: { shrink: true },
+                    }}                    
+                    value={registerData.birthdate}
+                    onChange={(e) => setRegisterData((prev) => ({ ...prev, birthdate: e.target.value }))}
+                    
+                  />
+                  <FormControl component="fieldset">
+                    <RadioGroup
+                      row 
+                      alignItems="center"
+                      justifyContent="center"
+                      aria-label="gender"
+                      name="gender" 
+                      value={registerData.gender} 
+                      onChange={handleInputChange} 
+                    >
+                      <FormControlLabel value="Male" control={<Radio />} label="Male" />
+                      <FormControlLabel value="Female" control={<Radio />} label="Female" />
+                      <FormControlLabel value="Other" control={<Radio />} label="Other" />
+                    </RadioGroup>
+                  </FormControl>
 
-              <Select name="gender" value={registerData.gender} onChange={handleInputChange} fullWidth required>
-                <MenuItem value="" disabled>
-                  Select Gender
-                </MenuItem>
-                <MenuItem value="Male">Male</MenuItem>
-                <MenuItem value="Female">Female</MenuItem>
-                <MenuItem value="Other">Other</MenuItem>
-              </Select>
+                  <Box>
+                    <input accept="image/*" type="file" id="avatar" onChange={handleAvatarChange} style={{ display: "none" }} />
+                    <label htmlFor="avatar">
+                      <Button variant="outlined" component="span" fullWidth>
+                        Upload Avatar
+                      </Button>
+                    </label>
+                    {avatar.file && <img src={avatar.url} alt="Avatar Preview" style={{ width: "100%", height: "auto", marginTop: 8 }} />}
+                    {avatar.error && (
+                      <Typography variant="body2" color="error">
+                        {avatar.error}
+                      </Typography>
+                    )}
+                  </Box>
 
-              <Box>
-                <input accept="image/*" type="file" id="avatar" onChange={handleAvatarChange} style={{ display: "none" }} />
-                <label htmlFor="avatar">
-                  <Button variant="outlined" component="span" fullWidth>
-                    Upload Avatar
-                  </Button>
-                </label>
-                {avatar.file && <img src={avatar.url} alt="Avatar Preview" style={{ width: "100%", height: "auto", marginTop: 8 }} />}
-                {avatar.error && (
-                  <Typography variant="body2" color="error">
-                    {avatar.error}
-                  </Typography>
-                )}
-              </Box>
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <TextField
-                  id="password"
-                  name="password"
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  variant="outlined"
-                  fullWidth
-                  required
-                  value={registerData.password}
-                  onChange={(e) => updatePassword(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword(!showPassword)}>
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <Box
-                      key={level}
-                      sx={{
-                        height: 8,
-                        width: "100%",
-                        borderRadius: 1,
-                        bgcolor: strength >= level ? "green" : "grey.300",
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <TextField
+                      id="password"
+                      name="password"
+                      label="Password"
+                      type={showPassword ? "text" : "password"}
+                      variant="outlined"
+                      fullWidth
+                      required
+                      value={registerData.password}
+                      onChange={(e) => updatePassword(e.target.value)}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={() => setShowPassword(!showPassword)}>
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
                       }}
                     />
-                  ))}
-                </Box>
-              </Box>
-              <TextField
-                id="confirm-password"
-                label="Confirm Password"
-                type="password"
-                variant="outlined"
-                fullWidth
-                required
-                value={confirmPassword}
-                onChange={handleConfirmPasswordChange}
-              />
-              {confirmPassword && (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {passwordsMatch ? <Check color="success" /> : <Error color="error" />}
-                  <Typography variant="body2" color={passwordsMatch ? "success.main" : "error.main"}>
-                    {passwordsMatch ? "Passwords match" : "Passwords do not match"}
-                  </Typography>
-                </Box>
-              )}
-              <Box sx={{ textAlign: "left" }}>
-                <Typography variant="body2" color="textSecondary">
-                  Password Requirements:
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    {requirements.length ? <Check color="success" /> : <DangerousIcon color="error" />}
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      At least 8 characters long
-                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <Box
+                          key={level}
+                          sx={{
+                            height: 8,
+                            width: "100%",
+                            borderRadius: 1,
+                            bgcolor: strength >= level ? "green" : "grey.300",
+                          }}
+                        />
+                      ))}
+                    </Box>
                   </Box>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    {requirements.uppercase && requirements.lowercase ? <Check color="success" /> : <DangerousIcon color="error" />}
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      Contains uppercase and lowercase letters
+                  <TextField
+                    id="confirm-password"
+                    label="Confirm Password"
+                    type="password"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    value={confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                  />
+                  {confirmPassword && (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      {passwordsMatch ? <Check color="success" /> : <Error color="error" />}
+                      <Typography variant="body2" color={passwordsMatch ? "success.main" : "error.main"}>
+                        {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                      </Typography>
+                    </Box>
+                  )}
+                  <Box sx={{ textAlign: "left" }}>
+                    <Typography variant="body2" color="textSecondary">
+                      Password Requirements:
                     </Typography>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {requirements.length ? <Check color="success" /> : <DangerousIcon color="error" />}
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          At least 8 characters long
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {requirements.uppercase && requirements.lowercase ? <Check color="success" /> : <DangerousIcon color="error" />}
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          Contains uppercase and lowercase letters
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {requirements.number && requirements.special ? <Check color="success" /> : <DangerousIcon color="error" />}
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          Includes numbers and special characters
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    {requirements.number && requirements.special ? <Check color="success" /> : <DangerousIcon color="error" />}
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      Includes numbers and special characters
-                    </Typography>
-                  </Box>
+                  {passwordError && (
+                    <Box sx={{ mt: 2, color: "error.main" }}>
+                      <Typography variant="body2">{passwordError}</Typography>
+                    </Box>
+                  )}
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    disabled={!Object.values(requirements).every(Boolean) || !passwordsMatch || isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <CircularProgress size={24} sx={{ mr: 2 }} />
+                        Sign up
+                      </>
+                    ) : (
+                      "Sign up"
+                    )}
+                  </Button>
+                  {error && <Alert severity="error">{error}</Alert>}
                 </Box>
-              </Box>
-              {passwordError && (
-                <Box sx={{ mt: 2, color: "error.main" }}>
-                  <Typography variant="body2">{passwordError}</Typography>
-                </Box>
-              )}
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-                disabled={!Object.values(requirements).every(Boolean) || !passwordsMatch || isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <CircularProgress size={24} sx={{ mr: 2 }} />
-                    Sign up
-                  </>
-                ) : (
-                  "Sign up"
-                )}
-              </Button>
-              {error && <Alert severity="error">{error}</Alert>}
-            </Box>
-          </form>
-          <Typography variant="body2" color="textSecondary" align="center" sx={{ mt: 2 }}>
-            Already have an account?{" "}
-            <a href="/sign-in" style={{ color: "#1976d2", textDecoration: "none" }}>
-              Sign in
-            </a>
-          </Typography>
-        </CardContent>
-      </Card>
-      <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
-        {error ? (
-          <Alert onClose={handleClose} severity="error" variant="filled" sx={{ width: "100%" }}>
-            {error}
-          </Alert>
-        ) : (
-          <Alert onClose={handleClose} severity="success" variant="filled" sx={{ width: "100%" }}>
-            Please check your mailbox to complete signing up!
-          </Alert>
-        )}
-      </Snackbar>
-    </Box>
+              </form>
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ mt: 2 }}>
+                Already have an account?{" "}
+                <a href="/sign-in" style={{ color: "#1976d2", textDecoration: "none" }}>
+                  Sign in
+                </a>
+              </Typography>
+            </Paper>
+          </Container>
+          <Copyright sx={{ mt: 8, mb: 4 }} />
+
+        
+          <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
+            {error ? (
+              <Alert onClose={handleClose} severity="error" variant="filled" sx={{ width: "100%" }}>
+                {error}
+              </Alert>
+            ) : (
+              <Alert onClose={handleClose} severity="success" variant="filled" sx={{ width: "100%" }}>
+                Please check your mailbox to complete signing up!
+              </Alert>
+            )}
+          </Snackbar>
+        </Box>
+      )
+    }
+  </>
   );
 }

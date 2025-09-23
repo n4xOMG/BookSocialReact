@@ -12,30 +12,31 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUserByJwt, loginUserAction } from "../../redux/auth/auth.action";
-import { Alert } from "@mui/material";
+import { Alert, IconButton, Paper } from "@mui/material"; // Thêm Paper component
 import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import background from "../../assets/images/signin_background.png";
+import { useTheme } from "@emotion/react";
+import { Brightness7, Brightness4 } from "@mui/icons-material";
 
 function Copyright(props) {
   return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      BookSocial {new Date().getFullYear()}
+    <Typography variant="body2" color="white" align="center" {...props}>
+      ©️ CopyRight {new Date().getFullYear()} TailVerse | All rights reserved.
     </Typography>
   );
 }
 
-const defaultTheme = createTheme();
-
-export default function SignIn() {
+export default function SignIn({toggleTheme}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const error = useSelector((store) => store.auth.error);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const theme = useTheme();
 
   // Check for redirect state
   useEffect(() => {
@@ -79,29 +80,50 @@ export default function SignIn() {
     }
   };
 
+  const isDarkMode = theme.palette.mode === "dark";
+
   return (
     <>
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <ThemeProvider theme={defaultTheme}>
+        <Box
+          sx={{
+            backgroundImage:
+              `url(${background})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          <CssBaseline />
+          <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+            <IconButton onClick={toggleTheme} color="inherit">
+            {isDarkMode ? <Brightness7 sx={{ color: "text.primary"  }} /> : <Brightness4 sx={{ color: "text.primary"  }} />}
+            </IconButton>
+          </Box>
+
           <Container component="main" maxWidth="xs">
-            <CssBaseline />
-            <Box
+            <Paper
+              elevation={10}
               sx={{
-                marginTop: 8,
+                p: 4,
                 display: "flex",
-                flexDirection: "column",
+                flexDirection: "column", 
                 alignItems: "center",
               }}
             >
-              <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-                <LockOutlinedIcon />
+              <Avatar sx={{ m: 1, bgcolor: "primary.main" }}>
+                <LockOutlinedIcon sx={{ color: "background.default" }} />
               </Avatar>
-              <Typography component="h1" variant="h5">
+              <Typography component="h1" variant="h5" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
                 Sign in
               </Typography>
-              <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+              <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: "100%" }}>
                 <TextField
                   margin="normal"
                   required
@@ -122,8 +144,15 @@ export default function SignIn() {
                   id="password"
                   autoComplete="current-password"
                 />
-                {loginError && <Alert severity="error">{loginError}</Alert>}
-                <FormControlLabel control={<Checkbox value="remember" name="remember" color="primary" />} label="Remember me" />
+                {loginError && (
+                  <Alert severity="error" sx={{ mt: 2 }}>
+                    {loginError}
+                  </Alert>
+                )}
+                <FormControlLabel
+                  control={<Checkbox value="remember" name="remember" sx={{ color: "text.primary" }} />}
+                  label={<Typography sx={{ color: "text.primary" }}>Remember me</Typography>}
+                />
                 <Button
                   type="submit"
                   fullWidth
@@ -131,35 +160,27 @@ export default function SignIn() {
                   sx={{
                     mt: 3,
                     mb: 3,
-                    backgroundColor: "black",
-                    color: "white",
-                    borderRadius: 2,
-                    alignSelf: "flex-start",
-                    "&:hover": {
-                      backgroundColor: "#fdf6e3",
-                      color: "black",
-                    },
                   }}
                 >
                   Sign In
                 </Button>
                 <Grid container>
                   <Grid item xs>
-                    <Link href="/forgot-password" variant="body2">
+                    <Link href="/forgot-password" variant="body2" sx={{ color: "text.primary", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
                       Forgot password?
                     </Link>
                   </Grid>
                   <Grid item>
-                    <Link href="/sign-up" variant="body2">
-                      Don't have an account? Sign Up
+                    <Link href="/sign-up" variant="body2" sx={{ color: "text.primary", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+                      {"Don't have an account? Sign Up"}
                     </Link>
                   </Grid>
                 </Grid>
               </Box>
-            </Box>
-            <Copyright sx={{ mt: 8, mb: 4 }} />
+            </Paper>
           </Container>
-        </ThemeProvider>
+          <Copyright sx={{ mt: 8, mb: 4 }} />
+        </Box>
       )}
     </>
   );

@@ -10,7 +10,6 @@ import { getBooksByAuthorAction } from "../../redux/book/book.action";
 import { fetchPostsByUserId } from "../../redux/post/post.action";
 import { getUserById } from "../../redux/user/user.action";
 import { createChat } from "../../redux/chat/chat.action";
-import Sidebar from "../../components/HomePage/Sidebar";
 import { isTokenExpired } from "../../utils/useAuthCheck";
 const OtherUserProfile = () => {
   const { userId } = useParams();
@@ -81,7 +80,6 @@ const OtherUserProfile = () => {
 
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
-      <Sidebar />
       <Container sx={{ width: "100%" }}>
         <Box sx={{ my: 4 }}>
           <UserInfo user={user} handleMessageClick={handleMessageClick} />

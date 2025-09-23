@@ -105,8 +105,18 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
 
   return (
     <Fade in timeout={500}>
-      <Box sx={{ height: "100%", backgroundColor: "background.default" }}>
-        <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
+        <Box
+          sx={{
+            minHeight: "100vh",
+            backgroundColor: "rgba(255, 255, 255, 0.15)", 
+            backdropFilter: "blur(10px) saturate(180%)", 
+            border: "1px solid rgba(255, 255, 255, 0.125)",
+            borderRadius: "20px", 
+            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.2)", 
+            p: { xs: 2, md: 4 }, 
+          }}
+        >
+          <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
           {/* Header Section */}
           <Box sx={{ mb: { xs: 4, md: 6 } }}>
             <Typography

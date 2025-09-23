@@ -8,6 +8,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Divider,
   FormControl,
   Grid,
   IconButton,
@@ -41,6 +42,7 @@ import { getBookByIdAction, getBooksByAuthorAction } from "../../redux/book/book
 import { getCategories } from "../../redux/category/category.action";
 import { clearChapters, manageChapterByBookId } from "../../redux/chapter/chapter.action";
 import { getTags } from "../../redux/tag/tag.action";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const UserBooks = () => {
   const dispatch = useDispatch();
@@ -112,6 +114,11 @@ const UserBooks = () => {
 
   const toggleFilterDrawer = () => {
     setOpenFilterDrawer(!openFilterDrawer);
+  };
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const handleSidebarToggle = () => {
+    setSidebarOpen((prev) => !prev);
   };
 
   // Last element ref for infinite scrolling
@@ -323,289 +330,358 @@ const UserBooks = () => {
   const isManga = getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "manga");
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
-      <Sidebar />
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        overscrollBehavior: "contain",
+        overflowX: "hidden",
+        boxSizing: "border-box",
+      }}
+    >
       <Box
         sx={{
-          display: isMobile ? "flex" : "grid",
-          flexDirection: isMobile ? "column" : "unset",
-          maxWidth: "100%",
-          width: "100%",
-          height: "100%",
-          gridTemplateColumns: "1fr 1fr",
-          bgcolor: "background.default",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
           overflow: "hidden",
+          width: "100%",
         }}
       >
-        <Box
-          component={Paper}
-          elevation={1}
-          sx={{
-            height: isMobile ? "50vh" : "100%",
-            borderRight: isMobile ? 0 : 1,
-            borderColor: "divider",
-            px: 3,
-            pt: 3,
-            pb: 2,
-            bgcolor: "grey.50",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
+        <PanelGroup 
+          direction={isMobile ? "vertical" : "horizontal"}
+          style={{ width: "100%", height: "100%" }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
-              My Books
-            </Typography>
-            <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
-              Add Book
-            </Button>
-          </Box>
-
-          {/* Search and Filter Bar */}
-          <Box sx={{ mb: 2 }}>
-            <Grid container spacing={1} alignItems="center">
-              <Grid item xs>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Search books..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon fontSize="small" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: searchQuery && (
-                      <InputAdornment position="end">
-                        <IconButton size="small" onClick={handleClearSearch}>
-                          <ClearIcon fontSize="small" />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item>
-                <Tooltip title="Filter">
-                  <IconButton size="small" onClick={toggleFilterDrawer}>
-                    <FilterListIcon />
-                  </IconButton>
-                </Tooltip>
-              </Grid>
-              <Grid item>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <Select
-                    value={filterOptions.sortBy}
-                    onChange={handleSortChange}
-                    displayEmpty
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <Tooltip title={`Sort ${filterOptions.sortOrder === "asc" ? "ascending" : "descending"}`}>
-                          <IconButton size="small" onClick={handleSortOrderChange} sx={{ mr: 0.5 }}>
-                            <SortIcon
-                              fontSize="small"
-                              sx={{
-                                transform: filterOptions.sortOrder === "desc" ? "rotate(180deg)" : "none",
-                                transition: "transform 0.3s",
-                              }}
-                            />
-                          </IconButton>
-                        </Tooltip>
-                      </InputAdornment>
-                    }
-                  >
-                    <MenuItem value="title">Title</MenuItem>
-                    <MenuItem value="uploadDate">Upload Date</MenuItem>
-                    <MenuItem value="chapterCount">Chapter Count</MenuItem>
-                    <MenuItem value="avgRating">Rating</MenuItem>
-                    <MenuItem value="viewCount">Views</MenuItem>
-                    <MenuItem value="favCount">Favorites</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </Box>
-
-          {/* Active Filters Display */}
-          {(filterOptions.categories.length > 0 || filterOptions.tags.length > 0) && (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5, maxHeight: 60, overflow: "auto" }}>
-              {getSelectedCategories().map((category) => (
-                <FilterChip
-                  key={`category-${category.id}`}
-                  label={category.name}
-                  color="primary"
-                  onDelete={() => handleRemoveFilter("category", category.id)}
-                />
-              ))}
-              {getSelectedTags().map((tag) => (
-                <FilterChip key={`tag-${tag.id}`} label={tag.name} color="secondary" onDelete={() => handleRemoveFilter("tag", tag.id)} />
-              ))}
-            </Box>
-          )}
-
-          <Box sx={{ flex: 1, overflow: "auto" }}>
-            {loading && !filteredBooks.length ? (
-              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-                <CircularProgress />
+          <Panel minSize={30} defaultSize={60}>
+            <Box
+              component={Paper}
+              elevation={1}
+              sx={{
+                width: "100%",
+                height: "100%",
+                ...(isMobile && {minHeight: "50vh"}), 
+                borderRight: isMobile ? 0 : 1,
+                borderColor: "divider",
+                boxSizing: "border-box",
+                px: 3,
+                pt: 3,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: 0,
+                backdropFilter: 'blur(0px)',
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Typography variant="h4" sx={{ fontWeight: "bold", color: "primary.main" }}>
+                  My Books
+                </Typography>
+                <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
+                  Add Book
+                </Button>
               </Box>
-            ) : filteredBooks.length > 0 ? (
-              <>
-                <BookList
-                  books={filteredBooks}
-                  selectedBookId={selectedBookId}
-                  onSelectBook={debouncedSetSelectedBookId}
-                  onEditBook={(book) => handleOpenModal("editBook", book)}
-                  onDeleteBook={(book) => handleOpenModal("deleteBook", book)}
-                  lastBookElementRef={lastBookElementRef}
-                />
-                {loadingMore && (
-                  <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                    <CircularProgress size={24} />
+
+              {/* Search and Filter Bar */}
+              <Box component={Paper}
+                sx={{
+                    mb: 2,
+                    width: "100%",
+                    boxSizing: "border-box",
+                    backgroundColor: theme.palette.background.paper, 
+                  }}>
+                <Grid container spacing={1} alignItems="center" sx={{ p: 1 }}> {/* Sửa lỗi ở đây */}
+                  <Grid item xs>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Search books..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      sx={{
+                            '& .MuiOutlinedInput-root': {
+                            borderRadius: '10px',
+                          },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon fontSize="small" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: searchQuery && (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={handleClearSearch}>
+                              <ClearIcon fontSize="small" />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                  <Grid item>
+                    <Tooltip title="Filter">
+                      <IconButton size="small" onClick={toggleFilterDrawer}>
+                        <FilterListIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Grid>
+                  <Grid item>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <Select
+                        value={filterOptions.sortBy}
+                        onChange={handleSortChange}
+                        displayEmpty
+                        sx={{
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderRadius: '10px',
+                          },
+                        }}
+                        startAdornment={
+                          <InputAdornment position="start">
+                            <Tooltip
+                              title={`Sort ${
+                                filterOptions.sortOrder === 'asc'
+                                  ? 'ascending'
+                                  : 'descending'
+                              }`}
+                            >
+                              <IconButton
+                                size="small"
+                                onClick={handleSortOrderChange}
+                                sx={{ mr: 0.5 }}
+                              >
+                                <SortIcon
+                                  fontSize="small"
+                                  sx={{
+                                    transform:
+                                      filterOptions.sortOrder === 'desc'
+                                        ? 'rotate(180deg)'
+                                        : 'none',
+                                    transition: 'transform 0.3s',
+                                  }}
+                                />
+                              </IconButton>
+                            </Tooltip>
+                          </InputAdornment>
+                        }
+                      >
+                        <MenuItem value="title">Title</MenuItem>
+                        <MenuItem value="uploadDate">Upload Date</MenuItem>
+                        <MenuItem value="chapterCount">Chapter Count</MenuItem>
+                        <MenuItem value="avgRating">Rating</MenuItem>
+                        <MenuItem value="viewCount">Views</MenuItem>
+                        <MenuItem value="favCount">Favorites</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Active Filters Display */}
+              {(filterOptions.categories.length > 0 || filterOptions.tags.length > 0) && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5, maxHeight: 60, overflow: "auto" }}>
+                  {getSelectedCategories().map((category) => (
+                    <FilterChip
+                      key={`category-${category.id}`}
+                      label={category.name}
+                      color="primary"
+                      onDelete={() => handleRemoveFilter("category", category.id)}
+                    />
+                  ))}
+                  {getSelectedTags().map((tag) => (
+                    <FilterChip key={`tag-${tag.id}`} label={tag.name} color="secondary" onDelete={() => handleRemoveFilter("tag", tag.id)} />
+                  ))}
+                </Box>
+              )}
+
+              <Box sx={{ flex: 1, overflow: "auto" }}>
+                {loading && !filteredBooks.length ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                    <CircularProgress />
+                  </Box>
+                ) : filteredBooks.length > 0 ? (
+                  <>
+                    <BookList
+                      books={filteredBooks}
+                      selectedBookId={selectedBookId}
+                      onSelectBook={debouncedSetSelectedBookId}
+                      onEditBook={(book) => handleOpenModal("editBook", book)}
+                      onDeleteBook={(book) => handleOpenModal("deleteBook", book)}
+                      lastBookElementRef={lastBookElementRef}
+                    />
+                    {loadingMore && (
+                      <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                        <CircularProgress size={24} />
+                      </Box>
+                    )}
+                  </>
+                ) : booksByAuthor.length > 0 ? (
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+                  >
+                    <Typography variant="body1" color="text.secondary">
+                      No books match your filter criteria
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      startIcon={<ClearIcon />}
+                      onClick={() => {
+                        setSearchQuery("");
+                        setFilterOptions({
+                          categories: [],
+                          tags: [],
+                          sortBy: "title",
+                          sortOrder: "asc",
+                        });
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+                  >
+                    <Typography variant="body1" color="text.secondary">
+                      You haven't created any books yet
+                    </Typography>
+                    <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
+                      Create Your First Book
+                    </Button>
                   </Box>
                 )}
-              </>
-            ) : booksByAuthor.length > 0 ? (
-              <Box
-                sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
-              >
-                <Typography variant="body1" color="text.secondary">
-                  No books match your filter criteria
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<ClearIcon />}
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFilterOptions({
-                      categories: [],
-                      tags: [],
-                      sortBy: "title",
-                      sortOrder: "asc",
-                    });
-                  }}
-                >
-                  Clear Filters
-                </Button>
               </Box>
-            ) : (
-              <Box
-                sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
-              >
-                <Typography variant="body1" color="text.secondary">
-                  You haven't created any books yet
-                </Typography>
-                <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
-                  Create Your First Book
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </Box>
+            </Box>
+          </Panel>
 
-        {/* Rest of component remains the same */}
-        <Box
-          component={Paper}
-          elevation={1}
-          sx={{
-            height: isMobile ? "50vh" : "100%",
-            px: 3,
-            pt: 3,
-            pb: 2,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
-              Chapters
-            </Typography>
-            {selectedBookId ? (
-              isManga ? (
-                <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addMangaChapter")}>
-                  Add Manga Chapter
-                </Button>
-              ) : (
-                <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addNovelChapter")}>
-                  Add Chapter
-                </Button>
-              )
-            ) : null}
-          </Box>
-          <Box sx={{ flex: 1, overflow: "hidden" }}>
-            {loading ? (
-              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-                <CircularProgress />
+          <PanelResizeHandle 
+            style={{ 
+              width: isMobile ? '100%' : '8px',
+              height: isMobile ? '8px' : '100%',
+              background: 'divider', 
+              cursor: isMobile ? 'row-resize' : 'col-resize', 
+              transition: 'background-color 0.3s' 
+            }} 
+          />
+
+          <Panel minSize={30} defaultSize={40}>
+            {/* Rest of component remains the same */}
+            <Box
+              component={Paper}
+              elevation={1}
+              sx={{
+                width: "100%",
+                boxSizing: "border-box",
+                height: isMobile ? "50vh" : "100%",
+                px: 3,
+                pt: 3,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: 0,
+                backdropFilter: 'blur(0px)',
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Typography variant="h4" sx={{ fontWeight: "bold", color: "primary.main" }}>
+                  Chapters
+                </Typography>
+                {selectedBookId ? (
+                  isManga ? (
+                    <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addMangaChapter")}>
+                      Add Manga Chapter
+                    </Button>
+                  ) : (
+                    <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addNovelChapter")}>
+                      Add Chapter
+                    </Button>
+                  )
+                ) : null}
               </Box>
-            ) : !selectedBookId ? (
-              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-                <Typography variant="body1" color="text.secondary">
-                  Select a book to view chapters
+              <Box sx={{ mb: 1, justifyContent: "space-between", display: "flex", alignItems: "center" }}>
+                <Typography variant="subTitle2" sx={{ fontWeight: "bold", color: "primary.main" }}>
+                  {book?.title || "Select a book to view chapters"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {chapters.length} {chapters.length === 1 ? "Chapter" : "Chapters"}
                 </Typography>
               </Box>
-            ) : chapters.length > 0 ? (
-              <UserBookChapterList
-                chapters={chapters}
-                onEditChapter={(chapter) => handleOpenModal("editChapter", chapter)}
-                onDeleteChapter={(chapter) => handleOpenModal("deleteChapter", chapter)}
-              />
-            ) : (
-              <Box
-                sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
-              >
-                <Typography variant="body1" color="text.secondary">
-                  No chapters added yet
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<AddIcon />}
-                  onClick={() => handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter")}
-                >
-                  Add Your First Chapter
-                </Button>
+              <Divider  sx={{ mb: 2, borderColor: "divider" }} />
+              <Box sx={{ flex: 1, overflow: "hidden" }}>
+                {loading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                    <CircularProgress />
+                  </Box>
+                ) : !selectedBookId ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                    <Typography variant="body1" color="text.secondary">
+                      Select a book to view chapters
+                    </Typography>
+                  </Box>
+                ) : chapters.length > 0 ? (
+                  <UserBookChapterList
+                    chapters={chapters}
+                    onEditChapter={(chapter) => handleOpenModal("editChapter", chapter)}
+                    onDeleteChapter={(chapter) => handleOpenModal("deleteChapter", chapter)}
+                  />
+                ) : (
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+                  >
+                    <Typography variant="body1" color="text.secondary">
+                      No chapters added yet
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      startIcon={<AddIcon />}
+                      onClick={() => handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter")}
+                    >
+                      Add Your First Chapter
+                    </Button>
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
-        </Box>
-
-        <Suspense fallback={<CircularProgress />}>
-          {openModal.type === "editBook" && (
-            <EditBookDialog open={true} handleClose={handleCloseModal} currentBook={openModal.data} categories={categories} tags={tags} />
-          )}
-          {openModal.type === "deleteBook" && <DeleteBookModal open={true} onClose={handleCloseModal} deleteBook={openModal.data} />}
-          {!isManga && openModal.type === "addNovelChapter" && (
-            <AddChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
-          )}
-          {isManga && openModal.type === "addMangaChapter" && (
-            <AddMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
-          )}
-          {!isManga && openModal.type === "editChapter" && (
-            <EditChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />
-          )}
-          {isManga && openModal.type === "editChapter" && (
-            <EditMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />
-          )}
-          {openModal.type === "deleteChapter" && (
-            <DeleteChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} deleteChapter={openModal.data} />
-          )}
-        </Suspense>
-
-        <FilterDrawer
-          open={openFilterDrawer}
-          onClose={toggleFilterDrawer}
-          categories={categories}
-          tags={tags}
-          filterOptions={filterOptions}
-          onFilterChange={handleFilterChange}
-        />
-
-        <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
-          <CircularProgress color="inherit" />
-        </Backdrop>
+            </Box>
+          </Panel>
+        </PanelGroup>
       </Box>
+
+      <Suspense fallback={<CircularProgress />}>
+        {openModal.type === "editBook" && (
+          <EditBookDialog open={true} handleClose={handleCloseModal} currentBook={openModal.data} categories={categories} tags={tags} />
+        )}
+        {openModal.type === "deleteBook" && <DeleteBookModal open={true} onClose={handleCloseModal} deleteBook={openModal.data} />}
+        {!isManga && openModal.type === "addNovelChapter" && (
+          <AddChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
+        )}
+        {isManga && openModal.type === "addMangaChapter" && (
+          <AddMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
+        )}
+        {!isManga && openModal.type === "editChapter" && (
+          <EditChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />
+        )}
+        {isManga && openModal.type === "editChapter" && (
+          <EditMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />
+        )}
+        {openModal.type === "deleteChapter" && (
+          <DeleteChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} deleteChapter={openModal.data} />
+        )}
+      </Suspense>
+
+      <FilterDrawer
+        open={openFilterDrawer}
+        onClose={toggleFilterDrawer}
+        categories={categories}
+        tags={tags}
+        filterOptions={filterOptions}
+        onFilterChange={handleFilterChange}
+      />
+
+      <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 };

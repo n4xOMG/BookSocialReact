@@ -19,8 +19,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import CheckoutForm from "./CheckoutForm";
 import { getActiveCreditPackages } from "../../redux/creditpackage/creditpackage.action";
-import Sidebar from "../../components/HomePage/Sidebar";
-import Header from "../../components/HomePage/Header";
+
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
@@ -77,9 +76,7 @@ const CreditPackages = () => {
 
   return (
     <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
-      <Sidebar />
       <Box sx={{ width: "100%" }}>
-        <Header />
         <Typography variant="h4" gutterBottom pt={3}>
           Buy Credits
         </Typography>

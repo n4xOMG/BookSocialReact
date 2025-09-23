@@ -1,370 +1,335 @@
-import { Book, Bookmark, Chat, Explore, Money, Person, Menu, Close } from "@mui/icons-material";
+import * as React from 'react';
+import { styled, useTheme } from '@mui/material/styles';
 import {
-  Avatar,
-  Box,
-  Collapse,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-  useTheme,
-  SwipeableDrawer,
-  AppBar,
-  Toolbar,
+    Avatar,
+    Box,
+    Collapse,
+    Divider,
+    Drawer,
+    IconButton,
+    List,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Tooltip,
+    Typography,
+    useMediaQuery,
+    SwipeableDrawer,
 } from "@mui/material";
+import { Book, Bookmark, Chat, Explore, Money, Person, Menu, Close, Brightness4, Brightness7, ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
 import ReadingHistoryCard from "./ReadingHistoryCard";
 
-export const Sidebar = () => {
-  // Use a single selector for all needed state
-  const { user } = useSelector((state) => state.auth, shallowEqual);
-  const { readingProgresses, loading: userLoading } = useSelector(
-    (state) => ({
-      readingProgresses: state.user.readingProgresses,
-      loading: state.user.loading,
+// Định nghĩa DrawerHeader và MiniDrawer
+const drawerWidth = 220;
+const collapsedDrawerWidth = 70;
+
+const openedMixin = (theme) => ({
+    width: drawerWidth,
+    transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
     }),
-    shallowEqual
-  );
+    overflowX: 'hidden',
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+});
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const location = useLocation();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [historyExpanded, setHistoryExpanded] = useState(!isMobile);
-
-  // Memoize menu items
-  const menuItems = useMemo(
-    () => [
-      { text: "Home", icon: <Explore />, link: "/" },
-      ...(user
-        ? [
-            { text: "My Stories", icon: <Book />, link: "/stories" },
-            { text: "Library", icon: <Bookmark />, link: "/library" },
-            { text: "Credit Packages", icon: <Money />, link: "/credit-packages" },
-          ]
-        : []),
-      { text: "Book Clubs", icon: <Chat />, link: "/book-clubs" },
-    ],
-    [user]
-  );
-
-  // Only fetch reading progress when user logs in and readingProgresses is empty
-  useEffect(() => {
-    if (user && readingProgresses.length === 0) {
-      dispatch(getReadingProgressByUser());
-    }
-    // Only run when user or readingProgresses changes
-  }, [dispatch, user, readingProgresses.length]);
-
-  // Toggle drawer for mobile
-  const toggleDrawer = useCallback(() => {
-    setMobileOpen((prev) => !prev);
-  }, []);
-
-  // Toggle reading history section
-  const handleHistoryToggle = useCallback(() => {
-    setHistoryExpanded((prev) => !prev);
-  }, []);
-
-  // Navigation handler
-  const handleNavigation = useCallback(
-    (link) => {
-      navigate(link);
-      if (isMobile) {
-        setMobileOpen(false);
-      }
+const closedMixin = (theme) => ({
+    transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+    }),
+    overflowX: 'hidden',
+    width: collapsedDrawerWidth,
+    [theme.breakpoints.up('sm')]: {
+        width: collapsedDrawerWidth,
     },
-    [navigate, isMobile]
-  );
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+});
 
-  const drawerContent = (
-    <>
-      {/* Sidebar Header */}
-      <Box
-        sx={{
-          cursor: "pointer",
-          p: 2.5,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderBottom: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            cursor: "pointer",
-          }}
-          onClick={() => handleNavigation("/")}
-        >
-          <Avatar
-            src={user?.avatarUrl || "https://via.placeholder.com/32?text=B"}
-            alt="BookSocial"
-            sx={{
-              width: 32,
-              height: 32,
-              mr: 1.5,
-              background: theme.palette.primary.main,
-            }}
-          >
-            B
-          </Avatar>
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            sx={{
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            BookSocial
-          </Typography>
-        </Box>
+const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    padding: theme.spacing(0, 1),
+    ...theme.mixins.toolbar,
+}));
 
-        {isMobile && (
-          <IconButton edge="end" onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
-            <Close />
-          </IconButton>
-        )}
-      </Box>
+const MiniDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+    ({ theme, open }) => ({
+        width: drawerWidth,
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+        boxSizing: 'border-box',
+        ...(open && {
+            ...openedMixin(theme),
+            '& .MuiDrawer-paper': openedMixin(theme),
+        }),
+        ...(!open && {
+            ...closedMixin(theme),
+            '& .MuiDrawer-paper': closedMixin(theme),
+        }),
+    }),
+);
 
-      {/* Navigation Menu */}
-      <List sx={{ py: 2 }}>
-        {menuItems.map((item) => {
-          const isActive = location.pathname === item.link;
-          return (
-            <Tooltip title={item.text} placement="right" key={item.text} arrow disableHoverListener={isMobile}>
-              <ListItemButton
-                onClick={() => handleNavigation(item.link)}
-                selected={isActive}
-                sx={{
-                  my: 0.5,
-                  mx: 1,
-                  borderRadius: 1.5,
-                  py: isMobile ? 1.5 : 1,
-                  "&.Mui-selected": {
-                    backgroundColor: theme.palette.primary.main + "15",
-                    "&:hover": {
-                      backgroundColor: theme.palette.primary.main + "25",
-                    },
-                    "& .MuiListItemIcon-root": {
-                      color: theme.palette.primary.main,
-                    },
-                    "& .MuiListItemText-primary": {
-                      color: theme.palette.primary.main,
-                      fontWeight: "bold",
-                    },
-                  },
-                  "&:hover": {
-                    backgroundColor: theme.palette.action.hover,
-                  },
+export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
+    const { user } = useSelector((state) => state.auth, shallowEqual);
+    const { readingProgresses, loading: userLoading } = useSelector(
+        (state) => ({
+            readingProgresses: state.user.readingProgresses,
+            loading: state.user.loading,
+        }),
+        shallowEqual
+    );
+
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const location = useLocation();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const [historyExpanded, setHistoryExpanded] = useState(true);
+
+    // Thay đổi 3: Memoize menu items
+    const menuItems = useMemo(
+        () => [
+            { text: "Home", icon: <Explore />, link: "/" },
+            ...(user
+                ? [
+                    { text: "My Stories", icon: <Book />, link: "/stories" },
+                    { text: "Library", icon: <Bookmark />, link: "/library" },
+                    { text: "Credit Packages", icon: <Money />, link: "/credit-packages" },
+                ]
+                : []),
+            { text: "Book Clubs", icon: <Chat />, link: "/book-clubs" },
+        ],
+        [user]
+    );
+
+    useEffect(() => {
+        if (user && readingProgresses.length === 0) {
+            dispatch(getReadingProgressByUser());
+        }
+    }, [dispatch, user, readingProgresses.length]);
+
+    const handleHistoryToggle = useCallback(() => {
+        setHistoryExpanded((prev) => !prev);
+    }, []);
+
+    const handleNavigation = useCallback(
+        (link) => {
+            navigate(link);
+            if (isMobile) {
+                setOpen(false);
+            }
+        },
+        [navigate, isMobile]
+    );
+
+    const drawerContent = (
+        <Box 
+            sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    height: '100%',
+                    backgroundColor: theme.palette.background.paper,
+                    overflowY: 'auto',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': { display: 'none', },
                 }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 40,
-                    color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  primaryTypographyProps={{
-                    fontSize: isMobile ? "1rem" : "0.95rem",
-                    fontWeight: isActive ? "bold" : "normal",
-                  }}
-                />
-              </ListItemButton>
-            </Tooltip>
-          );
-        })}
-      </List>
+            >
+            {/* Sidebar Header */}
+            <DrawerHeader sx={{ justifyContent: 'left', px: 2 }}>
+                {/* Thay đổi 4: Tối ưu hóa logic hiển thị nút */}
+                <IconButton onClick={() => setOpen(!open)} sx={{ display: 'inline-flex' }}>
+                    {open ? <ChevronLeft /> : <ChevronRight />}
+                </IconButton>
+            </DrawerHeader>
 
-      <Divider sx={{ mx: 2 }} />
+            <Divider />
 
-      {/* Reading History Section - only show if user is logged in */}
-      {user && (
-        <Box sx={{ px: 2, mt: 2 }}>
-          <ListItemButton
-            onClick={handleHistoryToggle}
-            sx={{
-              borderRadius: 1.5,
-              mb: 1,
-              py: isMobile ? 1.5 : 1,
-            }}
-          >
-            <ListItemText
-              primary="Reading History"
-              primaryTypographyProps={{
-                fontSize: isMobile ? "1rem" : "0.9rem",
-                fontWeight: "bold",
-              }}
-            />
-            {historyExpanded ? (
-              <Typography variant="caption" color="text.secondary">
-                Hide
-              </Typography>
-            ) : (
-              <Typography variant="caption" color="text.secondary">
-                Show
-              </Typography>
+            {/* Navigation Menu */}
+            <List sx={{ py: 2 }}>
+                {menuItems.map((item) => {
+                    const isActive = location.pathname === item.link;
+                    return (
+                        <Tooltip title={open ? "" : item.text} placement="right" key={item.text} arrow>
+                            <ListItemButton
+                                onClick={() => handleNavigation(item.link)}
+                                selected={isActive}
+                                sx={{
+                                    my: 0.5,
+                                    borderRadius: 1.5,
+                                    py: 1,
+                                    "&.Mui-selected": {
+                                        backgroundColor: theme.palette.primary.main + "15",
+                                        "&:hover": {
+                                            backgroundColor: theme.palette.primary.main + "25",
+                                        },
+                                    },
+                                    "&:hover": {
+                                        backgroundColor: theme.palette.action.hover,
+                                    },
+                                }}
+                            >
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: 40,
+                                        color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={item.text}
+                                    sx={{ opacity: open ? 1 : 0 }}
+                                    primaryTypographyProps={{
+                                        fontSize: "0.95rem",
+                                        fontWeight: isActive ? "bold" : "normal",
+                                    }}
+                                />
+                            </ListItemButton>
+                        </Tooltip>
+                    );
+                })}
+            </List>
+
+            <Divider sx={{ mx: 2 }} />
+
+            {/* Reading History Section */}
+            {user && open && (
+                <Box sx={{ px: 2, mt: 2 }}>
+                    <ListItemButton
+                        onClick={handleHistoryToggle}
+                        sx={{
+                            borderRadius: 1.5,
+                            mb: 1,
+                            py: 1,
+                        }}
+                    >
+                        <ListItemText
+                            primary="Reading History"
+                            primaryTypographyProps={{
+                                fontSize: "0.9rem",
+                                fontWeight: "bold",
+                            }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                            {historyExpanded ? "Hide" : "Show"}
+                        </Typography>
+                    </ListItemButton>
+                    <Collapse in={historyExpanded} timeout="auto" unmountOnExit>
+                        <ReadingHistoryCard readingProgresses={readingProgresses} loading={userLoading} />
+                    </Collapse>
+                </Box>
             )}
-          </ListItemButton>
 
-          <Collapse in={historyExpanded} timeout="auto" unmountOnExit>
-            <ReadingHistoryCard readingProgresses={readingProgresses} loading={userLoading} />
-          </Collapse>
-        </Box>
-      )}
-
-      {/* User Section - show at bottom if logged in */}
-      {user && (
-        <Box
-          sx={{
-            mt: "auto",
-            p: 2,
-            borderTop: `1px solid ${theme.palette.divider}`,
-            position: "sticky",
-            bottom: 0,
-            backgroundColor: theme.palette.background.paper,
-          }}
-        >
-          <ListItemButton
-            onClick={() => handleNavigation("/profile")}
-            sx={{
-              borderRadius: 1.5,
-              "&:hover": { backgroundColor: theme.palette.action.hover },
-              py: isMobile ? 1.5 : 1,
-            }}
-          >
-            <Avatar src={user.avatarUrl} alt={user.name} sx={{ width: 32, height: 32, mr: 1.5 }} />
-            <Box>
-              <Typography variant="body2" fontWeight="medium" noWrap>
-                {user.name}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                noWrap
+            <Box
                 sx={{
-                  maxWidth: 120,
-                  display: "block",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
+                    mt: "auto",
+                    p: 1,
+                    borderTop: `1px solid ${theme.palette.divider}`,
+                    position: "sticky",
+                    bottom: 0,
+                    backgroundColor: theme.palette.background.paper,
                 }}
-              >
-                {user.email}
-              </Typography>
+            >
+                {/* Theme Toggle Button */}
+                <Tooltip title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"} placement="right" arrow>
+                    <ListItemButton
+                        onClick={toggleTheme}
+                        sx={{
+                            borderRadius: 1.5,
+                            mb: 1,
+                            py: 1,
+                        }}
+                    >
+                        <ListItemIcon sx={{ color: theme.palette.text.primary }}>
+                            {isDarkMode ? <Brightness7 /> : <Brightness4 />}
+                        </ListItemIcon>
+                        <ListItemText primary={isDarkMode ? "Light Mode" : "Dark Mode"} sx={{ opacity: open ? 1 : 0 }} />
+                    </ListItemButton>
+                </Tooltip>
+
+                {/* User Section - show only if logged in */}
+                {user && (
+                    <ListItemButton
+                        onClick={() => handleNavigation("/profile")}
+                        sx={{
+                            borderRadius: 1.5,
+                            py: 1,
+                            justifyContent: open ? 'initial' : 'center',
+                        }}
+                    >
+                        <Avatar src={user.avatarUrl} alt={user.name} sx={{ width: 32, height: 32, mr: open ? 1.5 : 0 }} />
+                        <Box sx={{ opacity: open ? 1 : 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            <Typography variant="body2" fontWeight="medium" noWrap>
+                                {user.name}
+                            </Typography>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                noWrap
+                                sx={{
+                                    display: "block",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                }}
+                            >
+                                {user.email}
+                            </Typography>
+                        </Box>
+                    </ListItemButton>
+                )}
             </Box>
-          </ListItemButton>
         </Box>
-      )}
-    </>
-  );
+    );
 
-  // Mobile drawer toggle button (shown only on mobile)
-  const drawerToggle = isMobile && (
-    <AppBar
-      position="fixed"
-      color="default"
-      elevation={0}
-      sx={{
-        top: "auto",
-        bottom: 0,
-        display: { xs: "block", md: "none" },
-        borderTop: `1px solid ${theme.palette.divider}`,
-        zIndex: (theme) => theme.zIndex.drawer - 1,
-      }}
-    >
-      <Toolbar sx={{ justifyContent: "space-between", minHeight: 56 }}>
-        <IconButton color="inherit" aria-label="open drawer" edge="start" onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
-          <Menu />
-        </IconButton>
+    return (
+        <>
+            {/* Desktop Drawer */}
+            {!isMobile && (
+                <MiniDrawer
+                    variant="permanent"
+                    open={open}
+                >
+                    {drawerContent}
+                </MiniDrawer>
+            )}
 
-        <Typography variant="body1" fontWeight="medium">
-          Menu
-        </Typography>
-
-        {user && (
-          <IconButton edge="end" onClick={() => handleNavigation("/profile")} sx={{ color: theme.palette.primary.main }}>
-            <Person />
-          </IconButton>
-        )}
-      </Toolbar>
-    </AppBar>
-  );
-
-  return (
-    <>
-      {/* Permanent drawer for desktop */}
-      {!isMobile && (
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: 240,
-            flexShrink: 0,
-            display: { xs: "none", md: "block" },
-            "& .MuiDrawer-paper": {
-              width: 240,
-              boxSizing: "border-box",
-              borderRight: `1px solid ${theme.palette.divider}`,
-              background: theme.palette.background.paper,
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            },
-          }}
-        >
-          {drawerContent}
-        </Drawer>
-      )}
-
-      {/* Temporary drawer for mobile */}
-      {isMobile && (
-        <SwipeableDrawer
-          variant="temporary"
-          open={mobileOpen}
-          onOpen={toggleDrawer}
-          onClose={toggleDrawer}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile
-          }}
-          sx={{
-            display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": {
-              width: "85%",
-              maxWidth: 320,
-              boxSizing: "border-box",
-              background: theme.palette.background.paper,
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            },
-          }}
-        >
-          {drawerContent}
-        </SwipeableDrawer>
-      )}
-
-      {/* Mobile drawer toggle */}
-      {drawerToggle}
-    </>
-  );
+            {/* Mobile Drawer */}
+            {isMobile && (
+                <SwipeableDrawer
+                    variant="temporary"
+                    open={open}
+                    onOpen={() => setOpen(true)}
+                    onClose={() => setOpen(false)}
+                    ModalProps={{
+                        keepMounted: true,
+                    }}
+                    sx={{
+                        display: { xs: "block", sm: "none" },
+                        "& .MuiDrawer-paper": {
+                            width: "85%",
+                            maxWidth: 200,
+                            boxSizing: "border-box",
+                            background: theme.palette.background.paper,
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
+                        },
+                    }}
+                >
+                    {drawerContent}
+                </SwipeableDrawer>
+            )}
+        </>
+    );
 };
 
 export default Sidebar;

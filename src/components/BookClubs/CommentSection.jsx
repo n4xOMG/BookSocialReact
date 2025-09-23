@@ -103,7 +103,7 @@ const CommentSection = ({ comments, postId }) => {
           </Typography>
 
           <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-            <Avatar src={user?.avatarUrl || "/placeholder.svg"} alt={user?.fullname || "User"} sx={{ width: 40, height: 40 }} />
+            <Avatar src={user?.avatarUrl || "/placeholder.svg"} alt={user?.username || "User"} sx={{ width: 40, height: 40 }} />
             <Box sx={{ flexGrow: 1 }}>
               <TextField
                 fullWidth

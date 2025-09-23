@@ -21,7 +21,7 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
         sx={{
           transition: "all 0.2s ease",
           "&:hover": {
-            bgcolor: "grey.50",
+            bgcolor: "action.hover",
             transform: "translateY(-2px)",
             boxShadow: 2,
           },
@@ -29,6 +29,8 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
           borderRadius: 1.5,
           border: "1px solid",
           borderColor: "divider",
+          boxShadow: '0 8px 8px 0 rgba(0, 0, 0, 0.37)',
+          bgcolor: "action.notselect",
         }}
       >
         <CardContent
@@ -52,8 +54,11 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
                   textOverflow: "ellipsis",
                   overflow: "hidden",
                   whiteSpace: "nowrap",
-                  color: theme.palette.primary.dark,
+                  color: theme.palette.text.primary,
                   mr: 1,
+                  "&:hover": {
+                    color: "primary.main",
+                  },
                 }}
               >
                 {isSmallScreen ? `Ch. ${chapter.chapterNum}` : `Chapter ${chapter.chapterNum}: ${chapter.title || "Untitled"}`}

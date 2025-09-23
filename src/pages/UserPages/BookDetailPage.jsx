@@ -10,7 +10,6 @@ import AuthorCard from "../../components/BookDetailPageComponents/AuthorCard";
 import { BookDetails } from "../../components/BookDetailPageComponents/BookDetails";
 import { ChapterList } from "../../components/BookDetailPageComponents/ChapterList";
 import { ProgressBar } from "../../components/BookDetailPageComponents/ProgressBar";
-import Sidebar from "../../components/HomePage/Sidebar";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import {
   followBookAction,
@@ -165,7 +164,6 @@ export const BookDetailPage = () => {
   if (loading || !book) {
     return (
       <Box sx={{ display: "flex", height: "100vh" }}>
-        <Sidebar />
         <Box sx={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
           <LoadingSpinner />
         </Box>
@@ -176,7 +174,6 @@ export const BookDetailPage = () => {
 
   return (
     <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#f9fafb" }}>
-      <Sidebar />
       <Box
         sx={{
           width: "100%",

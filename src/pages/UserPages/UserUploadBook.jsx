@@ -11,10 +11,12 @@ import CategoriesAndTagsStep from "../../components/UserUploadBook/CategoriesAnd
 import SettingsStep from "../../components/UserUploadBook/SettingsStep";
 import { addNewBookAction } from "../../redux/book/book.action";
 import { UploadToServer } from "../../utils/uploadToServer";
+import { useTheme } from "@emotion/react";
 
 export default function UserUploadBook() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const { user } = useSelector((state) => state.auth);
@@ -141,43 +143,67 @@ export default function UserUploadBook() {
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-            <IconButton onClick={() => navigate("/")}>
-              <ArrowBackIcon />
-            </IconButton>
-            <Typography variant="h4" sx={{ fontWeight: "bold", ml: 1 }}>
-              Upload New Book
-            </Typography>
-          </Box>
-          <Box sx={{ mb: 4 }}>
-            <Stepper activeStep={currentStep} alternativeLabel>
-              {steps.map((step, index) => (
-                <Step key={index}>
-                  <StepLabel>{step.title}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-            <LinearProgress variant="determinate" value={(currentStep / steps.length) * 100} sx={{ mt: 2 }} />
-          </Box>
-          <form>
-            {steps[currentStep].component}
-            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
-              {currentStep > 0 && (
-                <Button variant="outlined" startIcon={<ChevronLeftIcon />} onClick={handleBack} sx={{ mr: 2 }}>
-                  Back
-                </Button>
-              )}
-              <Button variant="contained" color="primary" onClick={handleNext}>
-                {currentStep === steps.length - 1 ? "Submit" : "Next"}
-              </Button>
+        <Box
+          sx={{
+          backgroundImage: theme.palette.background.backgroundImage,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        >
+          <Box 
+            sx={{
+            maxWidth: 800,
+            width: "100%",
+            mx: "auto",
+            p: { xs: 2, sm: 3, md: 4 },
+            backgroundColor: "rgba(255, 255, 255, 0.15)", 
+            backdropFilter: "blur(10px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.125)", 
+            borderRadius: "20px", 
+            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.2)", 
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+              <IconButton onClick={() => navigate("/")} sx={{ color: "text.primary" }} >
+                <ArrowBackIcon />
+              </IconButton>
+              <Typography variant="h4" sx={{ fontWeight: "bold", ml: 1 }}>
+                Upload New Book
+              </Typography>
             </Box>
-          </form>
-          <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-            <Alert onClose={() => setSnackbarOpen(false)} severity="error" sx={{ width: "100%" }}>
-              {snackbarMessage}
-            </Alert>
-          </Snackbar>
+            <Box sx={{ mb: 4 }}>
+              <Stepper activeStep={currentStep} alternativeLabel>
+                {steps.map((step, index) => (
+                  <Step key={index}>
+                    <StepLabel>{step.title}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+              <LinearProgress variant="determinate" value={(currentStep / steps.length) * 100} sx={{ mt: 2 }} />
+            </Box>
+            <form>
+              {steps[currentStep].component}
+              <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
+                {currentStep > 0 && (
+                  <Button variant="outlined" startIcon={<ChevronLeftIcon />} onClick={handleBack} sx={{ mr: 2 }}>
+                    Back
+                  </Button>
+                )}
+                <Button variant="contained" color="primary" onClick={handleNext}>
+                  {currentStep === steps.length - 1 ? "Submit" : "Next"}
+                </Button>
+              </Box>
+            </form>
+            <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+              <Alert onClose={() => setSnackbarOpen(false)} severity="error" sx={{ width: "100%" }}>
+                {snackbarMessage}
+              </Alert>
+            </Snackbar>
+          </Box>
         </Box>
       )}
     </>

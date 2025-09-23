@@ -2,7 +2,7 @@ import axios from "axios";
 import { EventEmitter } from "events";
 
 export const apiEvents = new EventEmitter();
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8181";
 
 // Create an axios instance for auth-related requests that don't need token
 export const authApi = axios.create({

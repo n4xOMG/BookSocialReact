@@ -53,7 +53,6 @@ export default function CommentDrawer({ open, user, chapterId, onToggleDrawer })
       }
 
       try {
-        setLoading(true);
         const reqData = {
           chapterId: chapterId,
           data: {
@@ -65,16 +64,13 @@ export default function CommentDrawer({ open, user, chapterId, onToggleDrawer })
           alert(response.error);
         } else {
           setNewComment("");
-          await fetchComments();
         }
       } catch (error) {
         console.error("Error creating comment:", error);
         alert("Failed to post comment");
-      } finally {
-        setLoading(false);
       }
     }),
-    [newComment, dispatch, fetchComments, chapterId, checkAuth]
+    [newComment, dispatch, chapterId, checkAuth]
   );
 
   const handleSubmitReply = useCallback(
@@ -87,22 +83,24 @@ export default function CommentDrawer({ open, user, chapterId, onToggleDrawer })
             content: newReply,
           },
         };
-        await dispatch(createReplyChapterCommentAction(reqData));
-        fetchComments();
-        setNewReply("");
+        const response = await dispatch(createReplyChapterCommentAction(reqData));
+        if (response?.error) {
+          alert(response.error);
+        } else {
+          setNewReply("");
+        }
       } else {
         alert("Reply cannot be null!");
       }
     }),
-    [newReply, dispatch, fetchComments]
+    [newReply, dispatch, chapterId]
   );
 
   const handleDeleteComment = useCallback(
     checkAuth(async (commentId) => {
       await dispatch(deleteCommentAction(commentId));
-      fetchComments();
     }),
-    [dispatch, fetchComments]
+    [dispatch]
   );
 
   const handleClose = useCallback((event, reason) => {

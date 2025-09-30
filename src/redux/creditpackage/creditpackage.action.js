@@ -40,7 +40,7 @@ import {
 export const getAllCreditPackages = () => async (dispatch) => {
   dispatch({ type: GET_ALL_CREDIT_PACKAGES_REQUEST });
   try {
-    const response = await axios.get(`${API_BASE_URL}/credit-packages`);
+    const response = await api.get(`${API_BASE_URL}/admin/credit-packages`);
     dispatch({ type: GET_ALL_CREDIT_PACKAGES_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: GET_ALL_CREDIT_PACKAGES_FAILURE, payload: error.message });

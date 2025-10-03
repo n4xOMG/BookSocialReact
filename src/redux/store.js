@@ -15,6 +15,7 @@ import { reportReducer } from "./report/report.reducer";
 import purchaseReducer from "./purchase/purchase.reducer";
 import authorReducer from "./author/author.reducer";
 import adminPayoutReducer from "./adminPayout/adminPayout.reducer";
+import { adminReducer } from "./admin/admin.reducer";
 
 const rootReducers = combineReducers({
   auth: authReducer,
@@ -32,5 +33,6 @@ const rootReducers = combineReducers({
   purchase: purchaseReducer,
   author: authorReducer,
   adminPayout: adminPayoutReducer,
+  admin: adminReducer,
 });
 export const store = legacy_createStore(rootReducers, applyMiddleware(thunk));

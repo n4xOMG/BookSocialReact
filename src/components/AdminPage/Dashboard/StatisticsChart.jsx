@@ -7,26 +7,56 @@ import PropTypes from "prop-types";
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
-const StatisticsChart = ({ newUsersByMonth = [], booksByMonth = [] }) => {
+const StatisticsChart = ({ revenueData = [], userGrowthData = [] }) => {
   const theme = useTheme();
 
-  // Month labels
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  // Process data for the chart
+  const processData = () => {
+    // If we have actual data, use it. Otherwise, use mock data
+    if (revenueData.length > 0 || userGrowthData.length > 0) {
+      const labels = [];
+      const revenueValues = [];
+      const userValues = [];
 
-  // Use provided data or fallback to default mock data if API data isn't available yet
-  const usersData = newUsersByMonth.length === 12 ? newUsersByMonth : [320, 290, 340, 380, 430, 460, 520, 590, 610, 650, 700, 750];
+      // Get the last 12 months of data
+      const last12Months = [...Array(12)].map((_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - (11 - i));
+        return date.toLocaleDateString("en-US", { month: "short" });
+      });
 
-  const booksData = booksByMonth.length === 12 ? booksByMonth : [45, 52, 63, 59, 71, 75, 82, 90, 95, 103, 110, 121];
+      // Fill with actual data or zeros
+      last12Months.forEach((month) => {
+        labels.push(month);
 
-  // Sales data (still mocked since we don't have monthly sales data)
-  const salesData = [48, 42, 53, 56, 61, 65, 70, 73, 80, 85, 92, 98];
+        // Find revenue for this month
+        const revenueItem = revenueData.find((item) => new Date(item.date).toLocaleDateString("en-US", { month: "short" }) === month);
+        revenueValues.push(revenueItem ? parseFloat(revenueItem.amount) / 1000 : 0);
+
+        // Find user growth for this month
+        const userItem = userGrowthData.find((item) => new Date(item.date).toLocaleDateString("en-US", { month: "short" }) === month);
+        userValues.push(userItem ? userItem.newUsers : 0);
+      });
+
+      return { labels, revenueValues, userValues };
+    }
+
+    // Fallback mock data
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const revenueValues = [48, 42, 53, 56, 61, 65, 70, 73, 80, 85, 92, 98];
+    const userValues = [320, 290, 340, 380, 430, 460, 520, 590, 610, 650, 700, 750];
+
+    return { labels: months, revenueValues, userValues };
+  };
+
+  const { labels, revenueValues, userValues } = processData();
 
   const data = {
-    labels: months,
+    labels,
     datasets: [
       {
-        label: "Sales ($k)",
-        data: salesData,
+        label: "Revenue ($k)",
+        data: revenueValues,
         borderColor: theme.palette.primary.main,
         backgroundColor: theme.palette.primary.light + "40",
         tension: 0.3,
@@ -39,25 +69,12 @@ const StatisticsChart = ({ newUsersByMonth = [], booksByMonth = [] }) => {
       },
       {
         label: "New Users",
-        data: usersData,
+        data: userValues,
         borderColor: theme.palette.secondary.main,
         backgroundColor: "transparent",
         tension: 0.3,
         borderDash: [5, 5],
         pointBackgroundColor: theme.palette.secondary.main,
-        pointBorderColor: theme.palette.background.paper,
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        yAxisID: "y1",
-      },
-      {
-        label: "Book Uploads",
-        data: booksData,
-        borderColor: theme.palette.success.main,
-        backgroundColor: "transparent",
-        tension: 0.3,
-        pointBackgroundColor: theme.palette.success.main,
         pointBorderColor: theme.palette.background.paper,
         pointBorderWidth: 2,
         pointRadius: 4,
@@ -104,7 +121,7 @@ const StatisticsChart = ({ newUsersByMonth = [], booksByMonth = [] }) => {
         },
         title: {
           display: true,
-          text: "Sales ($k)",
+          text: "Revenue ($k)",
         },
         ticks: {
           callback: function (value) {
@@ -119,7 +136,7 @@ const StatisticsChart = ({ newUsersByMonth = [], booksByMonth = [] }) => {
         },
         title: {
           display: true,
-          text: "Users & Books",
+          text: "New Users",
         },
       },
     },
@@ -129,8 +146,8 @@ const StatisticsChart = ({ newUsersByMonth = [], booksByMonth = [] }) => {
 };
 
 StatisticsChart.propTypes = {
-  newUsersByMonth: PropTypes.array,
-  booksByMonth: PropTypes.array,
+  revenueData: PropTypes.array,
+  userGrowthData: PropTypes.array,
 };
 
 export default StatisticsChart;

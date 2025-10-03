@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
-import { Box, Grid, Typography, Card, CardMedia, CardContent, CardActions, Button, Stack, Chip, Avatar } from "@mui/material";
+import { MenuBook } from "@mui/icons-material";
+import { Avatar, Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Grid, Stack, Typography } from "@mui/material";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getCategories } from "../../redux/category/category.action";
 import { getTags } from "../../redux/tag/tag.action";
-import { useDispatch } from "react-redux";
-import { MenuBook } from "@mui/icons-material";
-import { getOptimizedImageUrl } from "../../utils/optimizeImages";
 
 const RelatedBooks = ({ relatedBooks, loading, categories, tags }) => {
   const navigate = useNavigate();
@@ -67,7 +66,7 @@ const RelatedBooks = ({ relatedBooks, loading, categories, tags }) => {
               <Box sx={{ position: "relative", paddingTop: "130%" }}>
                 <CardMedia
                   component="img"
-                  image={getOptimizedImageUrl(book.bookCover)}
+                  image={book.bookCover}
                   alt={`Cover of ${book.title}`}
                   sx={{
                     position: "absolute",

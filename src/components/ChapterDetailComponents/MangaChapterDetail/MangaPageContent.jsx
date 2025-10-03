@@ -2,9 +2,8 @@ import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useMemo } from "react";
 
-import { useState, useEffect } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getOptimizedImageUrl } from "../../../utils/optimizeImages";
+import { useEffect, useState } from "react";
 
 const MangaPageContent = ({
   chapter,
@@ -33,9 +32,8 @@ const MangaPageContent = ({
 
   useEffect(() => {
     setLoadingImages(true);
-    const optimizedPages = pages.map(getOptimizedImageUrl);
 
-    const promises = optimizedPages.map((src) => {
+    const promises = pages.map((src) => {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.src = src;

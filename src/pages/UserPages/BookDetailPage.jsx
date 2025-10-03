@@ -22,7 +22,6 @@ import {
 } from "../../redux/book/book.action";
 import { clearChapters, getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
-import { getOptimizedImageUrl } from "../../utils/optimizeImages";
 import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
 // Lazy load heavy components
 const BookCommentSection = React.lazy(() => import("../../components/BookDetailPageComponents/BookCommentSection"));
@@ -190,7 +189,7 @@ export const BookDetailPage = () => {
               <Paper elevation={2} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
                 <Box
                   component="img"
-                  src={getOptimizedImageUrl(book.bookCover)}
+                  src={book.bookCover}
                   alt={`Cover of ${book.title}`}
                   sx={{
                     width: "100%",

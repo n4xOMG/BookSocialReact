@@ -1,13 +1,10 @@
 import { MenuBook, Star } from "@mui/icons-material";
 import { Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Skeleton, Typography } from "@mui/material";
-import { memo, useCallback, useState, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getOptimizedImageUrl } from "../../utils/optimizeImages";
 
 export const BookCard = memo(({ book, onClick, showRating = true, showActions = true, categories = [], tags = [], checkAuth }) => {
   const navigate = useNavigate();
-  const { user } = useSelector((store) => store.auth);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -52,7 +49,7 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
   );
 
   // Optimize image URL
-  const optimizedCoverUrl = useMemo(() => getOptimizedImageUrl(book.bookCover), [book.bookCover]);
+  const optimizedCoverUrl = useMemo(() => book.bookCover, [book.bookCover]);
 
   return (
     <Card

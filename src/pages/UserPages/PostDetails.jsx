@@ -410,8 +410,9 @@ const PostDetail = () => {
             {!isEditing && (
               post.images?.length > 0 && renderImages(post.images, "post")
             )}
-            
-          </CardContent>
+            </>
+          )}
+        </CardContent>
 
         {/* Edit controls */}
         {isEditing && (
@@ -536,6 +537,7 @@ const PostDetail = () => {
 
       <AuthDialog />
     </Box>
+    </>
   );
 };
 

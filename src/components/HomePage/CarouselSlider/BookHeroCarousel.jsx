@@ -7,7 +7,6 @@ import { Box, IconButton, Paper, useMediaQuery, useTheme } from "@mui/material";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { BookHeroSlide } from "./BookHeroSlide";
-import { getOptimizedImageUrl } from "../../../utils/optimizeImages";
 
 export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
@@ -29,7 +28,7 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
         
         return {
           ...book,
-          optimizedCoverUrl: getOptimizedImageUrl(book.bookCover),
+          optimizedCoverUrl: book.bookCover,
           categoryName: category ? category.name : "Unknown",
           bookTags: bookTags.slice(0, 5), // Lấy tối đa 5 tag
         };

@@ -16,8 +16,6 @@ import {
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CommentIcon from "@mui/icons-material/Comment";
-import SendIcon from "@mui/icons-material/Send";
-import { Alert, Avatar, Box, Button, CircularProgress, Divider, List, ListItem, Snackbar, TextField, Typography } from "@mui/material";
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {

@@ -5,6 +5,7 @@ import CategoriesTab from "../../components/AdminPage/Dashboard/CategoriesTab";
 import CreditsManagement from "../../components/AdminPage/Dashboard/CreditsManagement";
 import Overview from "../../components/AdminPage/Dashboard/Overview";
 import ReportsManagement from "../../components/AdminPage/Dashboard/ReportsManagement";
+import PayoutsManagement from "../../components/AdminPage/Dashboard/PayoutsManagement";
 import TagsTab from "../../components/AdminPage/Dashboard/TagsTab";
 import UserManagement from "../../components/AdminPage/Dashboard/UserManagement";
 import Header from "../../components/AdminPage/Layout/Header";
@@ -40,6 +41,14 @@ const AdminDashboard = () => {
             element={
               <ProtectedRoute roles={["ADMIN", "MODERATOR"]}>
                 <ReportsManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payouts"
+            element={
+              <ProtectedRoute roles={["ADMIN", "MODERATOR"]}>
+                <PayoutsManagement />
               </ProtectedRoute>
             }
           />

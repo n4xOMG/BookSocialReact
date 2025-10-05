@@ -16,6 +16,8 @@ import {
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CommentIcon from "@mui/icons-material/Comment";
+import SendIcon from "@mui/icons-material/Send";
+import { Alert, Avatar, Box, Button, CircularProgress, Divider, List, ListItem, Snackbar, TextField, Typography } from "@mui/material";
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -90,24 +92,6 @@ const BookCommentSection = ({ bookId, user }) => {
           return;
         }
 
-        // Optimistic update
-        const optimisticComment = {
-          id: `temp-${Date.now()}`,
-          content: newComment,
-          createdAt: new Date().toISOString(),
-          user: user,
-          replyComment: [],
-          likes: 0,
-          isOptimistic: true, // Flag to identify optimistic update
-        };
-
-        dispatch({
-          type: "CREATE_BOOK_COMMENT_SUCCESS",
-          payload: optimisticComment,
-        });
-        setNewComment("");
-
-        // Actual API call
         const reqData = {
           bookId: bookId,
           data: { content: newComment },
@@ -116,16 +100,9 @@ const BookCommentSection = ({ bookId, user }) => {
         const response = await dispatch(createBookCommentAction(reqData));
 
         if (response?.error) {
-          // Remove optimistic comment if there was an error
-          dispatch({
-            type: "DELETE_COMMENT_SUCCESS",
-            payload: optimisticComment.id,
-          });
           setLocalError(response.error);
           setOpen(true);
         } else {
-          // Refresh comments after a successful post
-          fetchComments();
           setNewComment("");
         }
       } catch (e) {
@@ -134,7 +111,7 @@ const BookCommentSection = ({ bookId, user }) => {
         setOpen(true);
       }
     }),
-    [newComment, bookId, dispatch, fetchComments, user, checkAuth]
+    [newComment, bookId, dispatch, user, checkAuth]
   );
 
   const handleSubmitReply = useCallback(
@@ -159,38 +136,29 @@ const BookCommentSection = ({ bookId, user }) => {
         if (response?.error) {
           setLocalError(response.error);
           setOpen(true);
+        } else {
+          setNewReply("");
         }
-
-        fetchComments();
-        setNewReply("");
       } catch (e) {
         console.log("Error replying: ", e);
         setLocalError("Failed to post reply. Please try again.");
         setOpen(true);
       }
     }),
-    [newReply, bookId, dispatch, fetchComments]
+    [newReply, bookId, dispatch]
   );
 
   const handleDeleteComment = useCallback(
     checkAuth(async (commentId) => {
       try {
-        // Optimistic delete
-        dispatch({
-          type: "DELETE_COMMENT_SUCCESS",
-          payload: commentId,
-        });
-
         await dispatch(deleteCommentAction(commentId));
       } catch (e) {
         console.log("Error deleting comment: ", e);
         setLocalError("Failed to delete comment. Please try again.");
         setOpen(true);
-        // Refresh to get actual state after error
-        fetchComments();
       }
     }),
-    [dispatch, fetchComments]
+    [dispatch]
   );
 
   const handleClose = useCallback((event, reason) => {

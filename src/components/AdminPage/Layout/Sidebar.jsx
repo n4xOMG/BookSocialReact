@@ -21,6 +21,7 @@ const Sidebar = () => {
     { text: "User Management", icon: <PeopleIcon />, path: "/admin/users" },
     { text: "Report Management", icon: <ReportGmailerrorredIcon />, path: "/admin/reports" },
     { text: "Credits Management", icon: <MonetizationOnIcon />, path: "/admin/credits" },
+    { text: "Payouts", icon: <MonetizationOnIcon />, path: "/admin/payouts" },
     { text: "Categories Management", icon: <CategoryIcon />, path: "/admin/categories" },
     { text: "Tags Management", icon: <StyleIcon />, path: "/admin/tags" },
   ];

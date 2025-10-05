@@ -348,10 +348,7 @@ const UserBooks = () => {
           width: "100%",
         }}
       >
-        <PanelGroup 
-          direction={isMobile ? "vertical" : "horizontal"}
-          style={{ width: "100%", height: "100%" }}
-        >
+        <PanelGroup direction={isMobile ? "vertical" : "horizontal"} style={{ width: "100%", height: "100%" }}>
           <Panel minSize={30} defaultSize={60}>
             <Box
               component={Paper}
@@ -359,7 +356,7 @@ const UserBooks = () => {
               sx={{
                 width: "100%",
                 height: "100%",
-                ...(isMobile && {minHeight: "50vh"}), 
+                ...(isMobile && { minHeight: "50vh" }),
                 borderRight: isMobile ? 0 : 1,
                 borderColor: "divider",
                 boxSizing: "border-box",
@@ -370,27 +367,39 @@ const UserBooks = () => {
                 flexDirection: "column",
                 overflow: "hidden",
                 borderRadius: 0,
-                backdropFilter: 'blur(0px)',
+                backdropFilter: "blur(0px)",
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
                 <Typography variant="h4" sx={{ fontWeight: "bold", color: "primary.main" }}>
                   My Books
                 </Typography>
-                <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
-                  Add Book
-                </Button>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <Button size="small" variant="outlined" onClick={() => navigate("/author/dashboard")}>
+                    Author Dashboard
+                  </Button>
+                  <Button size="small" variant="outlined" onClick={() => navigate("/author/payout-settings")}>
+                    Payout Settings
+                  </Button>
+                  <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
+                    Add Book
+                  </Button>
+                </Box>
               </Box>
 
               {/* Search and Filter Bar */}
-              <Box component={Paper}
+              <Box
+                component={Paper}
                 sx={{
-                    mb: 2,
-                    width: "100%",
-                    boxSizing: "border-box",
-                    backgroundColor: theme.palette.background.paper, 
-                  }}>
-                <Grid container spacing={1} alignItems="center" sx={{ p: 1 }}> {/* Sửa lỗi ở đây */}
+                  mb: 2,
+                  width: "100%",
+                  boxSizing: "border-box",
+                  backgroundColor: theme.palette.background.paper,
+                }}
+              >
+                <Grid container spacing={1} alignItems="center" sx={{ p: 1 }}>
+                  {" "}
+                  {/* Sửa lỗi ở đây */}
                   <Grid item xs>
                     <TextField
                       fullWidth
@@ -399,9 +408,9 @@ const UserBooks = () => {
                       value={searchQuery}
                       onChange={handleSearchChange}
                       sx={{
-                            '& .MuiOutlinedInput-root': {
-                            borderRadius: '10px',
-                          },
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "10px",
+                        },
                       }}
                       InputProps={{
                         startAdornment: (
@@ -433,32 +442,19 @@ const UserBooks = () => {
                         onChange={handleSortChange}
                         displayEmpty
                         sx={{
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderRadius: '10px',
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderRadius: "10px",
                           },
                         }}
                         startAdornment={
                           <InputAdornment position="start">
-                            <Tooltip
-                              title={`Sort ${
-                                filterOptions.sortOrder === 'asc'
-                                  ? 'ascending'
-                                  : 'descending'
-                              }`}
-                            >
-                              <IconButton
-                                size="small"
-                                onClick={handleSortOrderChange}
-                                sx={{ mr: 0.5 }}
-                              >
+                            <Tooltip title={`Sort ${filterOptions.sortOrder === "asc" ? "ascending" : "descending"}`}>
+                              <IconButton size="small" onClick={handleSortOrderChange} sx={{ mr: 0.5 }}>
                                 <SortIcon
                                   fontSize="small"
                                   sx={{
-                                    transform:
-                                      filterOptions.sortOrder === 'desc'
-                                        ? 'rotate(180deg)'
-                                        : 'none',
-                                    transition: 'transform 0.3s',
+                                    transform: filterOptions.sortOrder === "desc" ? "rotate(180deg)" : "none",
+                                    transition: "transform 0.3s",
                                   }}
                                 />
                               </IconButton>
@@ -490,7 +486,12 @@ const UserBooks = () => {
                     />
                   ))}
                   {getSelectedTags().map((tag) => (
-                    <FilterChip key={`tag-${tag.id}`} label={tag.name} color="secondary" onDelete={() => handleRemoveFilter("tag", tag.id)} />
+                    <FilterChip
+                      key={`tag-${tag.id}`}
+                      label={tag.name}
+                      color="secondary"
+                      onDelete={() => handleRemoveFilter("tag", tag.id)}
+                    />
                   ))}
                 </Box>
               )}
@@ -518,7 +519,14 @@ const UserBooks = () => {
                   </>
                 ) : booksByAuthor.length > 0 ? (
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                      gap: 2,
+                    }}
                   >
                     <Typography variant="body1" color="text.secondary">
                       No books match your filter criteria
@@ -541,7 +549,14 @@ const UserBooks = () => {
                   </Box>
                 ) : (
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                      gap: 2,
+                    }}
                   >
                     <Typography variant="body1" color="text.secondary">
                       You haven't created any books yet
@@ -555,14 +570,14 @@ const UserBooks = () => {
             </Box>
           </Panel>
 
-          <PanelResizeHandle 
-            style={{ 
-              width: isMobile ? '100%' : '8px',
-              height: isMobile ? '8px' : '100%',
-              background: 'divider', 
-              cursor: isMobile ? 'row-resize' : 'col-resize', 
-              transition: 'background-color 0.3s' 
-            }} 
+          <PanelResizeHandle
+            style={{
+              width: isMobile ? "100%" : "8px",
+              height: isMobile ? "8px" : "100%",
+              background: "divider",
+              cursor: isMobile ? "row-resize" : "col-resize",
+              transition: "background-color 0.3s",
+            }}
           />
 
           <Panel minSize={30} defaultSize={40}>
@@ -581,7 +596,7 @@ const UserBooks = () => {
                 flexDirection: "column",
                 overflow: "hidden",
                 borderRadius: 0,
-                backdropFilter: 'blur(0px)',
+                backdropFilter: "blur(0px)",
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
@@ -608,7 +623,7 @@ const UserBooks = () => {
                   {chapters.length} {chapters.length === 1 ? "Chapter" : "Chapters"}
                 </Typography>
               </Box>
-              <Divider  sx={{ mb: 2, borderColor: "divider" }} />
+              <Divider sx={{ mb: 2, borderColor: "divider" }} />
               <Box sx={{ flex: 1, overflow: "hidden" }}>
                 {loading ? (
                   <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
@@ -628,7 +643,14 @@ const UserBooks = () => {
                   />
                 ) : (
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%", gap: 2 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                      gap: 2,
+                    }}
                   >
                     <Typography variant="body1" color="text.secondary">
                       No chapters added yet

@@ -6,9 +6,14 @@ import {
   CREATE_BOOK_COMMENT_REQUEST,
   CREATE_BOOK_COMMENT_SUCCESS,
   CREATE_CHAPTER_COMMENT_SUCCESS,
-  CREATE_REPLY_BOOK_COMMENT_FAILED,
+  CREATE_POST_COMMENT_FAILED,
+  CREATE_POST_COMMENT_REQUEST,
+  CREATE_POST_COMMENT_SUCCESS,
   CREATE_REPLY_BOOK_COMMENT_SUCCESS,
   CREATE_REPLY_CHAPTER_COMMENT_SUCCESS,
+  CREATE_REPLY_POST_COMMENT_FAILED,
+  CREATE_REPLY_POST_COMMENT_REQUEST,
+  CREATE_REPLY_POST_COMMENT_SUCCESS,
   DELETE_COMMENT_FAILED,
   DELETE_COMMENT_REQUEST,
   DELETE_COMMENT_SUCCESS,
@@ -21,25 +26,27 @@ import {
   GET_ALL_BOOK_COMMENT_SUCCESS,
   GET_ALL_CHAPTER_COMMENT_REQUEST,
   GET_ALL_CHAPTER_COMMENT_SUCCESS,
+  GET_ALL_POST_COMMENT_FAILED,
+  GET_ALL_POST_COMMENT_REQUEST,
+  GET_ALL_POST_COMMENT_SUCCESS,
   GET_ALL_SENSITIVE_WORDS_FAILED,
   GET_ALL_SENSITIVE_WORDS_REQUEST,
   GET_ALL_SENSITIVE_WORDS_SUCCESS,
-  LIKE_COMMENT_FAILED,
-  LIKE_COMMENT_SUCCESS,
   GET_BOOK_COMMENT_COUNT_FAILED,
   GET_BOOK_COMMENT_COUNT_REQUEST,
-  GET_BOOK_COMMENT_COUNT_SUCCESS,
+  LIKE_COMMENT_FAILED,
+  LIKE_COMMENT_SUCCESS,
 } from "./comment.actionType";
 
 const initialState = {
   error: null,
   bookComments: [],
-  chapterComments: [], // Ensure this is always an array
+  postComments: [],
+  chapterComments: [],
   newComment: null,
   sensitiveWords: [],
   newSensitiveWord: null,
   likedComment: null,
-  commentCounts: {}, // Store comment counts by book ID
   pagination: {
     page: 0,
     size: 10,
@@ -52,9 +59,12 @@ const initialState = {
 export const commentReducer = (state = initialState, action) => {
   switch (action.type) {
     case GET_ALL_BOOK_COMMENT_REQUEST:
+    case GET_ALL_POST_COMMENT_REQUEST:
     case GET_ALL_CHAPTER_COMMENT_REQUEST:
     case GET_ALL_SENSITIVE_WORDS_REQUEST:
     case CREATE_BOOK_COMMENT_REQUEST:
+    case CREATE_POST_COMMENT_REQUEST:
+    case CREATE_REPLY_POST_COMMENT_REQUEST:
     case DELETE_COMMENT_REQUEST:
     case ADD_SENSITIVE_WORD_REQUEST:
     case DELETE_SENSITIVE_WORD_REQUEST:
@@ -74,6 +84,21 @@ export const commentReducer = (state = initialState, action) => {
         },
         error: null,
       };
+
+    case GET_ALL_POST_COMMENT_SUCCESS:
+      return {
+        ...state,
+        postComments: action.payload.page > 0 ? [...state.postComments, ...action.payload.comments] : action.payload.comments,
+        pagination: {
+          page: action.payload.page,
+          size: action.payload.size,
+          totalPages: action.payload.totalPages,
+          totalElements: action.payload.totalElements,
+          hasMore: action.payload.page < action.payload.totalPages - 1,
+        },
+        error: null,
+      };
+
     case GET_ALL_CHAPTER_COMMENT_SUCCESS:
       return {
         ...state,
@@ -88,6 +113,13 @@ export const commentReducer = (state = initialState, action) => {
         ...state,
         newComment: action.payload,
         bookComments: [action.payload, ...state.bookComments],
+        error: null,
+      };
+    case CREATE_POST_COMMENT_SUCCESS:
+      return {
+        ...state,
+        newComment: action.payload,
+        postComments: [action.payload, ...state.postComments],
         error: null,
       };
     case CREATE_CHAPTER_COMMENT_SUCCESS:
@@ -105,7 +137,22 @@ export const commentReducer = (state = initialState, action) => {
           if (comment.id === action.payload.parentCommentId) {
             return {
               ...comment,
-              replyComment: comment.replyComment ? [...comment.replyComment, action.payload.reply] : [action.payload.reply],
+              replyComment: comment.replyComment ? [...comment.replyComment, action.payload] : [action.payload],
+            };
+          }
+          return comment;
+        }),
+        error: null,
+      };
+
+    case CREATE_REPLY_POST_COMMENT_SUCCESS:
+      return {
+        ...state,
+        postComments: state.postComments.map((comment) => {
+          if (comment.id === action.payload.parentCommentId) {
+            return {
+              ...comment,
+              replyComment: comment.replyComment ? [...comment.replyComment, action.payload] : [action.payload],
             };
           }
           return comment;
@@ -120,7 +167,7 @@ export const commentReducer = (state = initialState, action) => {
           if (comment.id === action.payload.parentCommentId) {
             return {
               ...comment,
-              replyComment: comment.replyComment ? [...comment.replyComment, action.payload.reply] : [action.payload.reply],
+              replyComment: comment.replyComment ? [...comment.replyComment, action.payload] : [action.payload],
             };
           }
           return comment;
@@ -161,6 +208,19 @@ export const commentReducer = (state = initialState, action) => {
           }
           return comment;
         }),
+        postComments: state.postComments.map((comment) => {
+          if (comment.id === action.payload.id) {
+            return action.payload;
+          }
+          // Check in reply comments too
+          if (comment.replyComment && comment.replyComment.length > 0) {
+            return {
+              ...comment,
+              replyComment: comment.replyComment.map((reply) => (reply.id === action.payload.id ? action.payload : reply)),
+            };
+          }
+          return comment;
+        }),
       };
 
     case ADD_SENSITIVE_WORD_SUCCESS:
@@ -179,22 +239,20 @@ export const commentReducer = (state = initialState, action) => {
         error: null,
         bookComments: state.bookComments.filter((comment) => comment.id !== action.payload),
         chapterComments: state.chapterComments.filter((comment) => comment.id !== action.payload),
-      };
-
-    case GET_BOOK_COMMENT_COUNT_SUCCESS:
-      return {
-        ...state,
-        error: null,
-        commentCounts: {
-          ...state.commentCounts,
-          [action.payload.bookId]: action.payload.count,
-        },
+        postComments: state.postComments
+          .filter((comment) => comment.id !== action.payload)
+          .map((comment) => ({
+            ...comment,
+            replyComment: comment.replyComment?.filter((reply) => reply.id !== action.payload) || [],
+          })),
       };
 
     case GET_ALL_BOOK_COMMENT_FAILED:
+    case GET_ALL_POST_COMMENT_FAILED:
     case GET_ALL_SENSITIVE_WORDS_FAILED:
     case CREATE_BOOK_COMMENT_FAILED:
-    case CREATE_REPLY_BOOK_COMMENT_FAILED:
+    case CREATE_POST_COMMENT_FAILED:
+    case CREATE_REPLY_POST_COMMENT_FAILED:
     case LIKE_COMMENT_FAILED:
     case DELETE_COMMENT_FAILED:
     case ADD_SENSITIVE_WORD_FAILED:

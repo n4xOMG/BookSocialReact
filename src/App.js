@@ -22,6 +22,8 @@ import ProfilePage from "./pages/UserPages/ProfilePage";
 import UserBooks from "./pages/UserPages/UserBooks";
 import UserBookshelf from "./pages/UserPages/UserBookshelf";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
+import AuthorDashboard from "./pages/UserPages/AuthorDashboard";
+import AuthorPayoutSettings from "./pages/UserPages/AuthorPayoutSettings";
 import { getCurrentUserByJwt } from "./redux/auth/auth.action";
 import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
 import PostDetail from "./pages/UserPages/PostDetails";
@@ -33,103 +35,99 @@ import { lightTheme, darkTheme } from "./themes";
 import Layout from "./Layout";
 
 function App() {
-    const dispatch = useDispatch();
-    const { user, isAuthenticated, loading: authLoading } = useSelector((store) => store.auth, shallowEqual);
-    const jwt = localStorage.getItem("jwt");
-    const [loading, setLoading] = useState(false);
-    const { AuthDialog } = useAuthCheck();
-    const [rateLimitAlert, setRateLimitAlert] = useState({
-        open: false,
-        retryAfter: null,
-    });
+  const dispatch = useDispatch();
+  const { user, isAuthenticated, loading: authLoading } = useSelector((store) => store.auth, shallowEqual);
+  const jwt = localStorage.getItem("jwt");
+  const [loading, setLoading] = useState(false);
+  const { AuthDialog } = useAuthCheck();
+  const [rateLimitAlert, setRateLimitAlert] = useState({
+    open: false,
+    retryAfter: null,
+  });
 
-    const [mode, setMode] = useState(localStorage.getItem("themeMode") || "light");
+  const [mode, setMode] = useState(localStorage.getItem("themeMode") || "light");
 
-    const theme = useMemo(
-        () => (mode === "light" ? lightTheme : darkTheme),
-        [mode]
-    );
+  const theme = useMemo(() => (mode === "light" ? lightTheme : darkTheme), [mode]);
 
-    const toggleTheme = () => {
-      const newMode = mode === "light" ? "dark" : "light";
-      setMode(newMode);
-      localStorage.setItem("themeMode", newMode);
+  const toggleTheme = () => {
+    const newMode = mode === "light" ? "dark" : "light";
+    setMode(newMode);
+    localStorage.setItem("themeMode", newMode);
+  };
+
+  useEffect(() => {
+    // Rate limit event listener
+    const handleRateLimit = (data) => {
+      setRateLimitAlert({
+        open: true,
+        retryAfter: data.retryAfter,
+      });
     };
 
+    apiEvents.on("rateLimitExceeded", handleRateLimit);
 
-    useEffect(() => {
-        // Rate limit event listener
-        const handleRateLimit = (data) => {
-            setRateLimitAlert({
-                open: true,
-                retryAfter: data.retryAfter,
-            });
-        };
+    return () => {
+      apiEvents.off("rateLimitExceeded", handleRateLimit);
+    };
+  }, []);
 
-        apiEvents.on("rateLimitExceeded", handleRateLimit);
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (loading || authLoading) return;
 
-        return () => {
-            apiEvents.off("rateLimitExceeded", handleRateLimit);
-        };
-    }, []);
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            if (loading || authLoading) return;
-
-            try {
-                setLoading(true);
-                if (jwt && !isTokenExpired(jwt) && !user) {
-                    await dispatch(getCurrentUserByJwt(jwt));
-                }
-            } catch (e) {
-                console.error("Error loading app: ", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUser();
-    }, [dispatch, jwt, user, authLoading]);
-
-    // WebSocket connection - only initialize when user is authenticated
-    useEffect(() => {
-        let wsCleanup;
-
-        if (isAuthenticated && user?.id) {
-            console.log("App.js: Initializing WebSocket connection for user", user.username);
-            wsCleanup = connectWebSocket(user.username);
+      try {
+        setLoading(true);
+        if (jwt && !isTokenExpired(jwt) && !user) {
+          await dispatch(getCurrentUserByJwt(jwt));
         }
-
-        return () => {
-            if (wsCleanup) {
-                console.log("App.js: Cleaning up WebSocket connection");
-                wsCleanup();
-            }
-        };
-    }, [isAuthenticated, user]);
-
-    const handleCloseRateLimitAlert = () => {
-        setRateLimitAlert({
-            ...rateLimitAlert,
-            open: false,
-        });
+      } catch (e) {
+        console.error("Error loading app: ", e);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchUser();
+  }, [dispatch, jwt, user, authLoading]);
 
-    // Simple loading component
-    if (loading) {
-        return (
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "100vh",
-                }}
-            >
-                <CircularProgress />
-            </Box>
-        );
+  // WebSocket connection - only initialize when user is authenticated
+  useEffect(() => {
+    let wsCleanup;
+
+    if (isAuthenticated && user?.id) {
+      console.log("App.js: Initializing WebSocket connection for user", user.username);
+      wsCleanup = connectWebSocket(user.username);
     }
+
+    return () => {
+      if (wsCleanup) {
+        console.log("App.js: Cleaning up WebSocket connection");
+        wsCleanup();
+      }
+    };
+  }, [isAuthenticated, user]);
+
+  const handleCloseRateLimitAlert = () => {
+    setRateLimitAlert({
+      ...rateLimitAlert,
+      open: false,
+    });
+  };
+
+  // Simple loading component
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
     return (
         <ThemeProvider theme={theme}>
@@ -147,6 +145,8 @@ function App() {
                         <Route path="/credit-packages" element={<CreditPackages />} />
                         <Route path="/search-results" element={<BookSearchResults/>} />
                         <Route path="/posts/:postId" element={<PostDetail />} />
+                        <Route path="/author/dashboard" element={<AuthorDashboard />} />
+                        <Route path="/author/payout-settings" element={<AuthorPayoutSettings />} />
                         <Route path="/chats/:chatId" element={user ? <MessagesPage /> :  <Navigate to="/" replace/>} />
                     </Route>
                     <Route element={<Layout toggleTheme={toggleTheme} showHeader={false}/>}>
@@ -158,6 +158,7 @@ function App() {
                     <Route path="/verify-otp" element={user ?  <Navigate to="/" replace/> : <OtpVerification  toggleTheme={toggleTheme}/>} />
                     <Route path="/forgot-password" element={<ForgotPassword  toggleTheme={toggleTheme}/>} />
                     <Route path="/reset-password" element={<ResetPassword  toggleTheme={toggleTheme}/>} />
+                    
                     <Route path="/admin/*" element={<AdminDashboard />} />
                     
                     <Route path="/upload-book" element={<UserUploadBook />} />

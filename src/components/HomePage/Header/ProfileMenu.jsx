@@ -1,10 +1,9 @@
 import { AccountBalanceWallet, AdminPanelSettings, Logout } from "@mui/icons-material";
 import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logoutAction } from "../../../redux/auth/auth.action";
-import { getOptimizedImageUrl } from "../../../utils/optimizeImages";
 
 export default function ProfileMenu() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -44,7 +43,7 @@ export default function ProfileMenu() {
             aria-expanded={open ? "true" : undefined}
           >
             {user && user?.avatarUrl ? (
-              <Avatar src={getOptimizedImageUrl(user?.avatarUrl)} sx={{ width: 32, height: 32, mr: 2 }} />
+              <Avatar src={user?.avatarUrl} sx={{ width: 32, height: 32, mr: 2 }} />
             ) : (
               <Avatar>{user?.username[0]}</Avatar>
             )}

@@ -1,20 +1,21 @@
 import { Alert, Avatar, Box, Button, Divider, Snackbar, TextField, Typography, useTheme } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  getAllCommentByPostAction,
   createPostCommentAction,
   createReplyPostCommentAction,
-  deletepostCommentAction,
-  fetchPostById,
-} from "../../redux/post/post.action";
+  deletePostCommentAction,
+} from "../../redux/comment/comment.action";
 import { useAuthCheck } from "../../utils/useAuthCheck";
 import LoadingSpinner from "../LoadingSpinner";
 import CommentItem from "./CommentItem";
 
-const CommentSection = ({ comments, postId }) => {
+const CommentSection = ({ postId }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { postComments } = useSelector((state) => state.comment);
   const [commentText, setCommentText] = useState("");
   const [newReply, setNewReply] = useState("");
   const [open, setOpen] = useState(false);
@@ -33,19 +34,21 @@ const CommentSection = ({ comments, postId }) => {
       postId: postId,
       data: {
         content: commentText,
-        userId: user.id,
       },
     };
-    setLoading(true);
+
     try {
-      await dispatch(createPostCommentAction(reqData));
-      setCommentText("");
+      const result = await dispatch(createPostCommentAction(reqData));
+      if (result?.error) {
+        setLocalError(result.error);
+        setOpen(true);
+      } else {
+        setCommentText("");
+      }
     } catch (error) {
       console.log("Error creating comment:", error);
       setLocalError(error.message || "Failed to post comment");
       setOpen(true);
-    } finally {
-      setLoading(false);
     }
   });
 
@@ -67,8 +70,9 @@ const CommentSection = ({ comments, postId }) => {
         if (response?.error) {
           setLocalError(response.error);
           setOpen(true);
+        } else {
+          setNewReply("");
         }
-        setNewReply("");
       } else {
         setLocalError("Reply cannot be empty");
         setOpen(true);
@@ -79,11 +83,13 @@ const CommentSection = ({ comments, postId }) => {
 
   const handleDeleteComment = useCallback(
     checkAuth(async (commentId) => {
-      await dispatch(deletepostCommentAction(commentId));
-      await dispatch(fetchPostById(postId));
-      setOpen(false);
+      const result = await dispatch(deletePostCommentAction(commentId));
+      if (result?.error) {
+        setLocalError(result.error);
+        setOpen(true);
+      }
     }),
-    [dispatch, postId]
+    [dispatch]
   );
 
   const handleClose = useCallback((event, reason) => {
@@ -91,6 +97,20 @@ const CommentSection = ({ comments, postId }) => {
     setOpen(false);
     setLocalError(null);
   }, []);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      setLoading(true);
+      try {
+        await dispatch(getAllCommentByPostAction(user ? true : false, postId));
+      } catch (e) {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComments();
+  }, [postId, dispatch, user]);
 
   return (
     <>
@@ -137,8 +157,8 @@ const CommentSection = ({ comments, postId }) => {
           <Divider sx={{ mb: 2 }} />
 
           <Box sx={{ mt: 2 }}>
-            {comments && comments.length > 0 ? (
-              comments.map((comment) => (
+            {postComments && postComments.length > 0 ? (
+              postComments.map((comment) => (
                 <CommentItem
                   key={comment.id}
                   comment={comment}

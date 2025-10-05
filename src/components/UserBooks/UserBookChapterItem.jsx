@@ -5,15 +5,11 @@ import LockIcon from "@mui/icons-material/Lock";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { Box, Card, CardContent, Chip, IconButton, Tooltip, Typography, useMediaQuery, useTheme, Divider, Stack } from "@mui/material";
 import React from "react";
+import { formatExactTime } from "../../utils/formatDate";
 
 export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, style }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-  };
 
   return (
     <Box style={style} padding={1}>
@@ -97,7 +93,7 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <AccessTimeIcon sx={{ fontSize: "0.9rem", color: "text.secondary", mr: 0.5 }} />
                 <Typography variant="caption" color="text.secondary">
-                  Updated: {formatDate(chapter.updatedAt)}
+                  Updated: {formatExactTime(chapter.updatedAt)}
                 </Typography>
               </Box>
             )}

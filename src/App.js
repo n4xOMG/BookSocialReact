@@ -147,7 +147,7 @@ function App() {
                         <Route path="/credit-packages" element={<CreditPackages />} />
                         <Route path="/search-results" element={<BookSearchResults/>} />
                         <Route path="/posts/:postId" element={<PostDetail />} />
-
+                        <Route path="/chats/:chatId" element={user ? <MessagesPage /> :  <Navigate to="/" replace/>} />
                     </Route>
                     <Route element={<Layout toggleTheme={toggleTheme} showHeader={false}/>}>
                         <Route path="/stories" element={<UserBooks />} />
@@ -158,7 +158,6 @@ function App() {
                     <Route path="/verify-otp" element={user ?  <Navigate to="/" replace/> : <OtpVerification  toggleTheme={toggleTheme}/>} />
                     <Route path="/forgot-password" element={<ForgotPassword  toggleTheme={toggleTheme}/>} />
                     <Route path="/reset-password" element={<ResetPassword  toggleTheme={toggleTheme}/>} />
-                    <Route path="/chats/:chatId" element={user ? <MessagesPage /> :  <Navigate to="/" replace/>} />
                     <Route path="/admin/*" element={<AdminDashboard />} />
                     
                     <Route path="/upload-book" element={<UserUploadBook />} />

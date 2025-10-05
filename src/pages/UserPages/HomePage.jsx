@@ -3,11 +3,11 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MainContent } from "../../components/HomePage/MainContent";
 import LoadingSpinner from "../../components/LoadingSpinner";
-import { getFeaturedBooks, getTrendingBooks } from "../../redux/book/book.action";
+import { getFeaturedBooks, getTrendingBooks, getRecentUpdatedBooks } from "../../redux/book/book.action";
 
 export default function HomePage() {
     const dispatch = useDispatch();
-    const { featuredBooks, trendingBooks, error } = useSelector((state) => state.book);
+    const { featuredBooks, trendingBooks, latestUpdateBooks ,error } = useSelector((state) => state.book);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
     const theme = useTheme();
@@ -15,7 +15,7 @@ export default function HomePage() {
     const isInitialMount = useRef(true);
 
     const fetchData = useCallback(async () => {
-        if (featuredBooks?.length && trendingBooks?.length) {
+        if (featuredBooks?.length && trendingBooks?.length && latestUpdateBooks?.length) {
             return;
         }
 
@@ -28,6 +28,9 @@ export default function HomePage() {
             if (!trendingBooks?.length) {
                 promises.push(dispatch(getTrendingBooks()));
             }
+            if (!latestUpdateBooks?.length) {
+                promises.push(dispatch(getRecentUpdatedBooks()));
+            }
 
             await Promise.all(promises);
             setErrorMessage(null);
@@ -37,7 +40,7 @@ export default function HomePage() {
         } finally {
             setLoading(false);
         }
-    }, [dispatch, featuredBooks, trendingBooks]);
+    }, [dispatch, featuredBooks, trendingBooks, latestUpdateBooks]);
 
     useEffect(() => {
         if (isInitialMount.current) {
@@ -70,6 +73,7 @@ export default function HomePage() {
                     p: { xs: 1, sm: 2, md: 3 },
                     position: "relative",
                     pb: isMobile ? 7 : 0,
+                    zIndex: 1,
                 }}
             >
                 {loading ? (

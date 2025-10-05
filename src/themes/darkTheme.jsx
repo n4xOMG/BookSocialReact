@@ -6,20 +6,21 @@ export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      light: '#ffd700',
-      main: '#ffff00',
-      dark: '#ffeb3b',
-      contrastText: '#fff',
+      light: '#FFF59D',
+      main: '#FFEB3B',
+      dark: '#FBC02D',
+      contrastText: '#000',
     },
     secondary: {
-      light: '#f73378',
-      main: '#f50057',
-      dark: '#ab003c',
+      light: '#FFCC80',
+      main: '#FF9800',
+      dark: '#E65100',
       contrastText: '#fff',
     },
     background: {
       default: '#121212', 
-      paper: 'rgba(255, 255, 255, 0.01)', 
+      paper: 'rgba(255, 255, 255, 0.01)',
+      gradient:  'rgba(252, 231, 43, 0.3)',
       backgroundImage: `url(${darkBackground})`,
     },
     text: {

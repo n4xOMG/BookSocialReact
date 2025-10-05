@@ -75,7 +75,7 @@ const CreditPackages = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
+    <Box sx={{ display: "flex", height: "100%", overscrollBehavior: "contain" }}>
       <Box sx={{ width: "100%" }}>
         <Typography variant="h4" gutterBottom pt={3}>
           Buy Credits

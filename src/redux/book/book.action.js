@@ -169,7 +169,7 @@ export const getTrendingBooks = () => async (dispatch) => {
     dispatch({ type: GET_TRENDING_BOOKS_FAILED, payload: error.message });
   }
 };
-export const getRecentUpdatedBooksAction =
+export const getRecentUpdatedBooks =
   (limit = 5) =>
   async (dispatch) => {
     dispatch({ type: GET_LATEST_UPDATE_BOOK_REQUEST });

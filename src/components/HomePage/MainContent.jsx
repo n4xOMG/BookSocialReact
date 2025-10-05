@@ -1,10 +1,24 @@
 import { Explore, MenuBook, Recommend, TrendingUp } from "@mui/icons-material";
-import { Box, Button, CircularProgress, Container, Fade, Grid, Tab, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Fade,
+  Grid,
+  Tab,
+  Tabs,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getAllBookAction } from "../../redux/book/book.action";
 import { BookCard } from "./BookCard";
+import { BookHeroCarousel } from "./CarouselSlider/BookHeroCarousel";
+import TagBarList from "./TagBar/TagBarList";
 
 export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => {
   const navigate = useNavigate();
@@ -15,8 +29,8 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
   const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedTag, setSelectedTag] = useState(null);
 
-  // Use shallowEqual to avoid unnecessary rerenders
   const { books, categories, tags } = useSelector(
     (state) => ({
       books: state.book.books,
@@ -29,7 +43,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
   const loader = useRef(null);
   const prevTabRef = useRef(tabValue);
 
-  // Reset books and page when switching to "all" tab
   useEffect(() => {
     if (tabValue === "all" && prevTabRef.current !== "all") {
       setPage(0);
@@ -39,21 +52,23 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     prevTabRef.current = tabValue;
   }, [tabValue, dispatch]);
 
-  // Load books when page changes and tab is "all"
   useEffect(() => {
     if (tabValue !== "all" || !hasMore) return;
     setIsLoading(true);
     dispatch(getAllBookAction(page, 10)).then((result) => {
-      if (!result?.payload || (Array.isArray(result.payload) ? result.payload.length === 0 : result.payload.content?.length === 0)) {
+      if (
+        !result?.payload ||
+        (Array.isArray(result.payload)
+          ? result.payload.length === 0
+          : result.payload.content?.length === 0)
+      ) {
         setHasMore(false);
       }
       setIsLoading(false);
     });
   }, [page, tabValue, dispatch, hasMore]);
 
-  const handleTabChange = useCallback((event, newValue) => {
-    setTabValue(newValue);
-  }, []);
+  const handleTabChange = useCallback((_, newValue) => setTabValue(newValue), []);
 
   const navigateToBook = useCallback(
     (bookId) => {
@@ -64,38 +79,47 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     [navigate, dispatch]
   );
 
-  // Infinite scroll observer
   useEffect(() => {
     if (tabValue !== "all" || !loader.current || !hasMore) return;
-    const options = {
-      root: null,
-      rootMargin: "100px",
-      threshold: 0.5,
-    };
-    const observer = new window.IntersectionObserver((entities) => {
-      const target = entities[0];
-      if (target.isIntersecting && !isLoading && hasMore) {
-        setPage((prev) => prev + 1);
-      }
-    }, options);
+    const observer = new window.IntersectionObserver(
+      (entities) => {
+        const target = entities[0];
+        if (target.isIntersecting && !isLoading && hasMore) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { root: null, rootMargin: "100px", threshold: 0.5 }
+    );
     observer.observe(loader.current);
     return () => {
       if (loader.current) observer.unobserve(loader.current);
     };
   }, [tabValue, isLoading, hasMore]);
 
-  // Memoize book arrays
-  const featuredBooksArray = useMemo(() => (Array.isArray(featuredBooks) ? featuredBooks : []), [featuredBooks]);
-  const trendingBooksArray = useMemo(() => (Array.isArray(trendingBooks) ? trendingBooks : []), [trendingBooks]);
-  const allBooksArray = useMemo(() => (Array.isArray(books) ? books : []), [books]);
+  const featuredBooksArray = useMemo(
+    () => (Array.isArray(featuredBooks) ? featuredBooks : []),
+    [featuredBooks]
+  );
+  const trendingBooksArray = useMemo(
+    () => (Array.isArray(trendingBooks) ? trendingBooks : []),
+    [trendingBooks]
+  );
+  const allBooksArray = useMemo(
+    () => (Array.isArray(books) ? books : []),
+    [books]
+  );
 
-  // Memoize book grid rendering
   const renderBookGrid = useCallback(
     (bookList) => (
       <Grid container spacing={3}>
         {bookList.map((book) => (
           <Grid item xs={6} sm={4} md={3} lg={2.4} key={book.id || book.title}>
-            <BookCard book={book} onClick={() => navigateToBook(book.id)} categories={categories} tags={tags} />
+            <BookCard
+              book={book}
+              onClick={() => navigateToBook(book.id)}
+              categories={categories}
+              tags={tags}
+            />
           </Grid>
         ))}
       </Grid>
@@ -103,33 +127,48 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     [categories, tags, navigateToBook]
   );
 
+  const handleTagSelect = (tag) => {
+    setSelectedTag(tag);
+    console.log('Tag selected:', tag ? tag.name : 'None');
+  }
+
   return (
     <Fade in timeout={500}>
-        <Box
-          sx={{
-            minHeight: "100vh",
-            backgroundColor: "rgba(255, 255, 255, 0.15)", 
-            backdropFilter: "blur(10px) saturate(180%)", 
-            border: "1px solid rgba(255, 255, 255, 0.125)",
-            borderRadius: "20px", 
-            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.2)", 
-            p: { xs: 2, md: 4 }, 
-          }}
-        >
-          <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
+      <Box>
+        <Container maxWidth="xl" sx={{ p: isMobile ? 0 : 3 }}>
           {/* Header Section */}
-          <Box sx={{ mb: { xs: 4, md: 6 } }}>
+          <Box sx={{ mb: isMobile ? 0 : 6 }}>
+            {!isLoading && trendingBooksArray?.length > 0 && (
+              <Box sx={{ overflow: "hidden" }}>
+                <BookHeroCarousel 
+                  books={trendingBooksArray}
+                  categories={categories}
+                  tags={tags}
+                />
+              </Box>
+            )}
+
+            {/* Tag Bar */}
+            <Box sx={{ mt: isMobile ? 1 : 4 }}>
+              <TagBarList 
+                onTagSelect={handleTagSelect}
+                tags={tags} 
+              />
+            </Box>
+
             <Typography
               variant="h3"
               component="h1"
               sx={{
                 mb: 2,
+                mt: isMobile ? 2 : 4,
                 fontWeight: 800,
                 fontSize: { xs: "2rem", md: "2.5rem" },
                 background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
+                textAlign: "left",
               }}
             >
               Discover Your Next Favorite Book
@@ -140,6 +179,7 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 color: "text.secondary",
                 fontSize: { xs: "1rem", md: "1.125rem" },
                 maxWidth: "700px",
+                textAlign: "left",
               }}
             >
               Explore our curated collection of books across various genres.
@@ -230,7 +270,7 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
             </Box>
           )}
 
-          {/* All Books Section with optimized Infinite Scroll */}
+          {/* All Books Section */}
           {tabValue === "all" && (
             <Box sx={{ mb: { xs: 4, md: 6 } }}>
               <Typography
@@ -278,7 +318,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                     You've reached the end of the list
                   </Typography>
                 )}
-                {/* Remove Load More button for infinite scroll practicality */}
               </Box>
             </Box>
           )}

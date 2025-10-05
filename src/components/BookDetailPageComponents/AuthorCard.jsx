@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Stack, Typography, Divider, IconButton } from "@mui/material";
+import { Avatar, Box, Button, Stack, Typography, Divider, IconButton, useMediaQuery } from "@mui/material";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,8 @@ import { Email, Person } from "@mui/icons-material";
 const AuthorCard = ({ author, checkAuth }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+  
   const { user } = useSelector((store) => store.auth);
   const bookAuthor = useSelector((store) => store.user.user);
 
@@ -40,14 +42,14 @@ const AuthorCard = ({ author, checkAuth }) => {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: isMobile ? 1 : 2 }}>
         <Person sx={{ mr: 1.5 }} />
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           Author
         </Typography>
       </Box>
 
-      <Divider sx={{ mb: 3 }} />
+      <Divider sx={{ mb: isMobile ? 1 : 3 }} />
 
       <Box sx={{ display: "flex", alignItems: "flex-start" }}>
         <Avatar
@@ -63,8 +65,8 @@ const AuthorCard = ({ author, checkAuth }) => {
         />
 
         <Box sx={{ flexGrow: 1 }}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+          <Box sx={{ display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", mb: 1, flexDirection: isMobile ? "column" : "row"}}>
+            <Typography variant="h6" sx={{ fontWeight: "bold", mb: isMobile ? 1 : 0}}>
               {author.username}
             </Typography>
 
@@ -100,11 +102,11 @@ const AuthorCard = ({ author, checkAuth }) => {
             )}
           </Box>
 
-          <Typography variant="body1" sx={{ mt: 1, lineHeight: 1.6, color: "text.secondary" }}>
+          <Typography variant="body1" sx={{ mt: 1, lineHeight: 1.6, color: "text.secondary", display: isMobile ? 'none' : 'block' }}>
             {author.bio || "No bio available for this author."}
           </Typography>
 
-          <Button variant="text" size="small" onClick={() => navigate(`/profile/${author.id}`)} sx={{ mt: 2, pl: 0 }}>
+          <Button variant="text" size="small" onClick={() => navigate(`/profile/${author.id}`)} sx={{ mt: isMobile ? 0 : 2, pl: 0 }}>
             View Full Profile
           </Button>
         </Box>

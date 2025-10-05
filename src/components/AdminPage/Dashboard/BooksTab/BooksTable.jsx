@@ -24,6 +24,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import RateReviewIcon from "@mui/icons-material/RateReview";
+import { formatExactTime } from "../../../../utils/formatDate";
 
 const BooksTable = ({
   books,
@@ -54,21 +55,7 @@ const BooksTable = ({
     }
   };
 
-  // Format upload date using native JS Date
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
 
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Invalid date";
-
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-
-    return `${month} ${day < 10 ? "0" + day : day}, ${year}`;
-  };
 
   // Truncate description
   const truncateText = (text, maxLength = 100) => {
@@ -106,7 +93,7 @@ const BooksTable = ({
                         {truncateText(book.description, 50)}
                       </Typography>
                       <Typography variant="caption" color="textSecondary">
-                        Added: {formatDate(book.uploadDate)}
+                        Added: {formatExactTime(book.uploadDate)}
                       </Typography>
                     </Box>
                   </Box>

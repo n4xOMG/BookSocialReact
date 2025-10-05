@@ -1,5 +1,5 @@
 import { MenuBook } from "@mui/icons-material";
-import { Box, CircularProgress, Divider, Tabs, Typography, useTheme } from "@mui/material";
+import { Box, CircularProgress, Divider, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import { useEffect, useState } from "react";
 import { TabChapters } from "./ChapterListComponent/TabChapters";
@@ -15,6 +15,7 @@ function a11yProps(index) {
 export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, user, onFirstChapterId }) => {
   const [value, setValue] = useState(0);
   const theme = useTheme();
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -30,14 +31,14 @@ export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, use
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: isMobile ? 1 : 2 }}>
         <MenuBook sx={{ mr: 1.5 }} />
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           Chapters
         </Typography>
       </Box>
 
-      <Divider sx={{ mb: 3 }} />
+      <Divider sx={{ mb: isMobile ? 1 : 3 }} />
 
       {chapters === undefined ? (
         <Box sx={{ py: 4, textAlign: "center" }}>
@@ -57,7 +58,7 @@ export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, use
             sx={{
               borderBottom: 1,
               borderColor: "divider",
-              mb: 2,
+              mb: isMobile ? 0 : 2,
               "& .MuiTab-root": {
                 fontWeight: "bold",
                 textTransform: "none",

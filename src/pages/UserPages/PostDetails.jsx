@@ -11,6 +11,7 @@ import ShareModal from "../../components/BookClubs/ShareModal";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { addPost, deletePost, fetchPostById, likePost, updatePost } from "../../redux/post/post.action";
 import { UploadToServer } from "../../utils/uploadToServer";
+import { formatRelativeTime, formatExactTime } from "../../utils/formatDate";
 
 const PostDetail = () => {
   const { postId } = useParams();
@@ -135,10 +136,6 @@ const PostDetail = () => {
     );
   };
 
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "";
-    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-  };
 
   const handleLike = useCallback(async () => {
     if (!user) {
@@ -268,17 +265,20 @@ const PostDetail = () => {
               </Typography>
             }
             subheader={
-              <Typography 
-                variant="caption" 
-                color="text.secondary" 
-                sx={{
-                  mt: 0, 
-                  lineHeight: 1,
-                }}
-              >
-                {formatTimestamp(post.timestamp)}
-              </Typography>
-            }
+              <Tooltip title={formatExactTime(post.timestamp)} placement="bottom">
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary" 
+                  sx={{
+                    mt: 0, 
+                    lineHeight: 1,
+                  }}
+                >
+                  {formatRelativeTime(post.timestamp)}
+                </Typography>
+              </Tooltip>
+                
+              }
             action={
               user &&
               user.id === post.user.id && (
@@ -407,23 +407,26 @@ const PostDetail = () => {
                     </Typography>
                   }
                   subheader={
-                    <Typography 
-                      component={Link}
-                      to={`/posts/${post.sharedPostId}`}
-                      variant="caption" 
-                      color="text.secondary" 
-                      sx={{
-                        mt: 0, 
-                        lineHeight: 1,
-                        textDecoration: "none",
-                        "&:hover": {
-                                  textDecoration: "underline",
-                                  color: "primary.main",
-                                }
-                      }}
-                    >
-                      {formatTimestamp(post.sharedPostTimestamp)}
-                    </Typography>
+                    <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
+                      <Typography 
+                        component={Link}
+                        to={`/posts/${post.sharedPostId}`}
+                        variant="caption" 
+                        color="text.secondary" 
+                        sx={{
+                          mt: 0, 
+                          lineHeight: 1,
+                          textDecoration: "none",
+                          "&:hover": {
+                                    textDecoration: "underline",
+                                    color: "primary.main",
+                                  }
+                        }}
+                      >
+                        {formatRelativeTime(post.sharedPostTimestamp)}
+                      </Typography>
+                    </Tooltip>
+
                   }
                 />
                 <CardContent sx={{ pt: 0 }}>

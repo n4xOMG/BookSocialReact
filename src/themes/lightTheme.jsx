@@ -19,6 +19,7 @@ export const lightTheme = createTheme({
         background: {
             default: '#f5f5f5',
             paper: 'rgba(255, 255, 255, 0.1)', 
+            gradient: "linear-gradient(to right, rgba(29, 109, 83,0.4) 10%, rgba(29, 109, 83,0.2) 90%)",
             backgroundImage: `url(${lightBackground})`,
         },
         text: {

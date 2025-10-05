@@ -223,90 +223,86 @@ export default function MessagesPage() {
   }
 
   return (
-    <Grid container sx={{ height: "100vh", overflow: "hidden" }}>
-      <Grid item xs={3} sx={{ px: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #ddd" }}>
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          <Box sx={{ display: "flex", alignItems: "center", py: 2 }} onClick={() => navigate("/")}>
-            <IconButton>
-              <WestIcon />
-            </IconButton>
-            <Typography sx={{ fontSize: 20, fontWeight: "bold", ml: 1 }}>Home</Typography>
-          </Box>
-          <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
-            <SearchUser />
-            <Box sx={{ mt: 2 }}>
-              {chats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => {
-                    setCurrentChat(chat);
-                  }}
-                >
-                  <UserChatCard chat={chat} />
-                </div>
-              ))}
-            </Box>
-          </Box>
-        </Box>
-      </Grid>
-      <Grid item xs={9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        {currentChat ? (
+    <Box sx={{ flex: 1, width: "100%", height: "100%" }}>
+      <Grid container sx={{ height: "100%", overflow: "hidden" }}>
+        <Grid item xs={3} sx={{ px: 3, borderRight: "1px solid #ddd" }}>
           <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <Box sx={{ display: "flex", alignItems: "center", p: 2, borderBottom: "1px solid #ddd" }}>
-              <Avatar src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl} />
-              <Typography sx={{ ml: 2 }}>{currentChat.name}</Typography>
-            </Box>
-            <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
-              {messages?.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-              <div ref={messagesEndRef} />
-            </Box>
-            <Box sx={{ p: 2, borderTop: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
-              {imagePreview && (
-                <Box sx={{ mb: 2 }}>
-                  <img src={imagePreview} alt="Preview" style={{ maxWidth: "100px", borderRadius: 8 }} />
-                </Box>
-              )}
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <TextField
-                  placeholder="Type a message"
-                  sx={{ flexGrow: 1, mr: 2 }}
-                  variant="outlined"
-                  onKeyPress={async (e) => {
-                    if (e.key === "Enter" && e.target.value) {
-                      await handleCreateMessage(e.target.value);
-                      e.target.value = "";
-                    }
-                  }}
-                />
-                <input type="file" accept="image/*" onChange={handleSelectImage} hidden id="image-input" />
-                <label htmlFor="image-input">
-                  <IconButton component="span">
-                    <AddPhotoAlternateIcon />
-                  </IconButton>
-                </label>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  disabled={loading}
-                  onClick={async () => {
-                    const input = document.querySelector('input[placeholder="Type a message"]');
-                    if (input.value) {
-                      await handleCreateMessage(input.value);
-                      input.value = "";
-                    }
-                  }}
-                >
-                  {loading ? <CircularProgress size={24} /> : "Send"}
-                </Button>
+            <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
+              <SearchUser />
+              <Box sx={{ mt: 2 }}>
+                {chats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    onClick={() => {
+                      setCurrentChat(chat);
+                    }}
+                  >
+                    <UserChatCard chat={chat} />
+                  </div>
+                ))}
               </Box>
             </Box>
           </Box>
-        ) : (
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: 1 }}>No chat selected</Box>
-        )}
+        </Grid>
+        <Grid item xs={9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          {currentChat ? (
+            <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+              <Box sx={{ display: "flex", alignItems: "center", p: 2, borderBottom: "1px solid #ddd" }}>
+                <Avatar src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl} />
+                <Typography sx={{ ml: 2 }}>{currentChat.name}</Typography>
+              </Box>
+              <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
+                {messages?.map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
+                <div ref={messagesEndRef} />
+              </Box>
+              <Box sx={{ p: 2, borderTop: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
+                {imagePreview && (
+                  <Box sx={{ mb: 2 }}>
+                    <img src={imagePreview} alt="Preview" style={{ maxWidth: "100px", borderRadius: 8 }} />
+                  </Box>
+                )}
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <TextField
+                    placeholder="Type a message"
+                    sx={{ flexGrow: 1, mr: 2 }}
+                    variant="outlined"
+                    onKeyPress={async (e) => {
+                      if (e.key === "Enter" && e.target.value) {
+                        await handleCreateMessage(e.target.value);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  <input type="file" accept="image/*" onChange={handleSelectImage} hidden id="image-input" />
+                  <label htmlFor="image-input">
+                    <IconButton component="span">
+                      <AddPhotoAlternateIcon />
+                    </IconButton>
+                  </label>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={loading}
+                    onClick={async () => {
+                      const input = document.querySelector('input[placeholder="Type a message"]');
+                      if (input.value) {
+                        await handleCreateMessage(input.value);
+                        input.value = "";
+                      }
+                    }}
+                  >
+                    {loading ? <CircularProgress size={24} /> : "Send"}
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: 1 }}>No chat selected</Box>
+          )}
+        </Grid>
       </Grid>
-    </Grid>
+    </Box>
   );
 }

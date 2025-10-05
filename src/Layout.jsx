@@ -23,7 +23,7 @@ export default function Layout({
         width: "100%",
         minHeight: "100vh",
         backgroundAttachment: "fixed",
-        backgroundImage: theme.palette.background.backgroundImage, // ảnh bìa
+        backgroundImage: theme.palette.background.backgroundImage,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -38,17 +38,18 @@ export default function Layout({
       )}
       <Box
         sx={{
+          flex: 1,
           display: "flex",
           flexDirection: "column",
           width: "100%",
           minHeight: "100vh",
+          // overflow: "hidden", // tránh lỗi scroll ngang
+          overflowY: "auto"
         }}
       >
         {showHeader && <Header onSidebarToggle={handleSidebarToggle} />}
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <Box sx={{ height: "100%" }}>
-            <Outlet />
-          </Box>
+        <Box sx={{ flex: 1, minHeight: 0}}>
+          <Outlet />
         </Box>
       </Box>
     </Box>

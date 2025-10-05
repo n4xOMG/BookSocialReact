@@ -41,7 +41,7 @@ export default function UserBookshelf() {
 
   return (
     <Box sx={{ display: "flex", overscrollBehavior: "contain" }}>
-      <Box sx={{ width: "100%", px: 2, mx: "auto", py: 4, minHeight: "100vh" }}>
+      <Box sx={{ width: "100%", px: 2, mx: "auto", py: 4, minHeight: "100%" }}>
         <Box display="flex" flexDirection={{ xs: "column", md: "row" }} alignItems="center" justifyContent="space-between" mb={4} gap={3}>
           <Box display="flex" alignItems="center" gap={3}>
             <Avatar src={user?.avatarUrl} alt={user?.username} sx={{ width: 96, height: 96, border: 2, borderColor: "primary.main" }} />

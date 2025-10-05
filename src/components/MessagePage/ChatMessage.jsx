@@ -1,29 +1,11 @@
-import { Box, Fade, Paper, Typography, useTheme } from "@mui/material";
+import { Box, Fade, Paper, Tooltip, Typography, useTheme } from "@mui/material";
 import { useSelector } from "react-redux";
+import { formatRelativeTime, formatExactTime } from "../../utils/formatDate";
 
 export default function ChatMessage({ message }) {
   const { user } = useSelector((state) => state.auth);
   const theme = useTheme();
   const isReqUserMessages = user?.id === message.sender.id;
-
-  // Format timestamp nicely
-  const formatTime = (timestamp) => {
-    if (!timestamp) return "";
-
-    const date = new Date(timestamp);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-
-    if (isToday) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } else {
-      return (
-        date.toLocaleDateString([], { month: "short", day: "numeric" }) +
-        " " +
-        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      );
-    }
-  };
 
   return (
     <Fade in={true} timeout={300}>
@@ -81,18 +63,19 @@ export default function ChatMessage({ message }) {
               {message.content}
             </Typography>
           )}
-
-          <Typography
-            variant="caption"
-            sx={{
-              display: "block",
-              mt: 0.5,
-              textAlign: "right",
-              color: isReqUserMessages ? (theme.palette.mode === "light" ? "primary.grey" : "rgba(255,255,255,0.7)") : "text.secondary",
-            }}
-          >
-            {formatTime(message.timestamp)}
-          </Typography>
+          <Tooltip title={formatExactTime(message.timestamp)} placement="bottom">
+            <Typography
+              variant="caption"
+              sx={{
+                display: "block",
+                mt: 0.5,
+                textAlign: "right",
+                color: isReqUserMessages ? (theme.palette.mode === "light" ? "primary.grey" : "rgba(255,255,255,0.7)") : "text.secondary",
+              }}
+            >
+              {formatRelativeTime(message.timestamp)}
+            </Typography>
+          </Tooltip>
         </Paper>
       </Box>
     </Fade>

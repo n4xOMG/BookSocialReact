@@ -8,6 +8,7 @@ import ViewImageModal from "../AdminPage/Dashboard/BooksTab/ChapterModal/ViewIma
 import CommentSection from "./CommentSection";
 import ShareModal from "./ShareModal";
 import { Link, useNavigate } from "react-router-dom";
+import { formatExactTime } from "../../utils/formatDate";
 
 const PostItem = ({ post, checkAuth }) => {
   const theme = useTheme();
@@ -93,11 +94,12 @@ const PostItem = ({ post, checkAuth }) => {
       </Grid>
     );
   };
-
-  const formatTimestamp = (timestamp) => {
+  const formatRelativetime = (timestamp) => {
     if (!timestamp) return "";
     return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
   };
+
+
 
   const handleLike = useCallback(
     checkAuth(async () => {
@@ -197,23 +199,26 @@ const PostItem = ({ post, checkAuth }) => {
           </Typography>
         }
         subheader={
-          <Typography 
-            component={Link}
-            to={`/posts/${post.id}`}
-            variant="caption" 
-            color="text.secondary" 
-            sx={{
-              mt: 0, 
-              lineHeight: 1,
-              textDecoration: "none",
-              "&:hover": {
-                        textDecoration: "underline",
-                        color: "primary.main",
-                      }
-            }}
-          >
-            {formatTimestamp(post.timestamp)}
-          </Typography>
+          <Tooltip title={formatExactTime(post.timestamp)} placement="bottom">
+            <Typography 
+              component={Link}
+              to={`/posts/${post.id}`}
+              variant="caption" 
+              color="text.secondary" 
+              sx={{
+                mt: 0, 
+                lineHeight: 1,
+                textDecoration: "none",
+                "&:hover": {
+                          textDecoration: "underline",
+                          color: "primary.main",
+                        }
+              }}
+            >
+              {formatRelativetime(post.timestamp)}
+            </Typography>
+          </Tooltip>
+            
         }
         action={
           user &&
@@ -239,6 +244,7 @@ const PostItem = ({ post, checkAuth }) => {
               whiteSpace: "pre-line",
               fontSize: (post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length) ? "1.5rem" : "1rem", 
               fontWeight: (post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length) ? "bold" : "normal",
+              textAlign: 'justify',
             }}
           >
             {post.content}
@@ -288,23 +294,25 @@ const PostItem = ({ post, checkAuth }) => {
                 
               }
               subheader={
-                <Typography 
-                  component={Link}
-                  to={`/posts/${post.sharedPostId}`}
-                  variant="caption" 
-                  color="text.secondary" 
-                  sx={{
-                    mt: 0, 
-                    lineHeight: 1,
-                    textDecoration: "none",
-                    "&:hover": {
-                              textDecoration: "underline",
-                              color: "primary.main",
-                            }
-                  }}
-                >
-                  {formatTimestamp(post.sharedPostTimestamp)}
-                </Typography>
+                <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
+                  <Typography 
+                    component={Link}
+                    to={`/posts/${post.sharedPostId}`}
+                    variant="caption" 
+                    color="text.secondary" 
+                    sx={{
+                      mt: 0, 
+                      lineHeight: 1,
+                      textDecoration: "none",
+                      "&:hover": {
+                                textDecoration: "underline",
+                                color: "primary.main",
+                              }
+                    }}
+                  >
+                    {formatRelativetime(post.sharedPostTimestamp)}
+                  </Typography>
+                </Tooltip>
               }
             />
             <CardContent sx={{ pt: 0 }}>

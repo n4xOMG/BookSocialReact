@@ -12,6 +12,7 @@ import {
   TextField,
   Typography,
   Avatar,
+  useMediaQuery,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -36,6 +37,8 @@ const BookCommentSection = ({ bookId, user }) => {
   const [localError, setLocalError] = useState(null);
   const dispatch = useDispatch();
   const { checkAuth, AuthDialog } = useAuthCheck();
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+  
 
   const fetchComments = useCallback(
     async (page = 0, size = 10) => {
@@ -198,14 +201,14 @@ const BookCommentSection = ({ bookId, user }) => {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: isMobile ? 1 : 2 }}>
         <CommentIcon sx={{ mr: 1.5 }} />
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           Discussion
         </Typography>
       </Box>
 
-      <Divider sx={{ mb: 3 }} />
+      <Divider sx={{ mb: isMobile ? 2 : 3 }} />
 
       {/* Comment Input Section */}
       <Box
@@ -213,7 +216,7 @@ const BookCommentSection = ({ bookId, user }) => {
         sx={{
           display: "flex",
           alignItems: "center",
-          mb: 4,
+          mb: isMobile ? 2 : 4,
           gap: 2,
         }}
         onSubmit={(e) => {
@@ -239,7 +242,10 @@ const BookCommentSection = ({ bookId, user }) => {
           sx={{
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
-              backgroundColor: "white",
+              backgroundColor: "background.paper",
+              "&:hover": {
+                  backgroundColor: "action.hover",
+              },
             },
           }}
         />
@@ -276,7 +282,7 @@ const BookCommentSection = ({ bookId, user }) => {
                   alignItems="flex-start"
                   sx={{
                     flexDirection: "column",
-                    p: 2,
+                    p: isMobile ? 1 : 2,
                     opacity: comment.isOptimistic ? 0.7 : 1,
                   }}
                 >

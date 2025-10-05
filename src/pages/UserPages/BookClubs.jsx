@@ -94,7 +94,7 @@ const BookClubs = () => {
   });
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+    <Box sx={{ display: "flex", minHeight: "100%" }}>
       <Container maxWidth="md" sx={{ mt: 3, mb: 3 }}>
         <Paper
           elevation={3}

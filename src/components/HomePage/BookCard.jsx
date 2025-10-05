@@ -1,5 +1,5 @@
 import { MenuBook, Star } from "@mui/icons-material";
-import { Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Skeleton, Typography } from "@mui/material";
+import { Box, Button, Card, CardActions, CardContent, CardMedia, Chip, Divider, Skeleton, Tooltip, Typography, useTheme } from "@mui/material";
 import { memo, useCallback, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
   const { user } = useSelector((store) => store.auth);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const theme = useTheme();
 
   const handleImageLoad = () => setImageLoaded(true);
 
@@ -152,39 +153,56 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
         </Box>
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, pt: 2.5, pb: 1.5, px: 2.5 }}>
-        <Typography
-          variant="subtitle1"
-          component="h3"
-          fontWeight="600"
-          sx={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            cursor: "pointer",
-            transition: "color 0.2s",
-            color: isHovered ? "primary.main" : "text.primary",
-          }}
-          onClick={handleBookClick}
-        >
-          {book.title}
-        </Typography>
+      <CardContent sx={{ flexGrow: 1, pt: 1, pb: 0.2, px: 2.5 }}>
+        <Tooltip title={book.title} placement="top">
+          <Typography
+            variant="subtitle1"
+            component="h3"
+            fontWeight="600"
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              cursor: "pointer",
+              transition: "color 0.2s",
+              color: isHovered ? "primary.main" : "text.primary",
+              textAlign: "left",
+            }}
+            onClick={handleBookClick}
+          >
+            {book.title}
+          </Typography>
+        </Tooltip>
+
+        <Divider sx={{ my: 0.5 }} />
 
         <Typography
           variant="body2"
           color="text.secondary"
           sx={{
-            mt: 0.8,
+            cursor: "pointer",
+            transition: "color 0.2s",
+            fontSize: "0.8rem",
+            textAlign: "left",
+          }}
+        >
+          Written by: {book.artistName }
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
             cursor: "pointer",
             transition: "color 0.2s",
             "&:hover": { color: "primary.main" },
-            fontSize: "0.9rem",
+            fontSize: "0.7rem",
+            textAlign: "left",
           }}
           onClick={handleAuthorClick}
         >
-          by {book.authorName || book.author?.name}
+          Upload by: {book.authorName || book.author?.name}
         </Typography>
 
         {category && (
@@ -193,36 +211,71 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
             color="text.secondary"
             sx={{
               mt: 1.5,
-              fontSize: "0.8rem",
+              fontSize: "0.7rem",
               fontWeight: 500,
               opacity: 0.8,
+              textAlign: "left",
             }}
           >
-            {category.name}
+            Category: {category.name}
           </Typography>
         )}
 
         {bookTags.length > 0 && (
-          <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.7 }}>
+          <Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.7 }}>
+            <Chip
+              label={book.latestChapterNumber ? `Ch ${book.latestChapterNumber}` : "New"}
+              size="small"
+              sx={{
+                  fontSize: "0.6rem",
+                  height: "22px",
+                  borderRadius: "12px",
+                  bgcolor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText,
+                  fontWeight: 500,
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    bgcolor: theme.palette.background.paper,
+                  },
+              }}
+            />
             {bookTags.slice(0, 2).map((tag) => (
               <Chip
                 key={tag.id}
                 label={tag.name}
                 size="small"
                 sx={{
-                  fontSize: "0.7rem",
+                  fontSize: "0.6rem",
                   height: "22px",
                   borderRadius: "12px",
-                  bgcolor: "grey.100",
+                  bgcolor: theme.palette.background.gradient,
                   color: "text.secondary",
                   fontWeight: 500,
                   transition: "all 0.2s",
                   "&:hover": {
-                    bgcolor: "grey.200",
+                    bgcolor: theme.palette.background.paper,
                   },
                 }}
               />
             ))}
+            {bookTags.length > 2 && (
+              <Chip
+                label={`+${bookTags.length - 2}`}
+                size="small"
+                sx={{
+                  fontSize: "0.6rem",
+                  height: "22px",
+                  borderRadius: "12px",
+                  bgcolor: theme.palette.background.gradient,
+                  color: "text.secondary",
+                  fontWeight: 500,
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    bgcolor: theme.palette.background.paper,
+                  },
+                }}
+              />
+            )}
           </Box>
         )}
       </CardContent>
@@ -232,8 +285,8 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
           sx={{
             justifyContent: "space-between",
             p: 2.5,
-            pt: 0.5,
-            pb: 2,
+            pt: 1,
+            pb: 1,
             borderTop: "1px solid",
             borderColor: "divider",
             mt: 1,

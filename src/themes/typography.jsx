@@ -16,33 +16,51 @@ const typography = {
 
     h1: {
         fontWeight: 700,
-        fontSize: pxToRem(48),
+        fontSize: pxToRem(42),
         lineHeight: 1.2,
+        '@media (min-width:900px)': {
+            fontSize: pxToRem(48),
+        },
     },
     h2: {
         fontWeight: 600,
-        fontSize: pxToRem(36),
+        fontSize: pxToRem(32),
         lineHeight: 1.25,
+        '@media (min-width:900px)': {
+            fontSize: pxToRem(36),
+        },
     },
     h3: {
         fontWeight: 600,
-        fontSize: pxToRem(30),
+        fontSize: pxToRem(26),
         lineHeight: 1.3,
+        '@media (min-width:900px)': {
+            fontSize: pxToRem(30),
+        },
     },
     h4: {
         fontWeight: 500,
-        fontSize: pxToRem(24),
+        fontSize: pxToRem(22),
         lineHeight: 1.35,
+        '@media (min-width:900px)': {
+            fontSize: pxToRem(24),
+        },
     },
     h5: {
         fontWeight: 500,
-        fontSize: pxToRem(20),
+        fontSize: pxToRem(18),
         lineHeight: 1.4,
+        '@media (min-width:900px)': {
+            fontSize: pxToRem(20),
+        },
     },
     h6: {
         fontWeight: 400,
-        fontSize: pxToRem(18),
+        fontSize: pxToRem(16),
         lineHeight: 1.5,
+        '@media (min-width:900px)': {
+            fontSize: pxToRem(18),
+        },
     },
     body1: {
         fontSize: pxToRem(14),
@@ -53,8 +71,11 @@ const typography = {
         lineHeight: 1.6,
     },
     subTitle1: {
-        fontSize: pxToRem(16),
+        fontSize: pxToRem(14),
         fontWeight: 500,
+        '@media (min-width:900px)': {
+            fontSize: pxToRem(16),
+        },
     },
     subTitle2: {
         fontSize: pxToRem(14),

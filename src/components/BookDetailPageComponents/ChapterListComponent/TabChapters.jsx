@@ -14,6 +14,7 @@ import {
   DialogActions,
   Button,
   Alert,
+  useMediaQuery,
 } from "@mui/material";
 import UnlockIcon from "@mui/icons-material/LockOpen";
 import { getAllChaptersByBookIdAction, unlockChapterAction } from "../../../redux/chapter/chapter.action";
@@ -26,6 +27,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [error, setError] = useState("");
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
 
   const handleUnlockClick = (chapter) => {
     setSelectedChapter(chapter);
@@ -54,7 +56,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
 
   return (
     <>
-      <List sx={{ spaceY: 2 }}>
+      <List sx={{ spaceY: isMobile ? 1 : 2 }}>
         {chapters?.map((chapter) => {
           const progress = Array.isArray(progresses) ? progresses.find((p) => Number(p.chapterId) === Number(chapter.id)) : null;
 
@@ -67,14 +69,19 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                p: 2,
+                p: isMobile ? 1 : 2,
+                mb: 1,
                 borderRadius: 2,
                 transition: "all 0.2s ease-in-out",
                 height: 60,
-                backgroundColor: isLocked ? "grey.100" : "white",
+                borderRadius: 1.5,
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: '0 8px 8px 0 rgba(0, 0, 0, 0.37)',
+                bgcolor: isLocked ? "background.paper" : "action.notselect",
                 "&:hover": {
-                  backgroundColor: isLocked ? "grey.100" : "grey.200",
-                  boxShadow: 3,
+                  backgroundColor: isLocked ? "grey.100" : "action.hover",
+                  boxShadow: 2,
                   transform: "scale(1.02)",
                   cursor: isLocked ? "default" : "pointer",
                 },

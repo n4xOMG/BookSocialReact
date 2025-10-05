@@ -10,6 +10,7 @@ import {
 } from "../../../redux/notification/notification.action";
 import LoadingSpinner from "../../LoadingSpinner";
 import { connectWebSocket, disconnectWebSocket, checkWebSocketConnection } from "../../../services/websocket.service";
+import { formatExactTime, formatRelativeTime } from "../../../utils/formatDate";
 
 export default function NotificationMenu() {
   const dispatch = useDispatch();
@@ -107,41 +108,6 @@ export default function NotificationMenu() {
       };
     }
   }, [user]);
-
-  // Format time to a more readable format
-  const formatTime = (timeString) => {
-    if (!timeString) return "Unknown time";
-
-    try {
-      // Parse ISO 8601 date string (what LocalDateTime typically returns from Java)
-      const date = new Date(timeString);
-
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        console.error("Invalid date:", timeString);
-        return "Invalid date";
-      }
-
-      const now = new Date();
-      const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-
-      if (diffInHours < 1) {
-        return "Just now";
-      } else if (diffInHours < 24) {
-        return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
-      } else {
-        const diffInDays = Math.floor(diffInHours / 24);
-        if (diffInDays < 7) {
-          return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
-        } else {
-          return date.toLocaleDateString();
-        }
-      }
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Date error";
-    }
-  };
 
   return (
     <>
@@ -260,9 +226,11 @@ export default function NotificationMenu() {
                         <Typography variant="body1" sx={{ fontWeight: noti?.read ? 400 : 500 }}>
                           {noti?.message}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                          {formatTime(noti?.createdDate)}
-                        </Typography>
+                        <Tooltip title={formatExactTime(noti?.createdDate)} placement="bottom">
+                          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                            {formatRelativeTime(noti?.createdDate)}
+                          </Typography>
+                        </Tooltip>
                       </Box>
                       {index < sortedNotifications?.length - 1 && <Divider sx={{ mt: 2 }} />}
                     </Box>

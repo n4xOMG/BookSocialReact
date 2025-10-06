@@ -6,6 +6,15 @@ import {
   CREATE_PAYMENT_INTENT_FAILED,
   CREATE_PAYMENT_INTENT_REQUEST,
   CREATE_PAYMENT_INTENT_SUCCESS,
+  CREATE_PAYMENT_REQUEST,
+  CREATE_PAYMENT_SUCCESS,
+  CREATE_PAYMENT_FAILED,
+  CONFIRM_PAYMENT_REQUEST,
+  CONFIRM_PAYMENT_SUCCESS,
+  CONFIRM_PAYMENT_FAILED,
+  GET_PAYMENT_PROVIDERS_REQUEST,
+  GET_PAYMENT_PROVIDERS_SUCCESS,
+  GET_PAYMENT_PROVIDERS_FAILED,
   DELETE_CHAPTER_FAILED,
   DELETE_CHAPTER_REQUEST,
   DELETE_CHAPTER_SUCCEED,
@@ -49,6 +58,10 @@ const initialState = {
   creditPackages: [],
   paymentIntent: null,
   loadingPaymentIntent: false,
+  paymentProviders: [],
+  paymentData: null,
+  loadingPayment: false,
+  confirmingPayment: false,
 };
 
 export const chapterReducer = (state = initialState, action) => {
@@ -78,6 +91,64 @@ export const chapterReducer = (state = initialState, action) => {
         ...state,
         loadingPaymentIntent: false,
         paymentIntent: action.payload.clientSecret,
+      };
+
+    // New unified payment actions
+    case GET_PAYMENT_PROVIDERS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+    case GET_PAYMENT_PROVIDERS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        paymentProviders: action.payload.providers,
+      };
+    case GET_PAYMENT_PROVIDERS_FAILED:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
+
+    case CREATE_PAYMENT_REQUEST:
+      return {
+        ...state,
+        loadingPayment: true,
+        error: null,
+      };
+    case CREATE_PAYMENT_SUCCESS:
+      return {
+        ...state,
+        loadingPayment: false,
+        paymentData: action.payload,
+      };
+    case CREATE_PAYMENT_FAILED:
+      return {
+        ...state,
+        loadingPayment: false,
+        error: action.payload,
+      };
+
+    case CONFIRM_PAYMENT_REQUEST:
+      return {
+        ...state,
+        confirmingPayment: true,
+        error: null,
+      };
+    case CONFIRM_PAYMENT_SUCCESS:
+      return {
+        ...state,
+        confirmingPayment: false,
+        paymentData: null,
+      };
+    case CONFIRM_PAYMENT_FAILED:
+      return {
+        ...state,
+        confirmingPayment: false,
+        error: action.payload,
       };
     case UNLOCK_CHAPTER_SUCCESS:
       return {

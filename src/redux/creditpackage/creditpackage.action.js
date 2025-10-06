@@ -73,7 +73,7 @@ export const getCreditPackageById = (id) => async (dispatch) => {
 export const createCreditPackage = (creditPackage) => async (dispatch) => {
   dispatch({ type: CREATE_CREDIT_PACKAGE_REQUEST });
   try {
-    const response = await api.post(`${API_BASE_URL}/api/credit-packages`, creditPackage);
+    const response = await api.post(`${API_BASE_URL}/admin/credit-packages`, creditPackage);
     dispatch({ type: CREATE_CREDIT_PACKAGE_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: CREATE_CREDIT_PACKAGE_FAILURE, payload: error.message });
@@ -84,7 +84,7 @@ export const createCreditPackage = (creditPackage) => async (dispatch) => {
 export const updateCreditPackage = (id, creditPackage) => async (dispatch) => {
   dispatch({ type: UPDATE_CREDIT_PACKAGE_REQUEST });
   try {
-    const response = await api.put(`${API_BASE_URL}/api/credit-packages/${id}`, creditPackage);
+    const response = await api.put(`${API_BASE_URL}/admin/credit-packages/${id}`, creditPackage);
     dispatch({ type: UPDATE_CREDIT_PACKAGE_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: UPDATE_CREDIT_PACKAGE_FAILURE, payload: error.message });
@@ -95,7 +95,7 @@ export const updateCreditPackage = (id, creditPackage) => async (dispatch) => {
 export const deleteCreditPackage = (id) => async (dispatch) => {
   dispatch({ type: DELETE_CREDIT_PACKAGE_REQUEST });
   try {
-    await api.delete(`${API_BASE_URL}/api/credit-packages/${id}`);
+    await api.delete(`${API_BASE_URL}/admin/credit-packages/${id}`);
     dispatch({ type: DELETE_CREDIT_PACKAGE_SUCCESS, payload: id });
   } catch (error) {
     dispatch({ type: DELETE_CREDIT_PACKAGE_FAILURE, payload: error.message });
@@ -139,7 +139,7 @@ export const getCreditPackagesSortedByCreditAmountDesc = () => async (dispatch) 
 export const activateCreditPackage = (id) => async (dispatch) => {
   dispatch({ type: ACTIVATE_CREDIT_PACKAGE_REQUEST });
   try {
-    const response = await api.put(`${API_BASE_URL}/api/credit-packages/${id}/activate`);
+    const response = await api.put(`${API_BASE_URL}/admin/credit-packages/${id}/activate`);
     dispatch({ type: ACTIVATE_CREDIT_PACKAGE_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: ACTIVATE_CREDIT_PACKAGE_FAILURE, payload: error.message });
@@ -150,7 +150,7 @@ export const activateCreditPackage = (id) => async (dispatch) => {
 export const deactivateCreditPackage = (id) => async (dispatch) => {
   dispatch({ type: DEACTIVATE_CREDIT_PACKAGE_REQUEST });
   try {
-    const response = await api.put(`${API_BASE_URL}/api/credit-packages/${id}/deactivate`);
+    const response = await api.put(`${API_BASE_URL}/admin/credit-packages/${id}/deactivate`);
     dispatch({ type: DEACTIVATE_CREDIT_PACKAGE_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: DEACTIVATE_CREDIT_PACKAGE_FAILURE, payload: error.message });

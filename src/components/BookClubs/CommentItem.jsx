@@ -15,55 +15,58 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
-  
-  // Menu State
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedCommentId, setSelectedCommentId] = useState(null);
-  const [selectedCommentUser, setSelectedCommentUser] = useState(null); // 👈 SỬA: Lưu trữ User Object của comment/reply đang được chọn
-  const [isReplyMenuSelected, setIsReplyMenuSelected] = useState(false);
-  
+
+  // Simplified menu state
+  const [menuState, setMenuState] = useState({
+    anchorEl: null,
+    commentId: null,
+    userId: null,
+    isReply: false,
+  });
+
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [editingReplies, setEditingReplies] = useState({});
 
-  // ❗ SỬA: Thêm userObject vào để kiểm tra quyền sở hữu
+  // Simplified menu handlers
   const handleMenuOpen = (event, commentId, userObject, isReply = false) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedCommentId(commentId);
-    setSelectedCommentUser(userObject); // Lưu user để kiểm tra quyền
-    setIsReplyMenuSelected(isReply);
+    setMenuState({
+      anchorEl: event.currentTarget,
+      commentId,
+      userId: userObject?.id,
+      isReply,
+    });
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedCommentUser(null); // Reset user
-    setIsReplyMenuSelected(false);
+    setMenuState({
+      anchorEl: null,
+      commentId: null,
+      userId: null,
+      isReply: false,
+    });
   };
 
   const handleEdit = () => {
-    setIsEditing(true);
+    if (menuState.isReply) {
+      const replyToEdit = comment.replyComment.find((r) => r.id === menuState.commentId);
+      if (replyToEdit) {
+        setEditingReplies((prev) => ({
+          ...prev,
+          [menuState.commentId]: replyToEdit.content,
+        }));
+      }
+    } else {
+      setIsEditing(true);
+    }
     handleMenuClose();
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedContent(comment.content);
-  };
-
-  // ❗ SỬA: Chỉ truyền ID. Hàm sẽ tự tìm nội dung gốc của reply.
-  const handleEditReply = (replyId) => {
-    // Tìm reply tương ứng để lấy nội dung gốc
-    const replyToEdit = comment.replyComment.find(r => r.id === replyId);
-    
-    if (!replyToEdit) return;
-
-    setEditingReplies((prev) => ({
-      ...prev,
-      [replyId]: replyToEdit.content, // Lấy nội dung GỐC của reply
-    }));
-    handleMenuClose();
   };
 
   const handleCancelEditReply = (replyId) => {
@@ -76,21 +79,30 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
 
   const handleUpdateReply = async (reply) => {
     const editedContent = editingReplies[reply.id];
-    if (!editedContent || !editedContent.trim()) {
+    if (!editedContent?.trim()) {
       alert("Reply content cannot be empty.");
       return;
     }
 
     setLoading(true);
     try {
-      // Dùng parentCommentId để đảm bảo Redux cập nhật đúng
-      await dispatch(editCommentAction(reply.id, { ...reply, content: editedContent, parentCommentId: comment.id }));
-      
-      setEditingReplies((prev) => {
-        const updated = { ...prev };
-        delete updated[reply.id];
-        return updated;
-      });
+      const result = await dispatch(
+        editCommentAction(reply.id, {
+          ...reply,
+          content: editedContent,
+          parentCommentId: comment.id,
+        })
+      );
+
+      if (result?.success) {
+        setEditingReplies((prev) => {
+          const updated = { ...prev };
+          delete updated[reply.id];
+          return updated;
+        });
+      } else if (result?.error) {
+        alert(`Failed to update reply: ${result.error}`);
+      }
     } catch (error) {
       console.log("Error updating reply:", error);
       alert("Failed to update reply.");
@@ -117,11 +129,10 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
 
     const reportData = {
       reason: reportReason,
-      comment: { id: selectedCommentId }, // This will be either parent comment or reply comment
+      comment: { id: menuState.commentId },
     };
 
     try {
-      console.log("Report data:", reportData);
       await dispatch(createReportAction(reportData));
       alert("Report submitted successfully.");
       handleCloseReportModal();
@@ -159,14 +170,19 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
   );
 
   const handleUpdateComment = async () => {
-    if (editedContent.trim() === "") {
+    if (!editedContent.trim()) {
       alert("Comment content cannot be empty.");
       return;
     }
+
     setLoading(true);
     try {
-      await dispatch(editCommentAction(comment.id, { ...comment, content: editedContent }));
-      setIsEditing(false);
+      const result = await dispatch(editCommentAction(comment.id, { ...comment, content: editedContent }));
+      if (result?.success) {
+        setIsEditing(false);
+      } else if (result?.error) {
+        alert(`Failed to update comment: ${result.error}`);
+      }
     } catch (error) {
       console.log("Error updating comment:", error);
       alert("Failed to update comment.");
@@ -175,10 +191,13 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
     }
   };
 
+  const canEdit = user?.id === menuState.userId;
+  const canDelete = user?.id === menuState.userId || user?.role?.name === "ADMIN";
+
   return (
     <>
       {loading && <LoadingSpinner />}
-      
+
       <Box sx={{ width: "100%" }}>
         {/* Parent Comment */}
         <Box
@@ -199,73 +218,47 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
               width: "100%",
             }}
           >
-            <Box
-              sx={{ display: "flex", alignItems: "center", width: "100%" }}
-            >
-              <Avatar
-                sx={{ mr: 1.5, width: 35, height: 35 }}
-                src={comment.user.avatarUrl || "/placeholder.svg"}
-                alt="Avatar"
-              />
-              <Typography 
+            <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+              <Avatar sx={{ mr: 1.5, width: 35, height: 35 }} src={comment.user.avatarUrl || "/placeholder.svg"} alt="Avatar" />
+              <Typography
                 component={Link}
                 to={`/profile/${comment.user.id}`}
-                sx={{ 
-                  cursor: "pointer", 
-                  lineHeight: 1, 
+                sx={{
+                  cursor: "pointer",
+                  lineHeight: 1,
                   display: "block",
                   mb: 0,
                   textDecoration: "none",
                   color: "inherit",
-                  fontSize: '15px',
-                  fontWeight: 'bold',
+                  fontSize: "15px",
+                  fontWeight: "bold",
                   "&:hover": {
-                      textDecoration: "underline",
-                      color: "primary.main",
-                  }
+                    textDecoration: "underline",
+                    color: "primary.main",
+                  },
                 }}
               >
                 {comment.user.username || "Anonymous"}
               </Typography>
 
-              <IconButton
-                // ❗ SỬA: Truyền comment.user
-                onClick={(event) => handleMenuOpen(event, comment.id, comment.user, false)}
-              >
+              <IconButton onClick={(event) => handleMenuOpen(event, comment.id, comment.user, false)}>
                 <MoreVertIcon />
               </IconButton>
 
-              {/* ❗ SỬA: Menu Logic Đã được Hợp Nhất */}
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-              >
+              <Menu anchorEl={menuState.anchorEl} open={Boolean(menuState.anchorEl)} onClose={handleMenuClose}>
                 <MenuItem onClick={handleOpenReportModal}>Report</MenuItem>
-                
-                {/* Nút EDIT: Chỉ user sở hữu mới thấy */}
-                {user?.id === selectedCommentUser?.id && (
-                    <MenuItem 
-                        onClick={() => {
-                            isReplyMenuSelected 
-                                ? handleEditReply(selectedCommentId) // Sửa Reply
-                                : handleEdit(); // Sửa Parent
-                        }}
-                    >
-                        Edit
-                    </MenuItem>
-                )}
-                
-                {/* Nút DELETE: User sở hữu HOẶC ADMIN mới thấy */}
-                {(user?.id === selectedCommentUser?.id || user?.role?.name === "ADMIN") && (
-                    <MenuItem
-                        onClick={() => {
-                            handleDeleteComment(selectedCommentId);
-                            handleMenuClose();
-                        }}
-                    >
-                        Delete
-                    </MenuItem>
+
+                {canEdit && <MenuItem onClick={handleEdit}>Edit</MenuItem>}
+
+                {canDelete && (
+                  <MenuItem
+                    onClick={() => {
+                      handleDeleteComment(menuState.commentId);
+                      handleMenuClose();
+                    }}
+                  >
+                    Delete
+                  </MenuItem>
                 )}
               </Menu>
             </Box>
@@ -282,58 +275,32 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                   sx={{ backgroundColor: "background.paper" }}
                 />
                 <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleUpdateComment}
-                    disabled={loading}
-                  >
+                  <Button variant="contained" color="primary" onClick={handleUpdateComment} disabled={loading}>
                     {loading ? "Updating..." : "Update"}
                   </Button>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    onClick={handleCancelEdit}
-                    disabled={loading}
-                  >
+                  <Button variant="outlined" color="secondary" onClick={handleCancelEdit} disabled={loading}>
                     Cancel
                   </Button>
                 </Box>
               </Box>
             ) : (
               <>
-                <Typography variant="body1" sx={{ml: 5.8 }}>
+                <Typography variant="body1" sx={{ ml: 5.8 }}>
                   {comment.content}
                 </Typography>
-                
-                {/* ❗ CẢI TIẾN UX: Tooltip cho Parent Comment */}
+
                 <Tooltip title={formatExactTime(comment?.createdAt)} placement="bottom">
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ ml: 5.8 }}
-                  >
+                  <Typography variant="caption" color="text.secondary" sx={{ ml: 5.8 }}>
                     {formatRelativeTime(comment?.createdAt)}
                   </Typography>
                 </Tooltip>
 
-                <Box
-                  sx={{ display: "flex", alignItems: "center", mt: 0.5, gap: 2, ml: 5.8 }}
-                >
+                <Box sx={{ display: "flex", alignItems: "center", mt: 0.5, gap: 2, ml: 5.8 }}>
                   <IconButton onClick={handleLikeComment} disabled={loading}>
-                    {comment.likedByCurrentUser ? (
-                      <ThumbUpIcon color="primary" />
-                    ) : (
-                      <ThumbUpOffAltIcon />
-                    )}
+                    {comment.likedByCurrentUser ? <ThumbUpIcon color="primary" /> : <ThumbUpOffAltIcon />}
                   </IconButton>
-                  <Typography variant="body2">
-                    {comment.likedUsers?.length || 0}
-                  </Typography>
-                  <Button
-                    size="small"
-                    onClick={() => setIsReplying(!isReplying)}
-                  >
+                  <Typography variant="body2">{comment.likedUsers?.length || 0}</Typography>
+                  <Button size="small" onClick={() => setIsReplying(!isReplying)}>
                     Reply
                   </Button>
                 </Box>
@@ -341,6 +308,41 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
             )}
           </Box>
         </Box>
+
+        {/* Reply Input Field */}
+        {isReplying && (
+          <Box sx={{ ml: 5.8, mt: 2 }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Write a reply..."
+              value={newReply}
+              onChange={handleReplyChange}
+              size="small"
+              sx={{
+                backgroundColor: "background.paper",
+                borderRadius: 1,
+              }}
+            />
+            <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => {
+                  handleSubmitReply(comment.id);
+                  setIsReplying(false);
+                }}
+                disabled={!newReply.trim()}
+                size="small"
+              >
+                Reply
+              </Button>
+              <Button variant="outlined" onClick={() => setIsReplying(false)} size="small">
+                Cancel
+              </Button>
+            </Box>
+          </Box>
+        )}
 
         {/* Reply Comments */}
         {comment?.replyComment?.map((reply) => (
@@ -354,58 +356,44 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
               width: "100%",
             }}
           >
-            <Box
-              sx={{ display: "flex", alignItems: "center", ml: 2, width: "100%" }}
-            >
+            <Box sx={{ display: "flex", alignItems: "center", ml: 2, width: "100%" }}>
               <Box sx={{ flex: 1, ml: 1, width: "100%" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Avatar
-                    sx={{ mr: 1.5, width: 35, height: 35 }}
-                    src={reply.user.avatarUrl || "/placeholder.svg"}
-                    alt="Avatar"
-                  />
-                  <Typography 
+                  <Avatar sx={{ mr: 1.5, width: 35, height: 35 }} src={reply.user.avatarUrl || "/placeholder.svg"} alt="Avatar" />
+                  <Typography
                     component={Link}
                     to={`/profile/${reply.user.id}`}
-                    sx={{ 
-                      cursor: "pointer", 
-                      lineHeight: 1, 
+                    sx={{
+                      cursor: "pointer",
+                      lineHeight: 1,
                       display: "block",
                       mb: 0,
                       textDecoration: "none",
                       color: "inherit",
-                      fontSize: '15px',
-                      fontWeight: 'bold',
+                      fontSize: "15px",
+                      fontWeight: "bold",
                       "&:hover": {
-                          textDecoration: "underline",
-                          color: "primary.main",
-                        }
+                        textDecoration: "underline",
+                        color: "primary.main",
+                      },
                     }}
                   >
                     {reply.user.username || "Anonymous"}
                   </Typography>
-                  
-                  {/* ❗ CẢI TIẾN UX: Tooltip cho Reply Comment */}
+
                   <Tooltip title={formatExactTime(reply?.createdAt)} placement="bottom">
-                    <Typography
-                      color="text.secondary"
-                      sx={{ fontSize: 10 }}
-                    >
+                    <Typography color="text.secondary" sx={{ fontSize: 10 }}>
                       {formatRelativeTime(reply?.createdAt)}
                     </Typography>
                   </Tooltip>
-                  
-                  <IconButton
-                    // ❗ SỬA: Truyền reply.user
-                    onClick={(event) => handleMenuOpen(event, reply.id, reply.user, true)}
-                  >
+
+                  <IconButton onClick={(event) => handleMenuOpen(event, reply.id, reply.user, true)}>
                     <MoreVertIcon />
                   </IconButton>
-                  {/* Menu đã được sửa ở trên nên không cần thay đổi ở đây */}
                 </Box>
-                
+
                 {editingReplies[reply?.id] ? (
-                  <Box sx={{width: "100%" }}>
+                  <Box sx={{ width: "100%" }}>
                     <TextField
                       fullWidth
                       multiline
@@ -420,53 +408,30 @@ const CommentItem = ({ comment, user, newReply, checkAuth, handleReplyChange, ha
                       }
                     />
                     <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleUpdateReply(reply)}
-                        disabled={loading}
-                      >
+                      <Button variant="contained" color="primary" onClick={() => handleUpdateReply(reply)} disabled={loading}>
                         {loading ? "Updating..." : "Update"}
                       </Button>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={() => handleCancelEditReply(reply.id)}
-                        disabled={loading}
-                      >
+                      <Button variant="outlined" color="secondary" onClick={() => handleCancelEditReply(reply.id)} disabled={loading}>
                         Cancel
                       </Button>
                     </Box>
                   </Box>
                 ) : (
                   <>
-                    <Typography
-                      variant="body1"
-                      color="text.primary"
-                      sx={{ml: 6.8}}
-                    >
+                    <Typography variant="body1" color="text.primary" sx={{ ml: 6.8 }}>
                       {reply?.content}
                     </Typography>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 3, mt: 1, ml: 6.8 }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleLikeReply(reply?.id)}
-                        sx={{ gap: 1 }}
-                      >
+                      <IconButton size="small" onClick={() => handleLikeReply(reply?.id)} sx={{ gap: 1 }}>
                         {reply?.likedByCurrentUser ? (
                           <ThumbUpIcon fontSize="small" color="primary" />
                         ) : (
                           <ThumbUpOffAltIcon fontSize="small" />
                         )}
-                        <Typography variant="body2">
-                          {reply?.likedUsers?.length || 0}
-                        </Typography>
+                        <Typography variant="body2">{reply?.likedUsers?.length || 0}</Typography>
                       </IconButton>
                       {!isReplying && (
-                        <Button
-                          size="small"
-                          onClick={() => setIsReplying(!isReplying)}
-                        >
+                        <Button size="small" onClick={() => setIsReplying(!isReplying)}>
                           Reply
                         </Button>
                       )}

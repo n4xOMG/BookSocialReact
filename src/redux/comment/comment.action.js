@@ -235,9 +235,12 @@ export const editCommentAction = (commentId, comment) => async (dispatch) => {
   try {
     const { data } = await api.put(`${API_BASE_URL}/api/comments/${commentId}`, comment);
     dispatch({ type: EDIT_COMMENT_SUCCESS, payload: data });
+    return { success: true, payload: data };
   } catch (error) {
     console.log("error", error);
-    dispatch({ type: EDIT_COMMENT_FAILED, payload: error });
+    const errorMessage = error.response?.data || error.message || "Failed to edit comment";
+    dispatch({ type: EDIT_COMMENT_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 

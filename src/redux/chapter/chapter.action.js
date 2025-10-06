@@ -7,6 +7,15 @@ import {
   CREATE_PAYMENT_INTENT_FAILED,
   CREATE_PAYMENT_INTENT_REQUEST,
   CREATE_PAYMENT_INTENT_SUCCESS,
+  CREATE_PAYMENT_REQUEST,
+  CREATE_PAYMENT_SUCCESS,
+  CREATE_PAYMENT_FAILED,
+  CONFIRM_PAYMENT_REQUEST,
+  CONFIRM_PAYMENT_SUCCESS,
+  CONFIRM_PAYMENT_FAILED,
+  GET_PAYMENT_PROVIDERS_REQUEST,
+  GET_PAYMENT_PROVIDERS_SUCCESS,
+  GET_PAYMENT_PROVIDERS_FAILED,
   DELETE_CHAPTER_FAILED,
   DELETE_CHAPTER_REQUEST,
   DELETE_CHAPTER_SUCCEED,
@@ -213,6 +222,55 @@ export const likeChapterAction = (chapterId) => async (dispatch) => {
     return { payload: data };
   } catch (error) {
     dispatch({ type: LIKE_CHAPTER_FAILED, payload: error.message });
+    throw error;
+  }
+};
+
+// Get available payment providers
+export const getPaymentProviders = () => async (dispatch) => {
+  dispatch({ type: GET_PAYMENT_PROVIDERS_REQUEST });
+  try {
+    const response = await api.get(`${API_BASE_URL}/api/payments/providers`);
+    dispatch({ type: GET_PAYMENT_PROVIDERS_SUCCESS, payload: response.data });
+    return response.data;
+  } catch (error) {
+    dispatch({ type: GET_PAYMENT_PROVIDERS_FAILED, payload: error.message });
+    throw error;
+  }
+};
+
+// Create unified payment (supports both Stripe and PayPal)
+export const createPayment = (purchaseRequest) => async (dispatch) => {
+  dispatch({ type: CREATE_PAYMENT_REQUEST });
+  try {
+    const response = await api.post(`${API_BASE_URL}/api/payments/create-payment`, purchaseRequest);
+    dispatch({ type: CREATE_PAYMENT_SUCCESS, payload: response.data });
+    return response.data;
+  } catch (error) {
+    dispatch({ type: CREATE_PAYMENT_FAILED, payload: error.message });
+    throw error;
+  }
+};
+
+// Confirm unified payment
+export const confirmUnifiedPayment = (confirmPaymentRequest) => async (dispatch) => {
+  dispatch({ type: CONFIRM_PAYMENT_REQUEST });
+  try {
+    const response = await api.post(`${API_BASE_URL}/api/payments/confirm-payment`, confirmPaymentRequest);
+    dispatch({ type: CONFIRM_PAYMENT_SUCCESS, payload: response.data });
+    return response.data;
+  } catch (error) {
+    dispatch({ type: CONFIRM_PAYMENT_FAILED, payload: error.message });
+    throw error;
+  }
+};
+
+// Capture PayPal order
+export const capturePaypalOrder = (orderID) => async (dispatch) => {
+  try {
+    const response = await api.post(`${API_BASE_URL}/api/orders/${orderID}/capture`);
+    return response.data;
+  } catch (error) {
     throw error;
   }
 };

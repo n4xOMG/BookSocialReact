@@ -2,7 +2,7 @@ import { Alert, Box, Button } from "@mui/material";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { confirmPayment, createPaymentIntent } from "../../redux/chapter/chapter.action";
+import { createPayment, confirmUnifiedPayment } from "../../redux/chapter/chapter.action";
 
 const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
   const stripe = useStripe();
@@ -23,15 +23,16 @@ const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
     setFormError("");
 
     try {
-      // Step 1: Create Payment Intent on the backend
-      const paymentIntentResponse = await dispatch(
-        createPaymentIntent({
+      // Step 1: Create Payment Intent on the backend using unified endpoint
+      const paymentResponse = await dispatch(
+        createPayment({
           creditPackageId: creditPackage.id,
+          paymentProvider: "STRIPE",
           currency: "usd",
         })
       );
 
-      const clientSecret = paymentIntentResponse.clientSecret;
+      const clientSecret = paymentResponse.clientSecret;
 
       // Step 2: Confirm the payment on the frontend
       const paymentResult = await stripe.confirmCardPayment(clientSecret, {
@@ -46,15 +47,13 @@ const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
         setProcessing(false);
       } else {
         if (paymentResult.paymentIntent.status === "succeeded") {
-          // Step 3: Inform backend to update user credits
+          // Step 3: Inform backend to update user credits using unified endpoint
           await dispatch(
-            confirmPayment(
-              {
-                paymentIntentId: paymentResult.paymentIntent.id,
-                creditPackageId: creditPackage.id,
-              },
-              jwt
-            )
+            confirmUnifiedPayment({
+              paymentIntentId: paymentResult.paymentIntent.id,
+              creditPackageId: creditPackage.id,
+              paymentProvider: "STRIPE",
+            })
           );
           onSuccess();
           setProcessing(false);

@@ -20,6 +20,8 @@ import {
   DELETE_SENSITIVE_WORD_FAILED,
   DELETE_SENSITIVE_WORD_REQUEST,
   DELETE_SENSITIVE_WORD_SUCCESS,
+  EDIT_COMMENT_FAILED,
+  EDIT_COMMENT_REQUEST,
   EDIT_COMMENT_SUCCESS,
   GET_ALL_BOOK_COMMENT_FAILED,
   GET_ALL_BOOK_COMMENT_REQUEST,
@@ -66,6 +68,7 @@ export const commentReducer = (state = initialState, action) => {
     case CREATE_POST_COMMENT_REQUEST:
     case CREATE_REPLY_POST_COMMENT_REQUEST:
     case DELETE_COMMENT_REQUEST:
+    case EDIT_COMMENT_REQUEST:
     case ADD_SENSITIVE_WORD_REQUEST:
     case DELETE_SENSITIVE_WORD_REQUEST:
     case GET_BOOK_COMMENT_COUNT_REQUEST:
@@ -226,11 +229,29 @@ export const commentReducer = (state = initialState, action) => {
     case ADD_SENSITIVE_WORD_SUCCESS:
       return { ...state, error: null, newSensitiveWord: action.payload };
     case EDIT_COMMENT_SUCCESS:
+      const updateCommentInList = (comments) => {
+        return comments.map((comment) => {
+          // If this is the comment being edited
+          if (comment.id === action.payload.id) {
+            return action.payload;
+          }
+          // If this comment has replies, check if any reply is being edited
+          if (comment.replyComment && comment.replyComment.length > 0) {
+            return {
+              ...comment,
+              replyComment: comment.replyComment.map((reply) => (reply.id === action.payload.id ? action.payload : reply)),
+            };
+          }
+          return comment;
+        });
+      };
+
       return {
         ...state,
         error: null,
-        bookComments: state.bookComments.map((comment) => (comment.id === action.payload.id ? action.payload : comment)),
-        chapterComments: state.chapterComments.map((comment) => (comment.id === action.payload.id ? action.payload : comment)),
+        bookComments: updateCommentInList(state.bookComments),
+        chapterComments: updateCommentInList(state.chapterComments),
+        postComments: updateCommentInList(state.postComments),
       };
     case DELETE_SENSITIVE_WORD_SUCCESS:
     case DELETE_COMMENT_SUCCESS:
@@ -255,6 +276,7 @@ export const commentReducer = (state = initialState, action) => {
     case CREATE_REPLY_POST_COMMENT_FAILED:
     case LIKE_COMMENT_FAILED:
     case DELETE_COMMENT_FAILED:
+    case EDIT_COMMENT_FAILED:
     case ADD_SENSITIVE_WORD_FAILED:
     case DELETE_SENSITIVE_WORD_FAILED:
     case GET_BOOK_COMMENT_COUNT_FAILED:

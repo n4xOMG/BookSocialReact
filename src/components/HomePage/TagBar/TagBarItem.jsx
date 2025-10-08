@@ -47,7 +47,7 @@ const TagBarItem = ({ tag, onClick, tagIndex }) => {
                 bgcolor: glassColor,
                 border: `1px solid ${selectedBorderColor}`,
                 color: 'text.primary',
-
+                boxShadow: '0 5px 5px 0 rgba(0, 0, 0, 0.3)',
                 '&:hover': {
                     elevation: 4,
                     transform: 'translateY(-10px)',

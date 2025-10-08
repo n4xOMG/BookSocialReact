@@ -65,8 +65,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#f5f7fa", flexDirection: "column" }}>
-      <Header />
+    <Box sx={{ display: "flex", minHeight: "100%", flexDirection: "column" }}>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 6, flex: 1 }}>
         <Paper
           elevation={0}

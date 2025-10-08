@@ -33,6 +33,7 @@ import OtpVerification from "./pages/Authentication/OtpVerification";
 import { ThemeProvider } from "@mui/material/styles"; // Sửa lỗi: Import ThemeProvider từ @mui/material/styles, không phải @emotion/react
 import { lightTheme, darkTheme } from "./themes";
 import Layout from "./Layout";
+import AdminLayout from "./components/AdminPage/Layout/AdminLayout";
 
 function App() {
   const dispatch = useDispatch();
@@ -159,7 +160,9 @@ function App() {
                     <Route path="/forgot-password" element={<ForgotPassword  toggleTheme={toggleTheme}/>} />
                     <Route path="/reset-password" element={<ResetPassword  toggleTheme={toggleTheme}/>} />
                     
-                    <Route path="/admin/*" element={<AdminDashboard />} />
+                    <Route element={<AdminLayout toggleTheme={toggleTheme} />}>
+                      <Route path="/admin/*" element={<AdminDashboard />} />
+                    </Route>
                     
                     <Route path="/upload-book" element={<UserUploadBook />} />
                     <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />

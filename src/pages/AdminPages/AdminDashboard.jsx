@@ -8,17 +8,12 @@ import ReportsManagement from "../../components/AdminPage/Dashboard/ReportsManag
 import PayoutsManagement from "../../components/AdminPage/Dashboard/PayoutsManagement";
 import TagsTab from "../../components/AdminPage/Dashboard/TagsTab";
 import UserManagement from "../../components/AdminPage/Dashboard/UserManagement";
-import Header from "../../components/AdminPage/Layout/Header";
-import Sidebar from "../../components/AdminPage/Layout/Sidebar";
 import ProtectedRoute from "../../components/ProtectedRoute";
 
 const AdminDashboard = () => {
   return (
     <Box sx={{ display: "flex" }}>
-      <Header />
-      <Sidebar />
-      <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}>
-        <Toolbar />
+      <Box component="main" sx={{ flexGrow: 1, p: 1 }}>
         <Routes>
           <Route
             path="/overview"

@@ -1,12 +1,13 @@
 import { createTheme } from "@mui/material";
 import typography from "./typography";
 import lightBackground from '../assets/images/9.png';
+import lightAdminBackground from '../assets/images/admin_light.png';
 export const lightTheme = createTheme({
     palette: {
         mode: 'light',
         primary: {
             light: '#4a8a75',
-            main: '#1d6d53',
+            main: '#1d6d53ff',
             dark: '#144c3a',
             contrastText: '#fff',
         },
@@ -20,7 +21,9 @@ export const lightTheme = createTheme({
             default: '#f5f5f5',
             paper: 'rgba(255, 255, 255, 0.1)', 
             gradient: "linear-gradient(to right, rgba(29, 109, 83,0.4) 10%, rgba(29, 109, 83,0.2) 90%)",
+            title: 'rgba(30, 112, 86, 0.5)',
             backgroundImage: `url(${lightBackground})`,
+            backgroundAdminImage: `url(${lightBackground})`,
         },
         text: {
             primary: 'rgba(0, 0, 0, 0.87)',
@@ -104,6 +107,18 @@ export const lightTheme = createTheme({
                 root: ({ theme }) => ({
                     color: theme.palette.text.primary,
                 }),
+            },
+        },
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                background: 'rgba(255, 255, 255, 1)',
+                backdropFilter: 'blur(30px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                borderRadius: '20px',
+                boxShadow: '0 8px 40px rgba(0, 0, 0, 0.25)',
+                },
             },
         },
     },

@@ -395,11 +395,10 @@ const UserBooks = () => {
                   width: "100%",
                   boxSizing: "border-box",
                   backgroundColor: theme.palette.background.paper,
+                  
                 }}
               >
                 <Grid container spacing={1} alignItems="center" sx={{ p: 1 }}>
-                  {" "}
-                  {/* Sửa lỗi ở đây */}
                   <Grid item xs>
                     <TextField
                       fullWidth

@@ -139,7 +139,7 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
           {/* Header Section */}
           <Box sx={{ mb: isMobile ? 0 : 6 }}>
             {!isLoading && trendingBooksArray?.length > 0 && (
-              <Box sx={{ overflow: "hidden" }}>
+              <Box sx={{ overflow: "hidden", boxShadow: '0 5px 5px 0 rgba(0, 0, 0, 0.3)', borderRadius: 2 }}>
                 <BookHeroCarousel 
                   books={trendingBooksArray}
                   categories={categories}

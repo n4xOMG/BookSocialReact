@@ -99,7 +99,6 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
           left: 8 ,
           zIndex: 10,
           transform: "translateY(-50%)",
-          // Cập nhật style Glassmorphism cho nav button
           bgcolor: 'rgba(255, 255, 255, 0.2)',
           backdropFilter: 'blur(5px)',
           WebkitBackdropFilter: 'blur(5px)',

@@ -1,6 +1,7 @@
 import { createTheme } from "@mui/material";
 import typography from "./typography";
 import darkBackground from '../assets/images/8.png';
+import darkAdminBackground from '../assets/images/admin_dark.png';
 
 export const darkTheme = createTheme({
   palette: {
@@ -21,7 +22,9 @@ export const darkTheme = createTheme({
       default: '#121212', 
       paper: 'rgba(255, 255, 255, 0.01)',
       gradient:  'rgba(252, 231, 43, 0.3)',
+      title: 'rgba(255, 235, 59, 0.5)',
       backgroundImage: `url(${darkBackground})`,
+      backgroundAdminImage: `url(${darkBackground})`,
     },
     text: {
       primary: '#fff', 
@@ -112,6 +115,18 @@ export const darkTheme = createTheme({
         root: ({ theme }) => ({
           color: theme.palette.text.primary,
         }),
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          background: 'rgba(106, 106, 106, 0.43)',
+          backdropFilter: 'blur(30px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(160%)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '20px',
+          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.6)',
+        },
       },
     },
   },

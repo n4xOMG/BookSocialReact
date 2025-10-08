@@ -15,6 +15,9 @@ import {
   GET_PAYOUT_SETTINGS_REQUEST,
   GET_PAYOUT_SETTINGS_SUCCESS,
   GET_PAYOUT_SETTINGS_FAILURE,
+  GET_BOOK_PERFORMANCE_REQUEST,
+  GET_BOOK_PERFORMANCE_SUCCESS,
+  GET_BOOK_PERFORMANCE_FAILURE,
 } from "./author.actionType";
 
 export const getAuthorDashboard =
@@ -98,5 +101,16 @@ export const updatePayoutSettings = (settings) => async (dispatch) => {
     return { payload: data };
   } catch (error) {
     dispatch({ type: GET_PAYOUT_SETTINGS_FAILURE, payload: error.response?.data || error.message });
+  }
+};
+
+export const getBookPerformance = () => async (dispatch) => {
+  dispatch({ type: GET_BOOK_PERFORMANCE_REQUEST });
+  try {
+    const { data } = await api.get(`${API_BASE_URL}/api/author/books/performance`);
+    dispatch({ type: GET_BOOK_PERFORMANCE_SUCCESS, payload: data });
+    return { payload: data };
+  } catch (error) {
+    dispatch({ type: GET_BOOK_PERFORMANCE_FAILURE, payload: error.response?.data || error.message });
   }
 };

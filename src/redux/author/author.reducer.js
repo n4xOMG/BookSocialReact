@@ -14,6 +14,9 @@ import {
   GET_PAYOUT_SETTINGS_REQUEST,
   GET_PAYOUT_SETTINGS_SUCCESS,
   GET_PAYOUT_SETTINGS_FAILURE,
+  GET_BOOK_PERFORMANCE_REQUEST,
+  GET_BOOK_PERFORMANCE_SUCCESS,
+  GET_BOOK_PERFORMANCE_FAILURE,
 } from "./author.actionType";
 
 const initialState = {
@@ -21,6 +24,7 @@ const initialState = {
   earningsPage: null, // Spring Page response for earnings
   payoutsPage: null, // Spring Page response for payouts
   payoutSettings: null,
+  bookPerformance: null, // Array of BookPerformanceDTO
   loading: false,
   error: null,
   requestingPayout: false,
@@ -32,6 +36,7 @@ export const authorReducer = (state = initialState, action) => {
     case GET_AUTHOR_EARNINGS_REQUEST:
     case GET_AUTHOR_PAYOUTS_REQUEST:
     case GET_PAYOUT_SETTINGS_REQUEST:
+    case GET_BOOK_PERFORMANCE_REQUEST:
       return { ...state, loading: true, error: null };
     case REQUEST_PAYOUT_REQUEST:
       return { ...state, requestingPayout: true, error: null };
@@ -44,6 +49,8 @@ export const authorReducer = (state = initialState, action) => {
       return { ...state, loading: false, payoutsPage: action.payload };
     case GET_PAYOUT_SETTINGS_SUCCESS:
       return { ...state, loading: false, payoutSettings: action.payload };
+    case GET_BOOK_PERFORMANCE_SUCCESS:
+      return { ...state, loading: false, bookPerformance: action.payload };
     case REQUEST_PAYOUT_SUCCESS:
       return { ...state, requestingPayout: false };
 
@@ -51,6 +58,7 @@ export const authorReducer = (state = initialState, action) => {
     case GET_AUTHOR_EARNINGS_FAILURE:
     case GET_AUTHOR_PAYOUTS_FAILURE:
     case GET_PAYOUT_SETTINGS_FAILURE:
+    case GET_BOOK_PERFORMANCE_FAILURE:
       return { ...state, loading: false, error: action.payload };
     case REQUEST_PAYOUT_FAILURE:
       return { ...state, requestingPayout: false, error: action.payload };

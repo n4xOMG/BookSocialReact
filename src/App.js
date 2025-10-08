@@ -30,7 +30,7 @@ import PostDetail from "./pages/UserPages/PostDetails";
 import { connectWebSocket } from "./services/websocket.service";
 import { apiEvents } from "./services/api.service";
 import OtpVerification from "./pages/Authentication/OtpVerification";
-import { ThemeProvider } from "@mui/material/styles"; // Sửa lỗi: Import ThemeProvider từ @mui/material/styles, không phải @emotion/react
+import { ThemeProvider } from "@mui/material/styles";
 import { lightTheme, darkTheme } from "./themes";
 import Layout from "./Layout";
 
@@ -129,47 +129,47 @@ function App() {
     );
   }
 
-    return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className="App">
-                <Routes>
-                    <Route element={<Layout toggleTheme={toggleTheme} />}>
-                        <Route path="/" element={<HomePage/>} />
-                        {/* <Route path="/stories" element={user ? <UserBooks toggleTheme={toggleTheme}/> : <HomePage toggleTheme={toggleTheme}/>} /> */}
-                        <Route path="/library" element={user ? <UserBookshelf /> : <HomePage/>} />
-                        <Route path="/book-clubs" element={<BookClubs  />} />
-                        <Route path="/profile" element={user ? <ProfilePage /> : <HomePage />} />
-                        <Route path="/profile/:userId" element={<OtherUserProfile />} />
-                        <Route path="/books/:bookId" element={<BookDetailPage />} />
-                        <Route path="/credit-packages" element={<CreditPackages />} />
-                        <Route path="/search-results" element={<BookSearchResults/>} />
-                        <Route path="/posts/:postId" element={<PostDetail />} />
-                        <Route path="/author/dashboard" element={<AuthorDashboard />} />
-                        <Route path="/author/payout-settings" element={<AuthorPayoutSettings />} />
-                        <Route path="/chats/:chatId" element={user ? <MessagesPage /> :  <Navigate to="/" replace/>} />
-                    </Route>
-                    <Route element={<Layout toggleTheme={toggleTheme} showHeader={false}/>}>
-                        <Route path="/stories" element={<UserBooks />} />
-                    </Route>
-                                            
-                    <Route path="/sign-in" element={<SignIn toggleTheme={toggleTheme}/>} />
-                    <Route path="/sign-up" element={user ? <Navigate to="/" replace/> : <SignUp toggleTheme={toggleTheme}/>} />
-                    <Route path="/verify-otp" element={user ?  <Navigate to="/" replace/> : <OtpVerification  toggleTheme={toggleTheme}/>} />
-                    <Route path="/forgot-password" element={<ForgotPassword  toggleTheme={toggleTheme}/>} />
-                    <Route path="/reset-password" element={<ResetPassword  toggleTheme={toggleTheme}/>} />
-                    
-                    <Route path="/admin/*" element={<AdminDashboard />} />
-                    
-                    <Route path="/upload-book" element={<UserUploadBook />} />
-                    <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />
-                    <Route path="/edit-chapter/:roomId" element={<CollaborativeEditorWrapper />} />
-                </Routes>
-                <AuthDialog />
-                <RateLimitAlert open={rateLimitAlert.open} handleClose={handleCloseRateLimitAlert} retryAfter={rateLimitAlert.retryAfter} />
-            </div>
-        </ThemeProvider>
-    );
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <div className="App">
+        <Routes>
+          <Route element={<Layout toggleTheme={toggleTheme} />}>
+            <Route path="/" element={<HomePage />} />
+            {/* <Route path="/stories" element={user ? <UserBooks toggleTheme={toggleTheme}/> : <HomePage toggleTheme={toggleTheme}/>} /> */}
+            <Route path="/library" element={user ? <UserBookshelf /> : <HomePage />} />
+            <Route path="/book-clubs" element={<BookClubs />} />
+            <Route path="/profile" element={user ? <ProfilePage /> : <HomePage />} />
+            <Route path="/profile/:userId" element={<OtherUserProfile />} />
+            <Route path="/books/:bookId" element={<BookDetailPage />} />
+            <Route path="/credit-packages" element={<CreditPackages />} />
+            <Route path="/search-results" element={<BookSearchResults />} />
+            <Route path="/posts/:postId" element={<PostDetail />} />
+            <Route path="/author/dashboard" element={<AuthorDashboard />} />
+            <Route path="/author/payout-settings" element={<AuthorPayoutSettings />} />
+            <Route path="/chats/:chatId" element={user ? <MessagesPage /> : <Navigate to="/" replace />} />
+          </Route>
+          <Route element={<Layout toggleTheme={toggleTheme} showHeader={false} />}>
+            <Route path="/stories" element={<UserBooks />} />
+          </Route>
+
+          <Route path="/sign-in" element={<SignIn toggleTheme={toggleTheme} />} />
+          <Route path="/sign-up" element={user ? <Navigate to="/" replace /> : <SignUp toggleTheme={toggleTheme} />} />
+          <Route path="/verify-otp" element={user ? <Navigate to="/" replace /> : <OtpVerification toggleTheme={toggleTheme} />} />
+          <Route path="/forgot-password" element={<ForgotPassword toggleTheme={toggleTheme} />} />
+          <Route path="/reset-password" element={<ResetPassword toggleTheme={toggleTheme} />} />
+
+          <Route path="/admin/*" element={<AdminDashboard />} />
+
+          <Route path="/upload-book" element={<UserUploadBook />} />
+          <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />
+          <Route path="/edit-chapter/:roomId" element={<CollaborativeEditorWrapper />} />
+        </Routes>
+        <AuthDialog />
+        <RateLimitAlert open={rateLimitAlert.open} handleClose={handleCloseRateLimitAlert} retryAfter={rateLimitAlert.retryAfter} />
+      </div>
+    </ThemeProvider>
+  );
 }
 
 export default App;

@@ -30,7 +30,7 @@ import PostDetail from "./pages/UserPages/PostDetails";
 import { connectWebSocket } from "./services/websocket.service";
 import { apiEvents } from "./services/api.service";
 import OtpVerification from "./pages/Authentication/OtpVerification";
-import { ThemeProvider } from "@mui/material/styles"; // Sửa lỗi: Import ThemeProvider từ @mui/material/styles, không phải @emotion/react
+import { ThemeProvider } from "@mui/material/styles";
 import { lightTheme, darkTheme } from "./themes";
 import Layout from "./Layout";
 import AdminLayout from "./components/AdminPage/Layout/AdminLayout";

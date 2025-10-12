@@ -17,27 +17,51 @@ export const EMPTY_CONTENT = [
  */
 export const isValidSlateContent = (content) => {
   if (!Array.isArray(content)) return false;
+  if (content.length === 0) return true; // Empty array is valid
 
   return content.every((node) => {
-    // Every node should have a type and children
-    if (!node || typeof node !== "object" || !node.type || !Array.isArray(node.children)) {
+    // Every node should be an object
+    if (!node || typeof node !== "object") {
       return false;
     }
 
-    // Check children recursively
-    return node.children.every((child) => {
-      if (typeof child === "object" && child !== null) {
-        // Text node should have text property
-        if ("text" in child) {
-          return typeof child.text === "string";
-        }
-        // Element node should have type and children
-        if ("type" in child && "children" in child) {
-          return typeof child.type === "string" && Array.isArray(child.children);
-        }
-      }
+    if (!node.type && !node.text) {
       return false;
-    });
+    }
+
+    // If it's a text node (has 'text' property), that's always valid
+    if ("text" in node) {
+      return typeof node.text === "string";
+    }
+
+    // If it's an element node, it should have children
+    if ("type" in node) {
+      if ("children" in node && !Array.isArray(node.children)) {
+        return false;
+      }
+
+      if (Array.isArray(node.children)) {
+        return node.children.every((child) => {
+          if (!child || typeof child !== "object") {
+            return false;
+          }
+
+          if ("text" in child) {
+            return typeof child.text === "string";
+          }
+
+          if ("type" in child) {
+            return typeof child.type === "string";
+          }
+
+          return false;
+        });
+      }
+
+      return true;
+    }
+
+    return false;
   });
 };
 
@@ -52,50 +76,66 @@ export const normalizeSlateContent = (content) => {
   }
 
   const normalized = content.map((node) => {
-    // Ensure each node has proper structure
     if (!node || typeof node !== "object") {
       return { type: "paragraph", children: [{ text: "" }] };
     }
 
-    // Ensure node has type
-    if (!node.type) {
-      node.type = "paragraph";
+    if ("text" in node) {
+      return { type: "paragraph", children: [{ text: node.text || "" }] };
     }
 
-    // Ensure node has children array
-    if (!Array.isArray(node.children)) {
-      node.children = [{ text: node.text || "" }];
+    const normalizedNode = { ...node };
+
+    if (!normalizedNode.type) {
+      normalizedNode.type = "paragraph";
     }
 
-    // Normalize children
-    node.children = node.children.map((child) => {
-      if (!child || typeof child !== "object") {
-        return { text: "" };
+    // Handle children
+    if (!Array.isArray(normalizedNode.children)) {
+      if (typeof normalizedNode.text === "string") {
+        normalizedNode.children = [{ text: normalizedNode.text }];
+        delete normalizedNode.text;
+      } else {
+        normalizedNode.children = [{ text: "" }];
       }
+    } else {
+      // Normalize existing children
+      normalizedNode.children = normalizedNode.children.map((child) => {
+        if (!child || typeof child !== "object") {
+          return { text: "" };
+        }
 
-      // If it's a text node, ensure it has text property
-      if ("text" in child) {
-        return { ...child, text: child.text || "" };
-      }
+        // Text node
+        if ("text" in child) {
+          return { ...child, text: child.text || "" };
+        }
 
-      // If it's an element node, recursively normalize
-      if ("type" in child && "children" in child) {
-        return normalizeSlateContent([child])[0];
-      }
+        // Element node - recursively normalize
+        if ("type" in child) {
+          return normalizeSlateContent([child])[0];
+        }
 
-      // Fallback to text node
-      return { text: child.text || "" };
-    });
+        return { text: child.text || "" };
+      });
 
-    // Ensure at least one child exists
-    if (node.children.length === 0) {
-      node.children = [{ text: "" }];
+      normalizedNode.children = normalizedNode.children.filter(
+        (child) =>
+          child &&
+          typeof child === "object" &&
+          (("text" in child && typeof child.text === "string") || ("type" in child && typeof child.type === "string"))
+      );
     }
 
-    return node;
+    if (normalizedNode.children.length === 0) {
+      normalizedNode.children = [{ text: "" }];
+    }
+
+    return normalizedNode;
   });
 
-  return normalized.length > 0 ? normalized : EMPTY_CONTENT;
+  const validNormalized = normalized.filter((node) => node && typeof node === "object" && node.type && Array.isArray(node.children));
+
+  return validNormalized.length > 0 ? validNormalized : EMPTY_CONTENT;
 };
 
 /**
@@ -108,11 +148,7 @@ export const convertHtmlToSlateJson = (htmlContent) => {
     return EMPTY_CONTENT;
   }
 
-  // Simple HTML to Slate conversion
-  // This is a basic implementation - you might want to use a more sophisticated HTML parser
-
   try {
-    // Create a temporary DOM element to parse HTML
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = htmlContent.trim();
 
@@ -120,7 +156,6 @@ export const convertHtmlToSlateJson = (htmlContent) => {
       const tagName = element.tagName?.toLowerCase();
       const children = [];
 
-      // Process child nodes
       for (const child of element.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
           const text = child.textContent || "";
@@ -132,7 +167,6 @@ export const convertHtmlToSlateJson = (htmlContent) => {
         }
       }
 
-      // Ensure we have at least one child
       if (children.length === 0) {
         children.push({ text: "" });
       }
@@ -206,7 +240,6 @@ export const convertHtmlToSlateJson = (htmlContent) => {
     return result.length > 0 ? normalizeSlateContent(result) : EMPTY_CONTENT;
   } catch (error) {
     console.error("Error converting HTML to Slate JSON:", error);
-    // Fallback: create a simple paragraph with the HTML content as text
     return [{ type: "paragraph", children: [{ text: htmlContent }] }];
   }
 };
@@ -224,11 +257,9 @@ export const convertSlateJsonToHtml = (slateContent) => {
   const serializeNode = (node) => {
     if (!node) return "";
 
-    // Handle text nodes
     if ("text" in node) {
       let text = node.text || "";
 
-      // Apply text formatting
       if (node.bold) text = `<strong>${text}</strong>`;
       if (node.italic) text = `<em>${text}</em>`;
       if (node.underline) text = `<u>${text}</u>`;
@@ -236,7 +267,6 @@ export const convertSlateJsonToHtml = (slateContent) => {
       return text;
     }
 
-    // Handle element nodes
     if ("type" in node && "children" in node) {
       const children = node.children.map(serializeNode).join("");
 

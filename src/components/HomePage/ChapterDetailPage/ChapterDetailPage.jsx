@@ -1,5 +1,5 @@
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { getBookByIdAction } from "../../../redux/book/book.action";
@@ -73,31 +73,53 @@ const useUnlockDialogs = () => {
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [insufficientCreditsDialogOpen, setInsufficientCreditsDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [unlockAttempted, setUnlockAttempted] = useState(false);
 
-  const openUnlockDialog = () => setUnlockDialogOpen(true);
-  const closeUnlockDialog = () => {
+  const openUnlockDialog = useCallback(() => {
+    if (!unlockAttempted) {
+      setUnlockDialogOpen(true);
+    }
+  }, [unlockAttempted]);
+
+  const closeUnlockDialog = useCallback(() => {
     setUnlockDialogOpen(false);
     setErrorMessage("");
-  };
+    setUnlockAttempted(true);
+  }, []);
 
-  const openInsufficientCreditsDialog = () => setInsufficientCreditsDialogOpen(true);
-  const closeInsufficientCreditsDialog = () => setInsufficientCreditsDialogOpen(false);
+  const openInsufficientCreditsDialog = useCallback(() => {
+    setInsufficientCreditsDialogOpen(true);
+    setUnlockAttempted(true);
+  }, []);
+
+  const closeInsufficientCreditsDialog = useCallback(() => {
+    setInsufficientCreditsDialogOpen(false);
+  }, []);
+
+  const resetUnlockState = useCallback(() => {
+    setUnlockAttempted(false);
+    setUnlockDialogOpen(false);
+    setInsufficientCreditsDialogOpen(false);
+    setErrorMessage("");
+  }, []);
 
   return {
     unlockDialogOpen,
     insufficientCreditsDialogOpen,
     errorMessage,
+    unlockAttempted,
     setErrorMessage,
     openUnlockDialog,
     closeUnlockDialog,
     openInsufficientCreditsDialog,
     closeInsufficientCreditsDialog,
+    resetUnlockState,
   };
 };
 
 // Custom hook for determining book type based on category
 const useBookType = (book, categories) => {
-  const getBookType = useCallback(() => {
+  return useMemo(() => {
     if (!book || !categories || categories.length === 0) {
       return { isManga: false, isNovel: false, isValid: false };
     }
@@ -113,8 +135,6 @@ const useBookType = (book, categories) => {
 
     return { isManga, isNovel, isValid: isManga || isNovel };
   }, [book, categories]);
-
-  return getBookType();
 };
 
 export default function ChapterDetailPage() {
@@ -150,19 +170,24 @@ export default function ChapterDetailPage() {
     fetchChapterData();
   }, [fetchChapterData]);
 
+  // Reset unlock state when chapter changes
+  useEffect(() => {
+    unlockDialogs.resetUnlockState();
+  }, [chapterId, unlockDialogs.resetUnlockState]);
+
   // Handle locked chapter
   useEffect(() => {
-    if (isChapterLocked && chapter) {
+    if (isChapterLocked && chapter && !unlockDialogs.unlockAttempted) {
       unlockDialogs.openUnlockDialog();
     }
-  }, [isChapterLocked, chapter]);
+  }, [isChapterLocked, chapter, unlockDialogs.unlockAttempted, unlockDialogs.openUnlockDialog]);
 
   // Handle unlock error
   useEffect(() => {
     if (unlockError) {
       unlockDialogs.openInsufficientCreditsDialog();
     }
-  }, [unlockError]);
+  }, [unlockError, unlockDialogs.openInsufficientCreditsDialog]);
 
   // Navigation handlers
   const handleChapterChange = useCallback(

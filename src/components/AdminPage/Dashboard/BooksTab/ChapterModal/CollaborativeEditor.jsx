@@ -98,27 +98,22 @@ export const CollaborativeEditor = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Confirmation Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Process chapter content when it's loaded
   const processedContent = useMemo(() => {
     if (!chapter) return null;
     return processChapterContent(chapter);
   }, [chapter]);
 
-  // Initialize Yjs with processed content
   const { provider, sharedType, connected } = useYjs(processedContent);
 
   useEffect(() => {
     if (chapter) {
       setIsLoadingChapter(false);
-      console.log("Chapter loaded:", chapter);
       setContent(processedContent);
     } else {
       setIsLoadingChapter(true);
@@ -202,7 +197,6 @@ export const CollaborativeEditor = () => {
     setSnackbarOpen(false);
   };
 
-  // Loading states
   if (isLoadingChapter) {
     return <LoadingEditor />;
   }

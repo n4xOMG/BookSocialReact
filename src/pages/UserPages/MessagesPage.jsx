@@ -1,10 +1,8 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
-import WestIcon from "@mui/icons-material/West";
 import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography } from "@mui/material";
 import { Stomp } from "@stomp/stompjs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { API_BASE_URL } from "../../api/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -17,21 +15,21 @@ import UploadToCloudinary from "../../utils/uploadToCloudinary";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { chats } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
   const [currentChat, setCurrentChat] = useState();
-  const messages = useSelector((state) => (currentChat ? state.chat.messages[currentChat.id] || [] : []));
+  const rawMessages = useSelector((state) => (currentChat ? state.chat.messages[currentChat.id] || [] : []));
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [stompClient, setStompClient] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [messageText, setMessageText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [isFetchingChats, setIsFetchingChats] = useState(true);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
+  const stompClientRef = useRef(null);
+  const subscriptionRef = useRef(null);
   const reconnectTimerRef = useRef(null);
   const MAX_RECONNECT_ATTEMPTS = 5;
   const reconnectAttemptsRef = useRef(0);
@@ -52,26 +50,33 @@ export default function MessagesPage() {
   };
 
   const handleCreateMessage = async (value) => {
-    if (isSending) return;
+    if (!currentChat || isSending) return;
+    const trimmedValue = value.trim();
+    if (!trimmedValue && !selectedImage) return;
+
     setIsSending(true);
-    setLoading(true);
-    let imgUrl = null;
-    if (selectedImage) {
-      imgUrl = await UploadToCloudinary(selectedImage, `chat/chat_images/${currentChat.id}`);
+    try {
+      let imgUrl = null;
+      if (selectedImage) {
+        imgUrl = await UploadToCloudinary(selectedImage, `chat/chat_images/${currentChat.id}`);
+      }
+      const message = {
+        chat: { id: currentChat.id },
+        chatId: currentChat.id,
+        sender: { id: user.id },
+        receiver: {
+          id: currentChat.userOne.id === user.id ? currentChat.userTwo.id : currentChat.userOne.id,
+        },
+        content: trimmedValue,
+        imageUrl: imgUrl,
+      };
+      await dispatch(createMessage({ message, sendMessageToServer }));
+      setSelectedImage(null);
+      setImagePreview(null);
+      setMessageText("");
+    } finally {
+      setIsSending(false);
     }
-    const message = {
-      chat: { id: currentChat.id },
-      chatId: currentChat.id,
-      sender: { id: user.id },
-      receiver: { id: currentChat.userOne.id === user.id ? user.id : currentChat.userTwo.id },
-      content: value,
-      imageUrl: imgUrl,
-    };
-    dispatch(createMessage({ message, sendMessageToServer }));
-    setSelectedImage(null);
-    setImagePreview(null);
-    setLoading(false);
-    setIsSending(false);
   };
 
   // Setup WebSocket connection
@@ -85,16 +90,18 @@ export default function MessagesPage() {
       const socket = new SockJS(`${API_BASE_URL}/ws`);
       socketRef.current = socket;
       const stomp = Stomp.over(socket);
-
-      setStompClient(stomp);
+      stompClientRef.current = stomp;
       stomp.connect({}, onConnect, onErr);
 
       return () => {
         if (reconnectTimerRef.current) {
           clearTimeout(reconnectTimerRef.current);
         }
-        if (stomp) {
-          stomp.disconnect();
+        if (subscriptionRef.current) {
+          subscriptionRef.current.unsubscribe();
+        }
+        if (stompClientRef.current) {
+          stompClientRef.current.disconnect();
         }
         setIsConnected(false);
       };
@@ -106,6 +113,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     return setupStompClient();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle visibility change to reconnect when tab becomes active again
@@ -113,7 +121,7 @@ export default function MessagesPage() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && !isConnected) {
         console.log("Page became visible, checking connection...");
-        if (stompClient && !stompClient.connected) {
+        if (stompClientRef.current && !stompClientRef.current.connected) {
           setupStompClient();
         }
       }
@@ -124,7 +132,8 @@ export default function MessagesPage() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [stompClient, isConnected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected]);
 
   const attemptReconnect = () => {
     if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
@@ -160,10 +169,15 @@ export default function MessagesPage() {
   };
 
   const subscribeToChat = () => {
-    if (stompClient && stompClient.connected && user && currentChat) {
+    if (subscriptionRef.current) {
+      subscriptionRef.current.unsubscribe();
+      subscriptionRef.current = null;
+    }
+
+    if (stompClientRef.current && stompClientRef.current.connected && user && currentChat) {
       try {
         console.log(`Subscribing to group: /group/${currentChat.id}/private`);
-        stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
+        subscriptionRef.current = stompClientRef.current.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
       } catch (error) {
         console.error("Error subscribing to chat:", error);
         // If this fails, we might need to reconnect
@@ -175,11 +189,11 @@ export default function MessagesPage() {
   };
 
   const sendMessageToServer = (newMessage) => {
-    if (!stompClient || !newMessage || !currentChat) return;
+    if (!stompClientRef.current || !newMessage || !currentChat) return;
 
     try {
-      if (stompClient.connected) {
-        stompClient.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
+      if (stompClientRef.current.connected) {
+        stompClientRef.current.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
       } else {
         console.error("STOMP client not connected, attempting to reconnect");
         setupStompClient();
@@ -200,16 +214,21 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    if (stompClient && user && currentChat && isConnected) {
+    if (stompClientRef.current && user && currentChat && isConnected) {
       subscribeToChat();
     }
-  }, [stompClient, user, currentChat, isConnected]);
+  }, [user, currentChat, isConnected]);
 
   useEffect(() => {
     if (currentChat) {
       dispatch(fetchChatMessages(currentChat.id));
     }
   }, [currentChat, dispatch]);
+
+  const messages = useMemo(() => {
+    if (!rawMessages) return [];
+    return [...rawMessages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  }, [rawMessages]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -268,10 +287,12 @@ export default function MessagesPage() {
                     placeholder="Type a message"
                     sx={{ flexGrow: 1, mr: 2 }}
                     variant="outlined"
-                    onKeyPress={async (e) => {
-                      if (e.key === "Enter" && e.target.value) {
-                        await handleCreateMessage(e.target.value);
-                        e.target.value = "";
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        await handleCreateMessage(messageText);
                       }
                     }}
                   />
@@ -284,16 +305,12 @@ export default function MessagesPage() {
                   <Button
                     variant="contained"
                     color="primary"
-                    disabled={loading}
+                    disabled={isSending}
                     onClick={async () => {
-                      const input = document.querySelector('input[placeholder="Type a message"]');
-                      if (input.value) {
-                        await handleCreateMessage(input.value);
-                        input.value = "";
-                      }
+                      await handleCreateMessage(messageText);
                     }}
                   >
-                    {loading ? <CircularProgress size={24} /> : "Send"}
+                    {isSending ? <CircularProgress size={24} /> : "Send"}
                   </Button>
                 </Box>
               </Box>

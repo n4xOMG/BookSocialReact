@@ -34,9 +34,17 @@ export default function NovelChapterDetail({
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [themeMode, setThemeMode] = useState(() => {
-    return localStorage.getItem("themeMode") || "light";
+    return localStorage.getItem("readerThemeMode") || "light";
   });
   const { checkAuth, AuthDialog } = useAuthCheck();
+
+  // Load theme from localStorage on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("readerThemeMode");
+    if (savedTheme && savedTheme !== themeMode) {
+      setThemeMode(savedTheme);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const saveProgress = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -134,7 +142,7 @@ export default function NovelChapterDetail({
   }, [debouncedSaveProgress]);
   const handleThemeModeChange = (value) => {
     setThemeMode(value);
-    localStorage.setItem("themeMode", value);
+    localStorage.setItem("readerThemeMode", value);
   };
   return (
     <>

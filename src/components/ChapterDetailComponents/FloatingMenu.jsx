@@ -58,10 +58,10 @@ export default function FloatingMenu({
   // Load theme from localStorage on component mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("readerThemeMode");
-    if (savedTheme && savedTheme !== themeMode) {
+    if (savedTheme && savedTheme !== themeMode && onThemeModeChange) {
       onThemeModeChange(savedTheme);
     }
-  }, []);
+  }, [themeMode, onThemeModeChange]);
 
   const handleFullScreen = () => {
     if (document.fullscreenElement) {

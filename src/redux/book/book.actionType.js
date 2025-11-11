@@ -81,3 +81,7 @@ export const GET_BOOKS_BY_MONTH_FAILED = "GET_BOOKS_BY_MONTH_FAILED";
 
 // Add this new action type to your existing action types
 export const RESET_BOOK_DETAIL = "RESET_BOOK_DETAIL";
+
+export const RECORD_BOOK_VIEW_REQUEST = "RECORD_BOOK_VIEW_REQUEST";
+export const RECORD_BOOK_VIEW_SUCCESS = "RECORD_BOOK_VIEW_SUCCESS";
+export const RECORD_BOOK_VIEW_FAILED = "RECORD_BOOK_VIEW_FAILED";

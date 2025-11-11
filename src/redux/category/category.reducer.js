@@ -48,29 +48,58 @@ export const categoryReducer = (state = initialState, action) => {
       return { ...state, loading: true, error: null };
 
     case GET_TOP_CATEGORIES_SUCCESS:
-      return { ...state, loading: false, topCategories: action.payload };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        topCategories: Array.isArray(action.payload) ? action.payload : [],
+      };
 
     case GET_CATEGORY_BY_BOOK_SUCCESS:
-      return { ...state, loading: false, categoryByBook: action.payload };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        categoryByBook: Array.isArray(action.payload) ? action.payload : [],
+      };
     case GET_BOOKS_BY_CATEGORY_SUCCESS:
-      return { ...state, loading: false, booksByCategory: action.payload };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        booksByCategory: action.payload && typeof action.payload === "object" ? action.payload : {},
+      };
 
     case GET_CATEGORIES_SUCCESS:
-      return { ...state, loading: false, categories: action.payload };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        categories: Array.isArray(action.payload) ? action.payload : [],
+      };
     case GET_CATEGORY_SUCCESS:
-      return { ...state, loading: false, category: action.payload };
+      return { ...state, loading: false, error: null, category: action.payload || null };
     case ADD_CATEGORY_SUCCESS:
-      return { ...state, loading: false, categories: [...state.categories, action.payload] };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        categories: action.payload ? [...state.categories, action.payload] : state.categories,
+      };
     case EDIT_CATEGORY_SUCCESS:
       return {
         ...state,
         loading: false,
-        categories: state.categories.map((category) => (category.id === action.payload.id ? action.payload : category)),
+        error: null,
+        categories: action.payload
+          ? state.categories.map((category) => (category.id === action.payload.id ? action.payload : category))
+          : state.categories,
       };
     case DELETE_CATEGORY_SUCCESS:
       return {
         ...state,
         loading: false,
+        error: null,
         categories: state.categories.filter((category) => category.id !== action.payload),
       };
 

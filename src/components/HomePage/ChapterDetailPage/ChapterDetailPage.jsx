@@ -37,17 +37,17 @@ const useChapterData = () => {
 
     try {
       // Fetch chapter details
-      const chapterResponse = await dispatch(getChapterById(jwt, chapterId));
+      const chapterResponse = await dispatch(getChapterById(chapterId));
       if (chapterResponse.payload?.error) {
         setError(chapterResponse.payload.error);
         return;
       }
 
       // Fetch all chapters for navigation
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+      await dispatch(getAllChaptersByBookIdAction(bookId));
 
       // Fetch book details
-      await dispatch(getBookByIdAction(jwt, bookId));
+      await dispatch(getBookByIdAction(bookId));
 
       // Fetch categories
       await dispatch(getCategories());
@@ -130,8 +130,8 @@ const useBookType = (book, categories) => {
     }
 
     const categoryName = bookCategory.name.toLowerCase();
-    const isManga = categoryName.includes("manga") || categoryName.includes("comic");
-    const isNovel = categoryName.includes("novel") || categoryName.includes("book") || categoryName.includes("story");
+    const isManga = categoryName.includes("manga") || categoryName.includes("comic") || categoryName.includes("image");
+    const isNovel = categoryName.includes("novel") || categoryName.includes("text") || categoryName.includes("story");
 
     return { isManga, isNovel, isValid: isManga || isNovel };
   }, [book, categories]);

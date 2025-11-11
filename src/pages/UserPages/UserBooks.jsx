@@ -22,8 +22,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { debounce } from "lodash";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import AddMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/AddMangaChapterModal";
@@ -33,7 +32,6 @@ import DeleteChapterModal from "../../components/AdminPage/Dashboard/BooksTab/Ch
 import EditChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditChapterModal";
 import EditMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditMangaChapterModal";
 import EditBookDialog from "../../components/AdminPage/Dashboard/BooksTab/EditBookDialog";
-import Sidebar from "../../components/HomePage/Sidebar";
 import { BookList } from "../../components/UserBooks/BookList";
 import { FilterChip } from "../../components/UserBooks/FilterChip";
 import FilterDrawer from "../../components/UserBooks/FilterDrawer";
@@ -44,6 +42,14 @@ import { clearChapters, manageChapterByBookId } from "../../redux/chapter/chapte
 import { getTags } from "../../redux/tag/tag.action";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
+const PAGE_SIZE = 10;
+const createInitialFilters = () => ({
+  categories: [],
+  tags: [],
+  sortBy: "title",
+  sortOrder: "asc",
+});
+
 const UserBooks = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -52,79 +58,113 @@ const UserBooks = () => {
   const { booksByAuthor, booksByAuthorPage, booksByAuthorHasMore, book } = useSelector((store) => store.book);
   const { chapters } = useSelector((store) => store.chapter);
   const { user } = useSelector((store) => store.auth);
-  const { tags } = useSelector((store) => store.tag);
-  const { categories } = useSelector((store) => store.category);
+  const { tags = [] } = useSelector((store) => store.tag);
+  const { categories = [] } = useSelector((store) => store.category);
+
   const [openModal, setOpenModal] = useState({ type: null, data: null });
-  const [loading, setLoading] = useState(false);
+  const [isListLoading, setIsListLoading] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState(null);
-  const observer = useRef();
-  const PAGE_SIZE = 10;
-
-  // New states for search and filtering
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [openFilterDrawer, setOpenFilterDrawer] = useState(false);
-  const [filterOptions, setFilterOptions] = useState({
-    categories: [],
-    tags: [],
-    sortBy: "title",
-    sortOrder: "asc",
-  });
-  const [filteredBooks, setFilteredBooks] = useState([]);
+  const [filterOptions, setFilterOptions] = useState(() => createInitialFilters());
+  const observer = useRef(null);
+
+  const { categories: selectedCategories, tags: selectedTags, sortBy, sortOrder } = filterOptions;
+
+  const hasActiveFilters = Boolean(searchQuery.trim() || selectedCategories.length || selectedTags.length);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim());
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const handleOpenModal = (type, data = null) => {
-    setLoading(false);
     setOpenModal({ type, data });
   };
   const handleCloseModal = () => setOpenModal({ type: null, data: null });
 
-  // Handle search input changes
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Clear search query
   const handleClearSearch = () => {
     setSearchQuery("");
   };
 
-  // Handle filter changes
   const handleFilterChange = (newFilters) => {
-    setFilterOptions({
-      ...filterOptions,
+    setFilterOptions((prev) => ({
+      ...prev,
       ...newFilters,
-    });
+    }));
   };
 
-  // Handle sort option changes
   const handleSortChange = (event) => {
-    setFilterOptions({
-      ...filterOptions,
+    setFilterOptions((prev) => ({
+      ...prev,
       sortBy: event.target.value,
-    });
+    }));
   };
 
-  // Handle sort direction change
   const handleSortOrderChange = () => {
-    setFilterOptions({
-      ...filterOptions,
-      sortOrder: filterOptions.sortOrder === "asc" ? "desc" : "asc",
-    });
+    setFilterOptions((prev) => ({
+      ...prev,
+      sortOrder: prev.sortOrder === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setFilterOptions(createInitialFilters());
   };
 
   const toggleFilterDrawer = () => {
-    setOpenFilterDrawer(!openFilterDrawer);
+    setOpenFilterDrawer((prev) => !prev);
   };
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const handleSidebarToggle = () => {
-    setSidebarOpen((prev) => !prev);
-  };
+  const loadMoreBooks = useCallback(async () => {
+    if (!user?.id || !booksByAuthorHasMore || loadingMore || isListLoading) return;
 
-  // Last element ref for infinite scrolling
+    try {
+      setLoadingMore(true);
+      await dispatch(
+        getBooksByAuthorAction({
+          query: debouncedQuery,
+          page: booksByAuthorPage + 1,
+          size: PAGE_SIZE,
+          categories: selectedCategories,
+          tags: selectedTags,
+          sortBy,
+          sortDir: sortOrder,
+        })
+      );
+    } catch (error) {
+      console.error("Error loading more books:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [
+    dispatch,
+    user?.id,
+    booksByAuthorHasMore,
+    booksByAuthorPage,
+    loadingMore,
+    isListLoading,
+    debouncedQuery,
+    selectedCategories,
+    selectedTags,
+    sortBy,
+    sortOrder,
+  ]);
+
   const lastBookElementRef = useCallback(
     (node) => {
-      if (loading || loadingMore) return;
+      if (isListLoading || loadingMore || !booksByAuthorHasMore) return;
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
@@ -135,165 +175,100 @@ const UserBooks = () => {
 
       if (node) observer.current.observe(node);
     },
-    [loading, loadingMore, booksByAuthorHasMore]
+    [isListLoading, loadingMore, booksByAuthorHasMore, loadMoreBooks]
   );
-
-  // Load more books function
-  const loadMoreBooks = async () => {
-    if (!user?.id || !booksByAuthorHasMore || loadingMore) return;
-
-    try {
-      setLoadingMore(true);
-      await dispatch(getBooksByAuthorAction(user.id, booksByAuthorPage + 1, PAGE_SIZE, filterOptions));
-    } catch (error) {
-      console.error("Error loading more books:", error);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  // Apply filters and sorting to books
-  useEffect(() => {
-    if (booksByAuthor.length === 0) return;
-
-    let result = [...booksByAuthor];
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (book) => book.title.toLowerCase().includes(query) || (book.description && book.description.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply category filter
-    if (filterOptions.categories.length > 0) {
-      result = result.filter((book) => filterOptions.categories.includes(book.categoryId));
-    }
-
-    // Apply tag filter
-    if (filterOptions.tags.length > 0) {
-      result = result.filter((book) => book.tagIds && book.tagIds.some((tagId) => filterOptions.tags.includes(tagId)));
-    }
-
-    // Apply sorting
-    result.sort((a, b) => {
-      let compareResult = 0;
-
-      switch (filterOptions.sortBy) {
-        case "title":
-          compareResult = a.title.localeCompare(b.title);
-          break;
-        case "uploadDate":
-          compareResult = new Date(a.uploadDate) - new Date(b.uploadDate);
-          break;
-        case "chapterCount":
-          compareResult = a.chapterCount - b.chapterCount;
-          break;
-        case "avgRating":
-          compareResult = (a.avgRating || 0) - (b.avgRating || 0);
-          break;
-        case "viewCount":
-          compareResult = a.viewCount - b.viewCount;
-          break;
-        case "favCount":
-          compareResult = a.favCount - b.favCount;
-          break;
-        default:
-          compareResult = a.title.localeCompare(b.title);
-      }
-
-      return filterOptions.sortOrder === "asc" ? compareResult : -compareResult;
-    });
-
-    setFilteredBooks(result);
-
-    // If the currently selected book is not in filtered results and there are books after filtering,
-    // select the first book from the filtered results
-    if (result.length > 0 && !result.some((book) => book.id === selectedBookId)) {
-      setSelectedBookId(result[0].id);
-    }
-  }, [booksByAuthor, searchQuery, filterOptions, selectedBookId]);
 
   useEffect(() => {
     dispatch(clearChapters());
   }, [dispatch]);
 
   useEffect(() => {
-    const fetchBookInfo = async () => {
-      setLoading(true);
+    if (!tags.length) {
+      dispatch(getTags());
+    }
+    if (!categories.length) {
+      dispatch(getCategories());
+    }
+  }, [dispatch, tags.length, categories.length]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let cancelled = false;
+
+    const fetchBooks = async () => {
+      setIsListLoading(true);
       try {
-        if (!tags || !categories) {
-          await dispatch(getTags());
-          await dispatch(getCategories());
-        }
-        // Use pagination when fetching initial books
-        await dispatch(getBooksByAuthorAction(user?.id, 0, PAGE_SIZE, filterOptions));
-      } catch (e) {
-        console.log("Error trying to get all books by user: ", e);
+        await dispatch(
+          getBooksByAuthorAction({
+            query: debouncedQuery,
+            page: 0,
+            size: PAGE_SIZE,
+            categories: selectedCategories,
+            tags: selectedTags,
+            sortBy,
+            sortDir: sortOrder,
+          })
+        );
+      } catch (error) {
+        console.error("Error loading books:", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setIsListLoading(false);
+        }
       }
     };
-    fetchBookInfo();
-  }, [dispatch, filterOptions]);
 
-  // Reload books when filters change
+    fetchBooks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, user?.id, debouncedQuery, selectedCategories, selectedTags, sortBy, sortOrder]);
+
   useEffect(() => {
-    if (user?.id) {
-      const reloadWithFilters = async () => {
-        setLoading(true);
-        try {
-          // Reset pagination and get first page with new filters
-          await dispatch(getBooksByAuthorAction(user.id, 0, PAGE_SIZE, filterOptions));
-        } catch (e) {
-          console.log("Error trying to filter books: ", e);
-        } finally {
-          setLoading(false);
-        }
-      };
-      reloadWithFilters();
+    if (!booksByAuthor.length) {
+      setSelectedBookId(null);
+      return;
     }
-  }, [filterOptions, dispatch, user?.id]);
 
-  useEffect(() => {
-    if (booksByAuthor.length > 0 && !selectedBookId) {
+    if (!selectedBookId || !booksByAuthor.some((item) => item.id === selectedBookId)) {
       setSelectedBookId(booksByAuthor[0].id);
-      setFilteredBooks(booksByAuthor);
     }
   }, [booksByAuthor, selectedBookId]);
 
-  const debouncedSetSelectedBookId = useCallback(
-    debounce((id) => setSelectedBookId(id), 300),
-    []
-  );
+  const handleSelectBook = useCallback((id) => {
+    setSelectedBookId(id);
+  }, []);
 
   useEffect(() => {
-    if (selectedBookId) {
-      const fetchChapterById = async () => {
-        setLoading(true);
-        try {
-          await dispatch(manageChapterByBookId(selectedBookId));
-        } catch (e) {
-          console.log("Error trying to get all chapters in manage book page: ", e);
-        } finally {
-          setLoading(false);
-        }
-      };
-      const fetchBookInfo = async () => {
-        setLoading(true);
-        try {
-          await dispatch(getBookByIdAction(null, selectedBookId));
-        } catch (e) {
-          console.log("Error trying to book by id in manage book page: ", e);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchBookInfo();
-      fetchChapterById();
+    if (!selectedBookId) {
+      dispatch(clearChapters());
+      setIsDetailLoading(false);
+      return;
     }
-  }, [selectedBookId, dispatch]);
+
+    let cancelled = false;
+
+    const fetchDetails = async () => {
+      setIsDetailLoading(true);
+      try {
+        await Promise.all([dispatch(getBookByIdAction(null, selectedBookId)), dispatch(manageChapterByBookId(selectedBookId))]);
+      } catch (error) {
+        console.error("Error loading book details:", error);
+      } finally {
+        if (!cancelled) {
+          setIsDetailLoading(false);
+        }
+      }
+    };
+
+    fetchDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, selectedBookId]);
 
   const getTagsByIds = (tagIds = []) => {
     if (!Array.isArray(tagIds)) {
@@ -303,31 +278,34 @@ const UserBooks = () => {
     return tags.filter((tag) => tagIds.includes(tag.id));
   };
 
-  // Get selected tag and category objects for displaying as filter chips
-  const getSelectedTags = () => {
-    return tags.filter((tag) => filterOptions.tags.includes(tag.id));
-  };
+  const selectedTagChips = useMemo(() => tags.filter((tag) => selectedTags.includes(tag.id)), [tags, selectedTags]);
 
-  const getSelectedCategories = () => {
-    return categories.filter((category) => filterOptions.categories.includes(category.id));
-  };
+  const selectedCategoryChips = useMemo(
+    () => categories.filter((category) => selectedCategories.includes(category.id)),
+    [categories, selectedCategories]
+  );
 
-  // Remove a filter chip
   const handleRemoveFilter = (type, id) => {
     if (type === "category") {
-      setFilterOptions({
-        ...filterOptions,
-        categories: filterOptions.categories.filter((catId) => catId !== id),
-      });
+      setFilterOptions((prev) => ({
+        ...prev,
+        categories: prev.categories.filter((catId) => catId !== id),
+      }));
     } else if (type === "tag") {
-      setFilterOptions({
-        ...filterOptions,
-        tags: filterOptions.tags.filter((tagId) => tagId !== id),
-      });
+      setFilterOptions((prev) => ({
+        ...prev,
+        tags: prev.tags.filter((tagId) => tagId !== id),
+      }));
     }
   };
 
-  const isManga = getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "manga");
+  const isManga = useMemo(() => {
+    const tagNames = (book?.tagNames || []).map((name) => name?.toLowerCase());
+    if (tagNames.includes("manga")) {
+      return true;
+    }
+    return getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "manga");
+  }, [book, tags]);
 
   return (
     <Box
@@ -395,7 +373,6 @@ const UserBooks = () => {
                   width: "100%",
                   boxSizing: "border-box",
                   backgroundColor: theme.palette.background.paper,
-                  
                 }}
               >
                 <Grid container spacing={1} alignItems="center" sx={{ p: 1 }}>
@@ -474,9 +451,9 @@ const UserBooks = () => {
               </Box>
 
               {/* Active Filters Display */}
-              {(filterOptions.categories.length > 0 || filterOptions.tags.length > 0) && (
+              {(selectedCategories.length > 0 || selectedTags.length > 0) && (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5, maxHeight: 60, overflow: "auto" }}>
-                  {getSelectedCategories().map((category) => (
+                  {selectedCategoryChips.map((category) => (
                     <FilterChip
                       key={`category-${category.id}`}
                       label={category.name}
@@ -484,7 +461,7 @@ const UserBooks = () => {
                       onDelete={() => handleRemoveFilter("category", category.id)}
                     />
                   ))}
-                  {getSelectedTags().map((tag) => (
+                  {selectedTagChips.map((tag) => (
                     <FilterChip
                       key={`tag-${tag.id}`}
                       label={tag.name}
@@ -494,18 +471,17 @@ const UserBooks = () => {
                   ))}
                 </Box>
               )}
-
               <Box sx={{ flex: 1, overflow: "auto" }}>
-                {loading && !filteredBooks.length ? (
+                {isListLoading && !booksByAuthor.length ? (
                   <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
                     <CircularProgress />
                   </Box>
-                ) : filteredBooks.length > 0 ? (
+                ) : booksByAuthor.length > 0 ? (
                   <>
                     <BookList
-                      books={filteredBooks}
+                      books={booksByAuthor}
                       selectedBookId={selectedBookId}
-                      onSelectBook={debouncedSetSelectedBookId}
+                      onSelectBook={handleSelectBook}
                       onEditBook={(book) => handleOpenModal("editBook", book)}
                       onDeleteBook={(book) => handleOpenModal("deleteBook", book)}
                       lastBookElementRef={lastBookElementRef}
@@ -516,7 +492,7 @@ const UserBooks = () => {
                       </Box>
                     )}
                   </>
-                ) : booksByAuthor.length > 0 ? (
+                ) : hasActiveFilters ? (
                   <Box
                     sx={{
                       display: "flex",
@@ -530,19 +506,7 @@ const UserBooks = () => {
                     <Typography variant="body1" color="text.secondary">
                       No books match your filter criteria
                     </Typography>
-                    <Button
-                      variant="outlined"
-                      startIcon={<ClearIcon />}
-                      onClick={() => {
-                        setSearchQuery("");
-                        setFilterOptions({
-                          categories: [],
-                          tags: [],
-                          sortBy: "title",
-                          sortOrder: "asc",
-                        });
-                      }}
-                    >
+                    <Button variant="outlined" startIcon={<ClearIcon />} onClick={handleClearFilters}>
                       Clear Filters
                     </Button>
                   </Box>
@@ -624,7 +588,7 @@ const UserBooks = () => {
               </Box>
               <Divider sx={{ mb: 2, borderColor: "divider" }} />
               <Box sx={{ flex: 1, overflow: "hidden" }}>
-                {loading ? (
+                {isDetailLoading ? (
                   <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
                     <CircularProgress />
                   </Box>
@@ -700,7 +664,7 @@ const UserBooks = () => {
         onFilterChange={handleFilterChange}
       />
 
-      <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
+      <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isDetailLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>
     </Box>

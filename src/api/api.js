@@ -1,10 +1,15 @@
 import axios from "axios";
 import { EventEmitter } from "events";
+import { isTokenExpired } from "../utils/useAuthCheck";
 
 export const apiEvents = new EventEmitter();
+apiEvents.setMaxListeners(20);
+
 export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8181";
 
-// Create an axios instance for auth-related requests that don't need token
+// ==============================================================================
+// AUTH API - For authentication requests that don't need token
+// ==============================================================================
 export const authApi = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -12,7 +17,9 @@ export const authApi = axios.create({
   },
 });
 
-// Main API instance for authenticated requests
+// ==============================================================================
+// MAIN API - For authenticated requests with token refresh
+// ==============================================================================
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -60,8 +67,10 @@ api.interceptors.response.use(
 
     // Handle rate limiting
     if (error.response && error.response.status === 429) {
-      const retryAfter = error.response.headers["retry-after"] || 60;
-      apiEvents.emit("rateLimitExceeded", { retryAfter });
+      const retryAfter = error.response.headers["retry-after"] || error.response.headers["x-rate-limit-retry-after-seconds"] || 60;
+      apiEvents.emit("rateLimitExceeded", {
+        retryAfter: typeof retryAfter === "string" ? parseInt(retryAfter, 10) : retryAfter,
+      });
       return Promise.reject(error);
     }
 
@@ -101,15 +110,18 @@ api.interceptors.response.use(
           }
         );
 
-        if (response.data.token) {
-          localStorage.setItem("jwt", response.data.token);
+        // Backend sends token in 'data' field: { message, success, data: token }
+        const newToken = response.data?.data || response.data?.token;
+
+        if (newToken) {
+          localStorage.setItem("jwt", newToken);
           localStorage.setItem("tokenTimestamp", Date.now().toString());
 
           // Update original request auth header
-          originalRequest.headers["Authorization"] = `Bearer ${response.data.token}`;
+          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
 
           // Process queue with new token
-          processQueue(null, response.data.token);
+          processQueue(null, newToken);
 
           return api(originalRequest);
         }
@@ -131,3 +143,65 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ==============================================================================
+// HTTP CLIENT - Alternative client with token expiry check (no auto-refresh)
+// ==============================================================================
+const httpClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Add response interceptor to handle rate limiting
+httpClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 429) {
+      const retryAfter = error.response.headers["retry-after"] || error.response.headers["x-rate-limit-retry-after-seconds"] || 60;
+      apiEvents.emit("rateLimitExceeded", {
+        retryAfter: typeof retryAfter === "string" ? parseInt(retryAfter, 10) : retryAfter,
+      });
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Add request interceptor to include auth token
+httpClient.interceptors.request.use(
+  (config) => {
+    if (!config) {
+      return config;
+    }
+
+    const useAuth = config.useAuth !== false;
+    if (!config.headers) {
+      config.headers = {};
+    }
+
+    if (!useAuth) {
+      delete config.headers.Authorization;
+      delete config.useAuth;
+      return config;
+    }
+
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("jwt") : null;
+      if (token && !isTokenExpired(token)) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        delete config.headers.Authorization;
+      }
+    } catch (err) {
+      delete config.headers.Authorization;
+    }
+
+    delete config.useAuth;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Default export for backward compatibility (was apiClient)
+export default httpClient;

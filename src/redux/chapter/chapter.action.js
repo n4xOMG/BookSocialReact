@@ -1,4 +1,5 @@
-import axios from "axios";
+import httpClient from "../../api/api";
+import { createLogger } from "../../utils/logger";
 import { api, API_BASE_URL } from "../../api/api";
 import {
   CHAPTER_UPLOAD_FAILED,
@@ -45,16 +46,28 @@ import {
   UNLOCK_CHAPTER_SUCCESS,
 } from "./chapter.actionType";
 
-export const getAllChaptersByBookIdAction = (jwt, bookId) => async (dispatch) => {
+const logger = createLogger("ChapterActions");
+
+const parseApiResponse = (response) => ({
+  data: response?.data?.data,
+  message: response?.data?.message,
+  success: response?.data?.success,
+});
+
+const getErrorMessage = (error) => error?.response?.data?.message || error.message || "An unexpected error occurred.";
+
+export const getAllChaptersByBookIdAction = (bookId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
 
   try {
-    const apiClient = jwt ? api : axios; // Choose the API client based on `jwt`
-    const { data } = await apiClient.get(`${API_BASE_URL}/books/${bookId}/chapters`);
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data });
-    return { payload: data };
+    const response = await httpClient.get(`${API_BASE_URL}/books/${bookId}/chapters`);
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data || [] });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 
@@ -62,141 +75,179 @@ export const manageChapterByBookId = (bookId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
 
   try {
-    const { data } = await api.get(`${API_BASE_URL}/api/books/${bookId}/chapters`);
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data });
-    return { payload: data };
+    const response = await api.get(`${API_BASE_URL}/api/books/${bookId}/chapters`);
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data || [] });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 
 export const getChaptersByBookAndLanguageAction = (bookId, languageId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/chapters/languages/${languageId}`);
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_SUCCESS, payload: data });
-    return { payload: data };
+    const response = await httpClient.get(`${API_BASE_URL}/books/${bookId}/chapters/languages/${languageId}`);
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_SUCCESS, payload: data || [] });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
-export const getChapterById = (jwt, chapterId) => async (dispatch) => {
+export const getChapterById = (chapterId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTER_REQUEST });
   try {
-    const apiClient = jwt ? api : axios; // Choose the API client based on `jwt`
-    const { data } = await apiClient.get(`${API_BASE_URL}/chapters/${chapterId}`);
+    const response = await httpClient.get(`${API_BASE_URL}/chapters/${chapterId}`);
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: GET_CHAPTER_SUCCESS, payload: data });
 
-    console.log("Chapter: ", data);
-    return { payload: data };
+    logger.info("Chapter: ", data);
+    return { payload: data, message, success };
   } catch (error) {
-    console.log("Api error when trying to retreiving chapter: ", error.response?.status);
+    logger.info("Api error when trying to retreiving chapter: ", error.response?.status);
     if (error.response?.status === 403) {
       dispatch({ type: GET_CHAPTER_FAILED, payload: "You need to unlock this chapter to read it" });
       return { payload: { error: "You need to unlock this chapter to read it" } };
     }
-    dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: GET_CHAPTER_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const getChapterByRoomId = (roomId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTER_REQUEST });
-  console.log("Inside getChapterByRoomId Room ID: ", roomId);
+  logger.info("Inside getChapterByRoomId Room ID: ", roomId);
   try {
-    console.log("API_BASE_URL: ", API_BASE_URL);
-    const { data } = await api.get(`${API_BASE_URL}/api/chapters/room/${roomId}`);
+    logger.info("API_BASE_URL: ", API_BASE_URL);
+    const response = await api.get(`${API_BASE_URL}/api/chapters/room/${roomId}`);
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: GET_CHAPTER_SUCCESS, payload: data });
 
-    console.log("Chapter: ", data);
-    return { payload: data };
+    logger.info("Chapter: ", data);
+    return { payload: data, message, success };
   } catch (error) {
-    console.log("Api error when trying to retreiving chapter: ", error);
-
-    dispatch({ type: GET_CHAPTER_FAILED, payload: error.message });
+    logger.info("Api error when trying to retreiving chapter: ", error);
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: GET_CHAPTER_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const addDraftChapterAction = (bookId, chapterData) => async (dispatch) => {
   dispatch({ type: CHAPTER_UPLOAD_REQUEST });
-  console.log("Chapter Data: ", chapterData);
+  logger.info("Chapter Data: ", chapterData);
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters/draft`, chapterData);
+    const response = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters/draft`, chapterData);
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: CHAPTER_UPLOAD_SUCCEED, payload: data });
-    return { payload: data };
+    return { payload: data, message, success };
   } catch (error) {
-    console.log("Api error when trying to add new chapter: ", error);
-    dispatch({ type: CHAPTER_UPLOAD_FAILED, payload: error.message });
+    logger.info("Api error when trying to add new chapter: ", error);
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: CHAPTER_UPLOAD_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const publishChapterAction = (bookId, chapterData) => async (dispatch) => {
   dispatch({ type: CHAPTER_UPLOAD_REQUEST });
-  console.log("Chapter Data: ", chapterData);
+  logger.info("Chapter Data: ", chapterData);
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters`, chapterData);
+    const response = await api.post(`${API_BASE_URL}/api/books/${bookId}/chapters`, chapterData);
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: CHAPTER_UPLOAD_SUCCEED, payload: data });
-    return { payload: data };
+    return { payload: data, message, success };
   } catch (error) {
-    console.log("Api error when trying to add new chapter: ", error);
-    dispatch({ type: CHAPTER_UPLOAD_FAILED, payload: error.message });
+    logger.info("Api error when trying to add new chapter: ", error);
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: CHAPTER_UPLOAD_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const editChapterAction = (chapterData) => async (dispatch) => {
   dispatch({ type: EDIT_CHAPTER_REQUEST });
-  console.log("Edit Chapter Data: ", chapterData.id);
+  logger.info("Edit Chapter Data: ", chapterData.id);
   try {
-    const { data } = await api.put(`${API_BASE_URL}/api/chapters/${chapterData.id}`, chapterData);
+    const response = await api.put(`${API_BASE_URL}/api/chapters/${chapterData.id}`, chapterData);
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: EDIT_CHAPTER_SUCCEED, payload: data });
+    return { payload: data, message, success };
   } catch (error) {
-    console.log("Api error when trying to add new chapter: ", error.message);
-    dispatch({ type: EDIT_CHAPTER_FAILED, payload: error.message });
+    logger.info("Api error when trying to add new chapter: ", error.message);
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: EDIT_CHAPTER_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const deleteChapterAction = (chapterId) => async (dispatch) => {
   dispatch({ type: DELETE_CHAPTER_REQUEST });
   try {
-    const { data } = await api.delete(`${API_BASE_URL}/api/chapters/${chapterId}`);
-    dispatch({ type: DELETE_CHAPTER_SUCCEED, payload: data });
+    const response = await api.delete(`${API_BASE_URL}/api/chapters/${chapterId}`);
+    const { message, success } = parseApiResponse(response);
+    dispatch({ type: DELETE_CHAPTER_SUCCEED, payload: chapterId });
+    return { payload: chapterId, message, success };
   } catch (error) {
-    console.log("Api error when trying to delete chapter: ", error.message);
-    dispatch({ type: DELETE_CHAPTER_FAILED, payload: error.message });
+    logger.info("Api error when trying to delete chapter: ", error.message);
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: DELETE_CHAPTER_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const saveChapterProgressAction = (chapterId, userId, progress) => async (dispatch) => {
   dispatch({ type: SAVE_PROGRESS_REQUEST });
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/chapters/${chapterId}/progress`, { userId, progress });
+    const response = await api.post(`${API_BASE_URL}/api/chapters/${chapterId}/progress`, { userId, progress });
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: SAVE_PROGRESS_SUCCESS, payload: data });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: SAVE_PROGRESS_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: SAVE_PROGRESS_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const getReadingProgressByUserAndChapter = (chapterId) => async (dispatch) => {
   dispatch({ type: GET_PROGRESS_REQUEST });
   try {
-    const { data } = await api.get(`${API_BASE_URL}/api/reading-progress/chapters/${chapterId}`);
+    const response = await api.get(`${API_BASE_URL}/api/reading-progress/chapters/${chapterId}`);
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: GET_PROGRESS_SUCCESS, payload: data });
-    return { payload: data };
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: GET_PROGRESS_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: GET_PROGRESS_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const unlockChapterAction = (chapterId) => async (dispatch) => {
   dispatch({ type: UNLOCK_CHAPTER_REQUEST });
   try {
-    const { data } = await api.post(`${API_BASE_URL}/api/unlock/${chapterId}`);
-    dispatch({ type: UNLOCK_CHAPTER_SUCCESS, payload: data });
-    console.log("Chapter unlocked: ", data);
+    const response = await api.post(`${API_BASE_URL}/api/unlock/${chapterId}`);
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: UNLOCK_CHAPTER_SUCCESS, payload: data, meta: { chapterId } });
+    logger.info("Chapter unlocked: ", data);
+    return { payload: data, message, success };
   } catch (error) {
-    console.log("Api error when trying to unlock chapter: ", error.message);
-    dispatch({ type: UNLOCK_CHAPTER_FAILED, payload: error.message });
+    logger.info("Api error when trying to unlock chapter: ", error.message);
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: UNLOCK_CHAPTER_FAILED, payload: errorMessage });
+    return { error: errorMessage };
   }
 };
 export const createPaymentIntent = (purchaseRequest) => async (dispatch) => {
   dispatch({ type: CREATE_PAYMENT_INTENT_REQUEST });
   try {
     const response = await api.post(`${API_BASE_URL}/api/payments/create-payment-intent`, purchaseRequest);
-    dispatch({ type: CREATE_PAYMENT_INTENT_SUCCESS, payload: response.data });
-    return response.data;
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: CREATE_PAYMENT_INTENT_SUCCESS, payload: data });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: CREATE_PAYMENT_INTENT_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: CREATE_PAYMENT_INTENT_FAILED, payload: errorMessage });
+    error.message = errorMessage;
     throw error;
   }
 };
@@ -205,9 +256,11 @@ export const createPaymentIntent = (purchaseRequest) => async (dispatch) => {
 export const confirmPayment = (confirmPaymentRequest) => async (dispatch) => {
   try {
     const response = await api.post(`${API_BASE_URL}/api/payments/confirm-payment`, confirmPaymentRequest);
-
-    return response.data;
+    const { data, message, success } = parseApiResponse(response);
+    return { payload: data, message, success };
   } catch (error) {
+    const errorMessage = getErrorMessage(error);
+    error.message = errorMessage;
     throw error;
   }
 };
@@ -217,11 +270,14 @@ export const clearChapters = () => ({
 export const likeChapterAction = (chapterId) => async (dispatch) => {
   dispatch({ type: LIKE_CHAPTER_REQUEST });
   try {
-    const { data } = await api.put(`${API_BASE_URL}/api/chapters/${chapterId}/like`);
+    const response = await api.put(`${API_BASE_URL}/api/chapters/${chapterId}/like`);
+    const { data, message, success } = parseApiResponse(response);
     dispatch({ type: LIKE_CHAPTER_SUCCESS, payload: data });
-    return { payload: data };
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: LIKE_CHAPTER_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: LIKE_CHAPTER_FAILED, payload: errorMessage });
+    error.message = errorMessage;
     throw error;
   }
 };
@@ -231,10 +287,13 @@ export const getPaymentProviders = () => async (dispatch) => {
   dispatch({ type: GET_PAYMENT_PROVIDERS_REQUEST });
   try {
     const response = await api.get(`${API_BASE_URL}/api/payments/providers`);
-    dispatch({ type: GET_PAYMENT_PROVIDERS_SUCCESS, payload: response.data });
-    return response.data;
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: GET_PAYMENT_PROVIDERS_SUCCESS, payload: data });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: GET_PAYMENT_PROVIDERS_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: GET_PAYMENT_PROVIDERS_FAILED, payload: errorMessage });
+    error.message = errorMessage;
     throw error;
   }
 };
@@ -244,10 +303,13 @@ export const createPayment = (purchaseRequest) => async (dispatch) => {
   dispatch({ type: CREATE_PAYMENT_REQUEST });
   try {
     const response = await api.post(`${API_BASE_URL}/api/payments/create-payment`, purchaseRequest);
-    dispatch({ type: CREATE_PAYMENT_SUCCESS, payload: response.data });
-    return response.data;
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: CREATE_PAYMENT_SUCCESS, payload: data });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: CREATE_PAYMENT_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: CREATE_PAYMENT_FAILED, payload: errorMessage });
+    error.message = errorMessage;
     throw error;
   }
 };
@@ -257,10 +319,13 @@ export const confirmUnifiedPayment = (confirmPaymentRequest) => async (dispatch)
   dispatch({ type: CONFIRM_PAYMENT_REQUEST });
   try {
     const response = await api.post(`${API_BASE_URL}/api/payments/confirm-payment`, confirmPaymentRequest);
-    dispatch({ type: CONFIRM_PAYMENT_SUCCESS, payload: response.data });
-    return response.data;
+    const { data, message, success } = parseApiResponse(response);
+    dispatch({ type: CONFIRM_PAYMENT_SUCCESS, payload: data });
+    return { payload: data, message, success };
   } catch (error) {
-    dispatch({ type: CONFIRM_PAYMENT_FAILED, payload: error.message });
+    const errorMessage = getErrorMessage(error);
+    dispatch({ type: CONFIRM_PAYMENT_FAILED, payload: errorMessage });
+    error.message = errorMessage;
     throw error;
   }
 };
@@ -269,8 +334,11 @@ export const confirmUnifiedPayment = (confirmPaymentRequest) => async (dispatch)
 export const capturePaypalOrder = (orderID) => async (dispatch) => {
   try {
     const response = await api.post(`${API_BASE_URL}/api/orders/${orderID}/capture`);
-    return response.data;
+    const { data, message, success } = parseApiResponse(response);
+    return { payload: data, message, success };
   } catch (error) {
+    const errorMessage = getErrorMessage(error);
+    error.message = errorMessage;
     throw error;
   }
 };

@@ -1,6 +1,5 @@
 import { CircularProgress, Box, CssBaseline } from "@mui/material";
-import { useEffect, useState, useMemo } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useSelector } from "react-redux";
 import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import { CollaborativeEditorWrapper } from "./components/AdminPage/Dashboard/BooksTab/ChapterModal/CollaborativeEditorWrapper";
@@ -24,95 +23,23 @@ import UserBookshelf from "./pages/UserPages/UserBookshelf";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import AuthorDashboard from "./pages/UserPages/AuthorDashboard";
 import AuthorPayoutSettings from "./pages/UserPages/AuthorPayoutSettings";
-import { getCurrentUserByJwt } from "./redux/auth/auth.action";
-import { isTokenExpired, useAuthCheck } from "./utils/useAuthCheck";
+import { useAuthCheck } from "./utils/useAuthCheck";
 import PostDetail from "./pages/UserPages/PostDetails";
-import { connectWebSocket } from "./services/websocket.service";
-import { apiEvents } from "./services/api.service";
 import OtpVerification from "./pages/Authentication/OtpVerification";
 import { ThemeProvider } from "@mui/material/styles";
-import { lightTheme, darkTheme } from "./themes";
 import Layout from "./Layout";
 import AdminLayout from "./components/AdminPage/Layout/AdminLayout";
+import { useTheme, useRateLimitAlert, useWebSocketConnection, useAuthInitialization } from "./hooks";
 
 function App() {
-  const dispatch = useDispatch();
-  const { user, isAuthenticated, loading: authLoading } = useSelector((store) => store.auth, shallowEqual);
-  const jwt = localStorage.getItem("jwt");
-  const [loading, setLoading] = useState(false);
+  const { user } = useSelector((store) => store.auth, shallowEqual);
   const { AuthDialog } = useAuthCheck();
-  const [rateLimitAlert, setRateLimitAlert] = useState({
-    open: false,
-    retryAfter: null,
-  });
 
-  const [mode, setMode] = useState(localStorage.getItem("themeMode") || "light");
-
-  const theme = useMemo(() => (mode === "light" ? lightTheme : darkTheme), [mode]);
-
-  const toggleTheme = () => {
-    const newMode = mode === "light" ? "dark" : "light";
-    setMode(newMode);
-    localStorage.setItem("themeMode", newMode);
-  };
-
-  useEffect(() => {
-    // Rate limit event listener
-    const handleRateLimit = (data) => {
-      setRateLimitAlert({
-        open: true,
-        retryAfter: data.retryAfter,
-      });
-    };
-
-    apiEvents.on("rateLimitExceeded", handleRateLimit);
-
-    return () => {
-      apiEvents.off("rateLimitExceeded", handleRateLimit);
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (loading || authLoading) return;
-
-      try {
-        setLoading(true);
-        if (jwt && !isTokenExpired(jwt) && !user) {
-          await dispatch(getCurrentUserByJwt(jwt));
-        }
-      } catch (e) {
-        console.error("Error loading app: ", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [dispatch, jwt, user, authLoading]);
-
-  // WebSocket connection - only initialize when user is authenticated
-  useEffect(() => {
-    let wsCleanup;
-
-    if (isAuthenticated && user?.id) {
-      console.log("App.js: Initializing WebSocket connection for user", user.username);
-      wsCleanup = connectWebSocket(user.username);
-    }
-
-    return () => {
-      if (wsCleanup) {
-        console.log("App.js: Cleaning up WebSocket connection");
-        wsCleanup();
-      }
-    };
-  }, [isAuthenticated, user]);
-
-  const handleCloseRateLimitAlert = () => {
-    setRateLimitAlert({
-      ...rateLimitAlert,
-      open: false,
-    });
-  };
+  // Custom hooks for separated concerns
+  const { theme, toggleTheme } = useTheme();
+  const { rateLimitAlert, handleCloseRateLimitAlert } = useRateLimitAlert();
+  const { loading } = useAuthInitialization();
+  useWebSocketConnection();
 
   // Simple loading component
   if (loading) {

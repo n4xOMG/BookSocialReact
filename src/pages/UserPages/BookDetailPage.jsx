@@ -1,4 +1,4 @@
-import { FavoriteBorder, Grade, MenuBook, Report, Star, StarRate } from "@mui/icons-material";
+import { FavoriteBorder, MenuBook, Report, StarRate } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useMediaQuery } from "@mui/material";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
@@ -19,11 +19,11 @@ import {
   getBookRatingByUserAction,
   getRelatedBooksAction,
   ratingBookAction,
+  recordBookViewAction,
 } from "../../redux/book/book.action";
 import { clearChapters, getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
 import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
-// Lazy load heavy components
 const BookCommentSection = React.lazy(() => import("../../components/BookDetailPageComponents/BookCommentSection"));
 const RelatedBooks = React.lazy(() => import("../../components/BookDetailPageComponents/RelatedBooks"));
 export const BookDetailPage = () => {
@@ -58,7 +58,6 @@ export const BookDetailPage = () => {
   const jwt = localStorage.getItem("jwt");
   const { checkAuth, AuthDialog } = useAuthCheck();
 
-  // Fetch all book-related data in one effect
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -67,16 +66,13 @@ export const BookDetailPage = () => {
 
     const fetchAll = async () => {
       try {
-        // Fetch book
-        const bookRes = await dispatch(getBookByIdAction(jwt, bookId));
+        const bookRes = await dispatch(getBookByIdAction(bookId));
         if (!bookRes?.payload) return;
 
-        // Fetch chapters
-        const chaptersRes = await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+        const chaptersRes = await dispatch(getAllChaptersByBookIdAction(bookId));
         const chapterList = chaptersRes?.payload || [];
         if (chapterList.length > 0) setFirstChapterId(chapterList[0].id);
 
-        // Fetch ratings and progresses only if user is logged in
         await Promise.all([
           dispatch(getAvgBookRating(bookId)),
           user && !isTokenExpired(jwt)
@@ -84,10 +80,10 @@ export const BookDetailPage = () => {
             : null,
         ]);
 
-        // Related books (use fresh book data)
         dispatch(getRelatedBooksAction(bookId, bookRes.payload.categoryId, bookRes.payload.tagIds));
+
+        dispatch(recordBookViewAction(bookId));
       } catch (e) {
-        // ignore
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -100,10 +96,8 @@ export const BookDetailPage = () => {
       dispatch({ type: "RESET_BOOK_DETAIL" });
       dispatch(clearChapters());
     };
-    // eslint-disable-next-line
   }, [bookId, dispatch, jwt, user]);
 
-  // Keep isFavorite in sync with book.followedByCurrentUser
   useEffect(() => {
     if (book && user) setIsFavorite(book.followedByCurrentUser);
   }, [book, user]);
@@ -112,7 +106,11 @@ export const BookDetailPage = () => {
   const overallProgress = useMemo(() => {
     if (!book || !book.chapterCount || !progresses?.length) return 0;
     const totalChapters = book.chapterCount;
-    const sumProgress = progresses.reduce((acc, progress) => acc + (progress.progress || 0), 0);
+    const sumProgress = progresses.reduce((acc, progress) => {
+      const raw = progress?.progress;
+      const numeric = typeof raw === "number" ? raw : parseFloat(raw);
+      return acc + (Number.isFinite(numeric) ? numeric : 0);
+    }, 0);
     const avg = Math.floor(sumProgress / totalChapters);
     return avg > 100 ? 100 : avg;
   }, [book, progresses]);
@@ -172,316 +170,308 @@ export const BookDetailPage = () => {
     );
   }
 
-return (
-  <Box sx={{ flex: 1, width: "100%" }}>
-    <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 4 }}>
-      <Grid
-        container
-        spacing={isMobile ? 1.5 : 3}
-        sx={{
-          // Không cần thay đổi ở đây, vì flex-direction chỉ cần 2 giá trị
-          flexDirection: isMobile ? "column" : "row", 
-        }}
-      >
-        {/* Left Column (Cover/Actions/Sidebar Item) */}
+  return (
+    <Box sx={{ flex: 1, width: "100%" }}>
+      <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 4 }}>
         <Grid
-          item
-          xs={12}
-          md={3}
+          container
+          spacing={isMobile ? 1.5 : 3}
           sx={{
-            order: isMobile ? 1 : 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: isMobile ? 1.5 : 3,
+            // Không cần thay đổi ở đây, vì flex-direction chỉ cần 2 giá trị
+            flexDirection: isMobile ? "column" : "row",
           }}
         >
-          {/* KHỐI 1: Cover/Actions/Rating */}
-          <Paper elevation={2} sx={{ p: isMobile ? 1 : 3, borderRadius: 2 }}>
-            <Box
-              sx={{
-                display: "flex",
-                // Mobile: row, Desktop: column
-                flexDirection: isMobile ? "row" : "column", 
-                gap: isMobile ? 1 : 0,
-                alignItems: "flex-start",
-              }}
-            >
-              {/* Cover */}
+          {/* Left Column (Cover/Actions/Sidebar Item) */}
+          <Grid
+            item
+            xs={12}
+            md={3}
+            sx={{
+              order: isMobile ? 1 : 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: isMobile ? 1.5 : 3,
+            }}
+          >
+            {/* KHỐI 1: Cover/Actions/Rating */}
+            <Paper elevation={2} sx={{ p: isMobile ? 1 : 3, borderRadius: 2 }}>
               <Box
                 sx={{
-                  // Mobile: 40%, Desktop: 100%
-                  width: isMobile ? "40%" : "100%", 
-                  flexShrink: 0,
+                  display: "flex",
+                  // Mobile: row, Desktop: column
+                  flexDirection: isMobile ? "row" : "column",
+                  gap: isMobile ? 1 : 0,
+                  alignItems: "flex-start",
                 }}
               >
+                {/* Cover */}
                 <Box
-                  component="img"
-                  src={book.bookCover}
-                  alt={`Cover of ${book.title}`}
                   sx={{
-                    width: "100%",
-                    borderRadius: 2,
-                    boxShadow:
-                      "0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
-                    // Mobile: 0, Desktop: 1
-                    mb: isMobile ? 0 : 1, 
+                    // Mobile: 40%, Desktop: 100%
+                    width: isMobile ? "40%" : "100%",
+                    flexShrink: 0,
                   }}
-                />
-              </Box>
-
-              {/* Actions */}
-              <Box sx={{ 
-                  // Mobile: 60%, Desktop: 100%
-                  width: isMobile ? "60%" : "100%", 
-                  flexGrow: 1 
-                }}>
-                <Box sx={{ mb: 1 }}>
+                >
                   <Box
+                    component="img"
+                    src={book.bookCover}
+                    alt={`Cover of ${book.title}`}
                     sx={{
-                      display: "inline-flex",
-                      border: "1px solid",
-                      borderColor: "#fbc02d",
-                      // Mobile: 2, Desktop: 4
-                      borderRadius: isMobile ? 2 : 4, 
-                      p: 0.7,
-                      alignItems: "center",
-                      mb: 1,
+                      width: "100%",
+                      borderRadius: 2,
+                      boxShadow: "0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+                      // Mobile: 0, Desktop: 1
+                      mb: isMobile ? 0 : 1,
                     }}
-                  >
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ml: 1,
-                        fontWeight: 600,
-                        color: "#fbc02d",
-                        // Desktop only
-                        display: isMobile ? "none" : "block", 
-                      }}
-                    >
-                      Average rating:{" "}
-                      {book.avgRating ? book.avgRating.toFixed(1) : "0.0"} / 5.0
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        ml: 1,
-                        fontWeight: 600,
-                        color: "#fbc02d",
-                        // Mobile only
-                        display: isMobile ? "block" : "none", 
-                      }}
-                    >
-                      Rating:{" "}
-                      {book.avgRating ? book.avgRating.toFixed(1) : "0.0"} / 5.0
-                    </Typography>
-                    <StarRate fontSize="small" sx={{ color: "#fbc02d", ml: 0.5 }} />
-                  </Box>
+                  />
                 </Box>
 
-                {/* Rating */}
-                <Box sx={{ mb: isMobile ? 2 : 3 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      // Mobile: column, Desktop: row
-                      flexDirection: isMobile ? "column" : "row", 
-                      alignItems: "center",
-                    }}
-                  >
-                    <Rating
-                      name="book-rating"
-                      precision={0.5}
-                      value={rating ? rating.rating : 0}
-                      onChange={(event, newValue) => handleRating(newValue)}
-                    />
-                    {rating?.rating && (
+                {/* Actions */}
+                <Box
+                  sx={{
+                    // Mobile: 60%, Desktop: 100%
+                    width: isMobile ? "60%" : "100%",
+                    flexGrow: 1,
+                  }}
+                >
+                  <Box sx={{ mb: 1 }}>
+                    <Box
+                      sx={{
+                        display: "inline-flex",
+                        border: "1px solid",
+                        borderColor: "#fbc02d",
+                        // Mobile: 2, Desktop: 4
+                        borderRadius: isMobile ? 2 : 4,
+                        p: 0.7,
+                        alignItems: "center",
+                        mb: 1,
+                      }}
+                    >
                       <Typography
-                        variant="body2"
+                        variant="body1"
                         sx={{
-                          // Mobile: 0, Desktop: 1
-                          ml: isMobile ? 0 : 1, 
-                          color: "text.secondary",
+                          ml: 1,
+                          fontWeight: 600,
+                          color: "#fbc02d",
+                          // Desktop only
+                          display: isMobile ? "none" : "block",
                         }}
                       >
-                        You rated {rating.rating?.toFixed(1)} !
+                        Average rating: {book.avgRating ? book.avgRating.toFixed(1) : "0.0"} / 5.0
                       </Typography>
-                    )}
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          ml: 1,
+                          fontWeight: 600,
+                          color: "#fbc02d",
+                          // Mobile only
+                          display: isMobile ? "block" : "none",
+                        }}
+                      >
+                        Rating: {book.avgRating ? book.avgRating.toFixed(1) : "0.0"} / 5.0
+                      </Typography>
+                      <StarRate fontSize="small" sx={{ color: "#fbc02d", ml: 0.5 }} />
+                    </Box>
                   </Box>
+
+                  {/* Rating */}
+                  <Box sx={{ mb: isMobile ? 2 : 3 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        // Mobile: column, Desktop: row
+                        flexDirection: isMobile ? "column" : "row",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Rating
+                        name="book-rating"
+                        precision={0.5}
+                        value={rating ? rating.rating : 0}
+                        onChange={(event, newValue) => handleRating(newValue)}
+                      />
+                      {rating?.rating && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            // Mobile: 0, Desktop: 1
+                            ml: isMobile ? 0 : 1,
+                            color: "text.secondary",
+                          }}
+                        >
+                          You rated {rating.rating?.toFixed(1)} !
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* Follow + Report */}
+                  <Box sx={{ display: "flex", gap: isMobile ? 1 : 2, mb: isMobile ? 1.5 : 3 }}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={handleFollowBook}
+                      startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorder />}
+                      color={isFavorite ? "error" : "primary"}
+                      sx={{ py: 1.5 }}
+                    >
+                      {isFavorite ? "Following" : "Follow"}
+                    </Button>
+
+                    <IconButton
+                      onClick={handleOpenReportModal}
+                      sx={{
+                        border: "1px solid",
+                        borderColor: "grey.300",
+                        borderRadius: 1,
+                        p: 1.5,
+                      }}
+                    >
+                      <Report />
+                    </IconButton>
+                  </Box>
+
+                  {/* Start Reading */}
+                  {firstChapterId && (
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
+                      sx={{
+                        py: 1.5,
+                        backgroundColor: "primary.dark",
+                        color: "primary.contrastText",
+                        borderRadius: 1,
+                        boxShadow: 3,
+                        "&:hover": {
+                          backgroundColor: "primary.light",
+                          boxShadow: 4,
+                        },
+                      }}
+                      startIcon={<MenuBook />}
+                    >
+                      Start Reading
+                    </Button>
+                  )}
                 </Box>
-
-                {/* Follow + Report */}
-                <Box sx={{ display: "flex", gap: isMobile ? 1 : 2, mb: isMobile ? 1.5 : 3 }}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={handleFollowBook}
-                    startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorder />}
-                    color={isFavorite ? "error" : "primary"}
-                    sx={{ py: 1.5 }}
-                  >
-                    {isFavorite ? "Following" : "Follow"}
-                  </Button>
-
-                  <IconButton
-                    onClick={handleOpenReportModal}
-                    sx={{
-                      border: "1px solid",
-                      borderColor: "grey.300",
-                      borderRadius: 1,
-                      p: 1.5,
-                    }}
-                  >
-                    <Report />
-                  </IconButton>
-                </Box>
-
-                {/* Start Reading */}
-                {firstChapterId && (
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() =>
-                      navigate(`/books/${bookId}/chapters/${firstChapterId}`)
-                    }
-                    sx={{
-                      py: 1.5,
-                      backgroundColor: "primary.dark",
-                      color: "primary.contrastText",
-                      borderRadius: 1,
-                      boxShadow: 3,
-                      "&:hover": {
-                        backgroundColor: "primary.light",
-                        boxShadow: 4,
-                      },
-                    }}
-                    startIcon={<MenuBook />}
-                  >
-                    Start Reading
-                  </Button>
-                )}
               </Box>
+            </Paper>
+
+            {/* KHỐI 7: Box Tab (Top Book of Day/Week/Month) */}
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: "lightcoral",
+                // Ẩn trên mobile
+                display: isMobile ? "none" : "block",
+                order: isMobile ? 8 : 2,
+              }}
+            >
+              <Typography>Box Tab (Top Book of Day/Week/Month)</Typography>
             </Box>
-          </Paper>
-          
-          {/* KHỐI 7: Box Tab (Top Book of Day/Week/Month) */}
-          <Box 
-            sx={{ 
-              p: 2, 
-              bgcolor: "lightcoral", 
-              // Ẩn trên mobile
-              display: isMobile ? 'none' : 'block',
-              order: isMobile ? 8 : 2
+          </Grid>
+
+          {/* Right Column - Book Details + Content */}
+          <Grid
+            item
+            xs={12}
+            md={9}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: isMobile ? 1.5 : 3,
+              order: isMobile ? 2 : 2,
             }}
           >
-            <Typography>Box Tab (Top Book of Day/Week/Month)</Typography>
-          </Box>
-        </Grid>
-
-        {/* Right Column - Book Details + Content */}
-        <Grid
-          item
-          xs={12}
-          md={9}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: isMobile ? 1.5 : 3,
-            order: isMobile ? 2 : 2,
-          }}
-        >
-          {/* Book Details */}
-          <Paper 
-            elevation={2} 
-            sx={{ 
-              order: isMobile ? 2 : "initial", 
-              p: isMobile ? 1 : 4, 
-              borderRadius: 2 
-            }}
-          >
-            <BookDetails book={book} categories={categories} tags={tags} />
-          </Paper>
-
-          {/* Author */}
-          <Paper 
-            elevation={2} 
-            sx={{ 
-              order: isMobile ? 3 : "initial", 
-              p: isMobile ? 1 : 4, 
-              borderRadius: 2 
-            }}
-          >
-            <AuthorCard author={book.author} checkAuth={checkAuth} />
-          </Paper>
-
-          {/* Progress */}
-          <Box sx={{ order: isMobile ? 4 : "initial" }}>
-            <Paper elevation={2} sx={{ p: isMobile ? 1 : 4, borderRadius: 2 }}>
-              <ProgressBar progress={overallProgress} />
-            </Paper>
-          </Box>
-
-          {/* Chapter List */}
-          <Paper 
-            elevation={2} 
-            sx={{ 
-              order: isMobile ? 5 : "initial", 
-              p: isMobile ? 1 : 4, 
-              borderRadius: 2 
-            }}
-          >
-            <ChapterList
-              chapters={chapters}
-              progresses={progresses}
-              onNavigate={navigate}
-              bookId={bookId}
-              user={user || null}
-              onFirstChapterId={setFirstChapterId}
-            />
-          </Paper>
-
-          {/* Comments + Related */}
-          <Suspense fallback={<LoadingSpinner />}>
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                order: isMobile ? 6 : "initial", 
-                p: isMobile ? 1 : 4, 
-                borderRadius: 2 
+            {/* Book Details */}
+            <Paper
+              elevation={2}
+              sx={{
+                order: isMobile ? 2 : "initial",
+                p: isMobile ? 1 : 4,
+                borderRadius: 2,
               }}
             >
-              <BookCommentSection bookId={book.id} user={user} />
+              <BookDetails book={book} categories={categories} tags={tags} />
             </Paper>
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                order: isMobile ? 7 : "initial", 
-                p: isMobile ? 1 : 4, 
-                borderRadius: 2 
+
+            {/* Author */}
+            <Paper
+              elevation={2}
+              sx={{
+                order: isMobile ? 3 : "initial",
+                p: isMobile ? 1 : 4,
+                borderRadius: 2,
               }}
             >
-              <RelatedBooks
-                relatedBooks={relatedBooks}
-                loading={loading}
-                categories={categories}
-                tags={tags}
+              <AuthorCard author={book.author} checkAuth={checkAuth} />
+            </Paper>
+
+            {/* Progress */}
+            <Box sx={{ order: isMobile ? 4 : "initial" }}>
+              <Paper elevation={2} sx={{ p: isMobile ? 1 : 4, borderRadius: 2 }}>
+                <ProgressBar progress={overallProgress} />
+              </Paper>
+            </Box>
+
+            {/* Chapter List */}
+            <Paper
+              elevation={2}
+              sx={{
+                order: isMobile ? 5 : "initial",
+                p: isMobile ? 1 : 4,
+                borderRadius: 2,
+              }}
+            >
+              <ChapterList
+                chapters={chapters}
+                progresses={progresses}
+                onNavigate={navigate}
+                bookId={bookId}
+                user={user || null}
+                onFirstChapterId={setFirstChapterId}
               />
             </Paper>
-          </Suspense>
-        </Grid>
-      </Grid>
-    </Container>
 
-    {/* Modals */}
-    <ReportModal
-      open={isReportModalOpen}
-      onClose={handleCloseReportModal}
-      reportReason={reportReason}
-      setReportReason={setReportReason}
-      handleSubmitReport={handleSubmitReport}
-    />
-    <AuthDialog />
-  </Box>
-);
+            {/* Comments + Related */}
+            <Suspense fallback={<LoadingSpinner />}>
+              <Paper
+                elevation={2}
+                sx={{
+                  order: isMobile ? 6 : "initial",
+                  p: isMobile ? 1 : 4,
+                  borderRadius: 2,
+                }}
+              >
+                <BookCommentSection bookId={book.id} user={user} />
+              </Paper>
+              <Paper
+                elevation={2}
+                sx={{
+                  order: isMobile ? 7 : "initial",
+                  p: isMobile ? 1 : 4,
+                  borderRadius: 2,
+                }}
+              >
+                <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
+              </Paper>
+            </Suspense>
+          </Grid>
+        </Grid>
+      </Container>
+
+      {/* Modals */}
+      <ReportModal
+        open={isReportModalOpen}
+        onClose={handleCloseReportModal}
+        reportReason={reportReason}
+        setReportReason={setReportReason}
+        handleSubmitReport={handleSubmitReport}
+      />
+      <AuthDialog />
+    </Box>
+  );
 };
 
 export default BookDetailPage;

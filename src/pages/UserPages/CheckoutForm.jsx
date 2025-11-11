@@ -31,8 +31,16 @@ const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
           currency: "usd",
         })
       );
+      const paymentPayload = paymentResponse?.payload || paymentResponse?.data;
+      const clientSecret = paymentPayload?.clientSecret;
 
-      const clientSecret = paymentResponse.clientSecret;
+      if (!clientSecret) {
+        const message = "Unable to initiate payment. Please try again.";
+        setFormError(message);
+        onError(message);
+        setProcessing(false);
+        return;
+      }
 
       // Step 2: Confirm the payment on the frontend
       const paymentResult = await stripe.confirmCardPayment(clientSecret, {
@@ -48,13 +56,20 @@ const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
       } else {
         if (paymentResult.paymentIntent.status === "succeeded") {
           // Step 3: Inform backend to update user credits using unified endpoint
-          await dispatch(
+          const confirmResponse = await dispatch(
             confirmUnifiedPayment({
               paymentIntentId: paymentResult.paymentIntent.id,
               creditPackageId: creditPackage.id,
               paymentProvider: "STRIPE",
             })
           );
+          if (confirmResponse?.error) {
+            const message = confirmResponse.error;
+            setFormError(message);
+            onError(message);
+            setProcessing(false);
+            return;
+          }
           onSuccess();
           setProcessing(false);
         } else {

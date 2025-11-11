@@ -1,10 +1,10 @@
-import { Alert, Box, Button, Grid, MenuItem, TextField, Typography, Divider, Paper } from "@mui/material";
-import React, { useState } from "react";
+import CakeIcon from "@mui/icons-material/Cake";
+import SaveIcon from "@mui/icons-material/Save";
+import WcIcon from "@mui/icons-material/Wc";
+import { Alert, Box, Button, Divider, Grid, MenuItem, Paper, TextField, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
-import CakeIcon from "@mui/icons-material/Cake";
-import WcIcon from "@mui/icons-material/Wc";
-import SaveIcon from "@mui/icons-material/Save";
 
 const genders = [
   { value: "Male", label: "Male" },
@@ -13,14 +13,18 @@ const genders = [
   { value: "Prefer not to say", label: "Prefer not to say" },
 ];
 
-const PersonalInfo = ({ user, setUser }) => {
-  const initialBirthdate = user.birthdate ? user.birthdate.slice(0, 10) : "";
-  const [birthdate, setBirthdate] = useState(initialBirthdate);
-  const [gender, setGender] = useState(user.gender || "");
+const PersonalInfo = ({ user }) => {
+  const [birthdate, setBirthdate] = useState(user?.birthdate ? user.birthdate.slice(0, 10) : "");
+  const [gender, setGender] = useState(user?.gender || "");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    setBirthdate(user?.birthdate ? user.birthdate.slice(0, 10) : "");
+    setGender(user?.gender || "");
+  }, [user]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -34,9 +38,13 @@ const PersonalInfo = ({ user, setUser }) => {
         birthdate: formattedBirthdate,
         gender,
       };
-      const updatedUser = await dispatch(updateUserProfile(updatedData));
-      setUser(updatedUser.payload);
-      setMessage("Personal information updated successfully.");
+      const result = await dispatch(updateUserProfile(updatedData));
+      if (result?.error) {
+        setError(result.error || "Failed to update personal information.");
+        return;
+      }
+
+      setMessage(result?.message || "Personal information updated successfully.");
     } catch (err) {
       setError("Failed to update personal information.");
     } finally {

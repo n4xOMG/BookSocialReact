@@ -4,10 +4,10 @@ import { BookItem } from "./BookItem";
 
 export const BookList = memo(({ books, selectedBookId, onSelectBook, onEditBook, onDeleteBook, lastBookElementRef }) => {
   return (
-    <List 
-      sx={{ 
-        overflow: "auto", 
-        height: "100%", 
+    <List
+      sx={{
+        overflow: "auto",
+        height: "100%",
         padding: 0,
         "&::-webkit-scrollbar": {
           width: 8,
@@ -24,15 +24,15 @@ export const BookList = memo(({ books, selectedBookId, onSelectBook, onEditBook,
         },
       }}
     >
-      {books.map((book, index) => {
+      {books?.map((book, index) => {
         const isLast = index === books.length - 1;
         const isSelected = selectedBookId === book.id;
 
         return (
-          <Box 
-            ref={isLast ? lastBookElementRef : null} 
-            key={book.id} 
-            sx={{ 
+          <Box
+            ref={isLast ? lastBookElementRef : null}
+            key={book.id}
+            sx={{
               mb: isLast ? 0 : 2,
             }}
           >

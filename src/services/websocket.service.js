@@ -3,6 +3,9 @@ import SockJS from "sockjs-client";
 import { API_BASE_URL } from "../api/api";
 import { receiveNotification } from "../redux/notification/notification.action";
 import { store } from "../redux/store";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger("WebSocket");
 
 let stompClient = null;
 let subscription = null;
@@ -35,7 +38,7 @@ export const connectWebSocket = (username) => {
     stompClient.connect(
       {},
       () => {
-        console.log("WebSocket connected successfully!");
+        logger.success("Connected successfully");
         isConnecting = false;
 
         // Subscribe to the user's notification channel
@@ -43,7 +46,7 @@ export const connectWebSocket = (username) => {
         subscription = stompClient.subscribe(topic, (message) => {
           try {
             const notification = JSON.parse(message.body);
-            console.log("New notification received:", notification);
+            logger.info("New notification received", notification);
 
             // Dispatch the notification to Redux store
             store.dispatch(
@@ -55,18 +58,18 @@ export const connectWebSocket = (username) => {
               })
             );
           } catch (error) {
-            console.error("Error processing WebSocket notification:", error);
+            logger.error("Error processing notification", error);
           }
         });
-        console.log(`Subscribed to notifications topic: ${topic}`);
+        logger.info(`Subscribed to topic: ${topic}`);
       },
       (error) => {
-        console.error("WebSocket connection error:", error);
+        logger.error("Connection error", error);
         isConnecting = false;
 
         // Set up reconnection
         reconnectTimer = setTimeout(() => {
-          console.log("Attempting to reconnect WebSocket...");
+          logger.info("Attempting to reconnect...");
           if (activeUsername) {
             connectWebSocket(activeUsername);
           }
@@ -76,12 +79,12 @@ export const connectWebSocket = (username) => {
 
     return stompClient;
   } catch (error) {
-    console.error("Error establishing WebSocket connection:", error);
+    logger.error("Error establishing connection", error);
     isConnecting = false;
 
     // Set up reconnection
     reconnectTimer = setTimeout(() => {
-      console.log("Attempting to reconnect WebSocket after error...");
+      logger.info("Attempting to reconnect after error...");
       if (activeUsername) {
         connectWebSocket(activeUsername);
       }
@@ -96,24 +99,24 @@ export const disconnectWebSocket = () => {
     if (subscription) {
       subscription.unsubscribe();
       subscription = null;
-      console.log("Unsubscribed from WebSocket topics");
+      logger.info("Unsubscribed from topics");
     }
 
     if (stompClient && stompClient.connected) {
       stompClient.disconnect();
-      console.log("WebSocket disconnected");
+      logger.info("Disconnected");
     }
 
     stompClient = null;
   } catch (error) {
-    console.error("Error disconnecting WebSocket:", error);
+    logger.error("Error disconnecting", error);
   }
 };
 
 // Add a health check function that can be called periodically
 export const checkWebSocketConnection = () => {
   if (!stompClient || !stompClient.connected) {
-    console.log("WebSocket connection lost, attempting to reconnect...");
+    logger.warn("Connection lost, attempting to reconnect...");
     if (activeUsername) {
       connectWebSocket(activeUsername);
     }

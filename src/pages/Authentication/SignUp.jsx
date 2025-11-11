@@ -36,12 +36,13 @@ function Copyright(props) {
   );
 }
 
-export default function SignUp({toggleTheme}) {
+export default function SignUp({ toggleTheme }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const error = useSelector((store) => store.auth.error);
+  const authError = useSelector((store) => store.auth.error);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [fallbackError, setFallbackError] = useState("");
   const [registerData, setRegisterData] = useState({
     fullname: "",
     gender: "",
@@ -153,7 +154,13 @@ export default function SignUp({toggleTheme}) {
         };
         const result = await dispatch(registerUserAction({ data: formData }));
 
-        if (result.payload) {
+        if (result?.error) {
+          setFallbackError(result.error);
+          setOpen(true);
+          return;
+        }
+
+        if (result?.payload?.token) {
           // Redirect to OTP verification page
           navigate("/verify-otp", {
             state: {
@@ -164,7 +171,7 @@ export default function SignUp({toggleTheme}) {
         }
       } catch (e) {
         console.error("Error signing up", e);
-        setError("Error signing up: ", e);
+        setFallbackError("Unable to complete sign up. Please try again.");
         setOpen(true);
       } finally {
         setIsLoading(false);
@@ -178,6 +185,7 @@ export default function SignUp({toggleTheme}) {
       return;
     }
     setOpen(false);
+    setFallbackError("");
   };
 
   useEffect(() => {
@@ -185,7 +193,15 @@ export default function SignUp({toggleTheme}) {
     setPasswordsMatch(registerData.password === confirmPassword);
   }, [registerData.password, confirmPassword]);
 
+  useEffect(() => {
+    if (authError) {
+      setFallbackError("");
+      setOpen(true);
+    }
+  }, [authError]);
+
   const isDarkMode = theme.palette.mode === "dark";
+  const submissionError = authError || fallbackError;
 
   return (
     <>
@@ -194,8 +210,7 @@ export default function SignUp({toggleTheme}) {
       ) : (
         <Box
           sx={{
-            backgroundImage:
-              `url(${background})`,
+            backgroundImage: `url(${background})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundAttachment: "fixed",
@@ -207,24 +222,24 @@ export default function SignUp({toggleTheme}) {
           }}
         >
           <CssBaseline />
-          <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+          <Box sx={{ position: "absolute", top: 16, right: 16 }}>
             <IconButton onClick={toggleTheme} color="inherit">
-            {isDarkMode ? <Brightness7 sx={{ color: "text.primary"  }} /> : <Brightness4 sx={{ color: "text.primary"  }} />}
+              {isDarkMode ? <Brightness7 sx={{ color: "text.primary" }} /> : <Brightness4 sx={{ color: "text.primary" }} />}
             </IconButton>
           </Box>
-          
+
           <Container component="main" maxWidth="xs">
             <Paper
               elevation={10}
               sx={{
                 p: 4,
                 display: "flex",
-                flexDirection: "column", 
+                flexDirection: "column",
                 alignItems: "center",
                 marginTop: 8,
               }}
             >
-              <Typography component="h1" variant="h5" sx={{color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+              <Typography component="h1" variant="h5" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
                 Create an account
               </Typography>
               <Typography component="h2" variant="subTitle1" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
@@ -268,22 +283,21 @@ export default function SignUp({toggleTheme}) {
                     type="date"
                     fullWidth
                     required
-                    slotProps={{ 
+                    slotProps={{
                       inputLabel: { shrink: true },
-                    }}                    
+                    }}
                     value={registerData.birthdate}
                     onChange={(e) => setRegisterData((prev) => ({ ...prev, birthdate: e.target.value }))}
-                    
                   />
                   <FormControl component="fieldset">
                     <RadioGroup
-                      row 
+                      row
                       alignItems="center"
                       justifyContent="center"
                       aria-label="gender"
-                      name="gender" 
-                      value={registerData.gender} 
-                      onChange={handleInputChange} 
+                      name="gender"
+                      value={registerData.gender}
+                      onChange={handleInputChange}
                     >
                       <FormControlLabel value="Male" control={<Radio />} label="Male" />
                       <FormControlLabel value="Female" control={<Radio />} label="Female" />
@@ -405,7 +419,7 @@ export default function SignUp({toggleTheme}) {
                       "Sign up"
                     )}
                   </Button>
-                  {error && <Alert severity="error">{error}</Alert>}
+                  {submissionError && <Alert severity="error">{submissionError}</Alert>}
                 </Box>
               </form>
               <Typography variant="body2" color="textSecondary" align="center" sx={{ mt: 2 }}>
@@ -418,11 +432,10 @@ export default function SignUp({toggleTheme}) {
           </Container>
           <Copyright sx={{ mt: 8, mb: 4 }} />
 
-        
           <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
-            {error ? (
+            {submissionError ? (
               <Alert onClose={handleClose} severity="error" variant="filled" sx={{ width: "100%" }}>
-                {error}
+                {submissionError}
               </Alert>
             ) : (
               <Alert onClose={handleClose} severity="success" variant="filled" sx={{ width: "100%" }}>
@@ -431,8 +444,7 @@ export default function SignUp({toggleTheme}) {
             )}
           </Snackbar>
         </Box>
-      )
-    }
-  </>
+      )}
+    </>
   );
 }

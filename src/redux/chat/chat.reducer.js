@@ -43,7 +43,7 @@ const mergeMessages = (existing = [], incoming = []) => {
 
 const initialState = {
   chats: [],
-  messages: {}, // Correctly initialized as an object
+  messages: {},
   loading: false,
   error: null,
   subscriptions: {},
@@ -64,7 +64,7 @@ export const chatReducer = (state = initialState, action) => {
         loading: false,
       };
     case FETCH_USER_CHATS_SUCCESS:
-      return { ...state, loading: false, chats: action.payload };
+      return { ...state, loading: false, chats: action.payload || [] };
 
     case FETCH_CHAT_MESSAGES_SUCCESS:
       return {
@@ -72,7 +72,7 @@ export const chatReducer = (state = initialState, action) => {
         loading: false,
         messages: {
           ...state.messages,
-          [action.payload.chatId]: sortMessages(action.payload.messages),
+          [action.payload.chatId]: sortMessages(action.payload.messages || []),
         },
       };
 
@@ -96,10 +96,17 @@ export const chatReducer = (state = initialState, action) => {
       };
 
     case CREATE_CHAT_SUCCESS:
+      if (!action.payload) {
+        return { ...state, loading: false };
+      }
+
+      const chatExists = state.chats.some((chat) => chat?.id === action.payload?.id);
       return {
         ...state,
         loading: false,
-        chats: [...state.chats, action.payload],
+        chats: chatExists
+          ? state.chats.map((chat) => (chat?.id === action.payload.id ? { ...chat, ...action.payload } : chat))
+          : [...state.chats, action.payload],
       };
 
     case FETCH_USER_CHATS_FAILED:

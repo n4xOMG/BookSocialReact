@@ -56,6 +56,9 @@ import {
   GET_BOOKS_BY_MONTH_SUCCESS,
   GET_BOOKS_BY_MONTH_FAILED,
   RESET_BOOK_DETAIL,
+  RECORD_BOOK_VIEW_REQUEST,
+  RECORD_BOOK_VIEW_SUCCESS,
+  RECORD_BOOK_VIEW_FAILED,
 } from "./book.actionType";
 
 const initialState = {
@@ -79,6 +82,7 @@ const initialState = {
   progresses: [],
   rating: null,
   booksByMonth: [],
+  viewError: null,
 };
 
 export const bookReducer = (state = initialState, action) => {
@@ -102,6 +106,8 @@ export const bookReducer = (state = initialState, action) => {
     case SET_EDIT_CHOICE_REQUEST:
     case GET_BOOKS_BY_MONTH_REQUEST:
       return { ...state, loading: true, error: null };
+    case RECORD_BOOK_VIEW_REQUEST:
+      return { ...state, viewError: null };
 
     case GET_FEATURED_BOOKS_SUCCESS:
       return { ...state, loading: false, error: null, featuredBooks: action.payload };
@@ -191,24 +197,40 @@ export const bookReducer = (state = initialState, action) => {
     case GET_BOOK_COUNT_SUCCESS:
       return { ...state, loading: false, error: null, bookCount: action.payload };
 
-    case GET_BOOKS_BY_AUTHOR_SUCCESS:
-      const newPage = action.payload.pageable?.pageNumber || 0;
-      const hasMore = !action.payload.last;
-      const content = action.payload.content || action.payload;
+    case GET_BOOKS_BY_AUTHOR_SUCCESS: {
+      const payload = action.payload?.data ?? action.payload;
+      const content = Array.isArray(payload) ? payload : payload?.content || [];
+      const pageNumber = payload?.pageable?.pageNumber ?? 0;
+      const hasMore = typeof payload?.last === "boolean" ? !payload.last : Array.isArray(payload) ? false : state.booksByAuthorHasMore;
 
       return {
         ...state,
         loading: false,
-        booksByAuthor: newPage > 0 ? [...state.booksByAuthor, ...content] : content,
-        booksByAuthorPage: newPage,
+        booksByAuthor: pageNumber > 0 ? [...state.booksByAuthor, ...content] : content,
+        booksByAuthorPage: pageNumber,
         booksByAuthorHasMore: hasMore,
       };
+    }
 
     case SEARCH_BOOK_SUCCESS:
       return { ...state, loading: false, searchResults: action.payload };
 
     case GET_BOOKS_BY_MONTH_SUCCESS:
       return { ...state, loading: false, error: null, booksByMonth: action.payload };
+    case RECORD_BOOK_VIEW_SUCCESS: {
+      const newViewCount = typeof action.payload === "number" ? action.payload : null;
+      return {
+        ...state,
+        viewError: null,
+        book:
+          state.book && newViewCount !== null
+            ? {
+                ...state.book,
+                viewCount: newViewCount,
+              }
+            : state.book,
+      };
+    }
 
     case RESET_BOOK_DETAIL:
       return {
@@ -219,6 +241,7 @@ export const bookReducer = (state = initialState, action) => {
         relatedBooks: [],
         avgRating: null,
         error: null,
+        viewError: null,
       };
 
     case BOOK_UPLOAD_FAILED:
@@ -240,6 +263,8 @@ export const bookReducer = (state = initialState, action) => {
     case GET_RELATED_BOOKS_FAILED:
     case GET_BOOKS_BY_MONTH_FAILED:
       return { ...state, loading: false, error: action.payload };
+    case RECORD_BOOK_VIEW_FAILED:
+      return { ...state, viewError: action.payload };
 
     default:
       return state;

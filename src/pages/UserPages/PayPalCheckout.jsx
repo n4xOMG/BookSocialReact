@@ -16,18 +16,24 @@ const PayPalCheckout = ({ creditPackage, onError, onSuccess, jwt }) => {
       setFormError("");
 
       // Create PayPal order on backend
-      const orderData = await dispatch(
+      const orderResponse = await dispatch(
         createPayment({
           creditPackageId: creditPackage.id,
           paymentProvider: "PAYPAL",
           currency: "USD",
         })
       );
+      const orderData = orderResponse?.payload || orderResponse?.data;
 
       console.log("PayPal order created:", orderData);
 
       // Return the order ID from the backend response
-      return orderData.id;
+      const orderId = orderData?.id || orderData?.orderId || orderData?.paypalOrderId;
+      if (!orderId) {
+        throw new Error("Missing PayPal order id.");
+      }
+
+      return orderId;
     } catch (error) {
       console.error("Error creating PayPal order:", error);
       setFormError("Failed to create PayPal order. Please try again.");
@@ -45,19 +51,26 @@ const PayPalCheckout = ({ creditPackage, onError, onSuccess, jwt }) => {
       console.log("PayPal payment approved:", data);
 
       // Capture the order on backend
-      const captureData = await dispatch(capturePaypalOrder(data.orderID));
+      const captureResponse = await dispatch(capturePaypalOrder(data.orderID));
+      const captureData = captureResponse?.payload || captureResponse?.data;
 
       console.log("PayPal order captured:", captureData);
 
-      if (captureData.status === "COMPLETED") {
+      const captureStatus = captureData?.status || captureData?.orderStatus;
+
+      if (captureStatus === "COMPLETED") {
         // Confirm payment and update user credits
-        await dispatch(
+        const confirmation = await dispatch(
           confirmUnifiedPayment({
             paymentIntentId: data.orderID,
             creditPackageId: creditPackage.id,
             paymentProvider: "PAYPAL",
           })
         );
+
+        if (confirmation?.error) {
+          throw new Error(confirmation.error);
+        }
 
         onSuccess();
       } else {

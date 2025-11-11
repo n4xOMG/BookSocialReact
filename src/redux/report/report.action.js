@@ -22,11 +22,13 @@ export const createReportAction = (reportData) => async (dispatch) => {
   dispatch({ type: CREATE_REPORT_REQUEST });
   try {
     const { data } = await api.post(`${API_BASE_URL}/api/reports`, reportData);
-    dispatch({ type: CREATE_REPORT_SUCCESS, payload: data });
-    return { payload: data };
+    const payload = data?.data || null;
+    dispatch({ type: CREATE_REPORT_SUCCESS, payload });
+    return { payload };
   } catch (error) {
-    dispatch({ type: CREATE_REPORT_FAILED, payload: error.response?.data || error.message });
-    return { error: error.response?.data || error.message };
+    const message = error.response?.data?.message || error.message;
+    dispatch({ type: CREATE_REPORT_FAILED, payload: message });
+    return { error: message };
   }
 };
 
@@ -35,9 +37,15 @@ export const getAllReportsAction = () => async (dispatch) => {
   dispatch({ type: GET_ALL_REPORTS_REQUEST });
   try {
     const { data } = await api.get(`${API_BASE_URL}/api/reports`);
-    dispatch({ type: GET_ALL_REPORTS_SUCCESS, payload: data });
+    dispatch({
+      type: GET_ALL_REPORTS_SUCCESS,
+      payload: Array.isArray(data?.data) ? data.data : [],
+    });
   } catch (error) {
-    dispatch({ type: GET_ALL_REPORTS_FAILED, payload: error.response?.data || error.message });
+    dispatch({
+      type: GET_ALL_REPORTS_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 
@@ -48,7 +56,10 @@ export const resolveReportAction = (reportId) => async (dispatch) => {
     await api.put(`${API_BASE_URL}/api/reports/${reportId}/resolve`, {});
     dispatch({ type: RESOLVE_REPORT_SUCCESS, payload: reportId });
   } catch (error) {
-    dispatch({ type: RESOLVE_REPORT_FAILED, payload: error.response?.data || error.message });
+    dispatch({
+      type: RESOLVE_REPORT_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 
@@ -59,7 +70,10 @@ export const deleteReportAction = (reportId) => async (dispatch) => {
     await api.delete(`${API_BASE_URL}/api/reports/${reportId}`);
     dispatch({ type: DELETE_REPORT_SUCCESS, payload: reportId });
   } catch (error) {
-    dispatch({ type: DELETE_REPORT_FAILED, payload: error.response?.data || error.message });
+    dispatch({
+      type: DELETE_REPORT_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 export const deleteReportedObjectAction = (reportId) => async (dispatch) => {
@@ -68,6 +82,9 @@ export const deleteReportedObjectAction = (reportId) => async (dispatch) => {
     await api.delete(`${API_BASE_URL}/api/reports/${reportId}/delete-object`);
     dispatch({ type: DELETE_REPORTED_OBJECT_SUCCESS, payload: reportId });
   } catch (error) {
-    dispatch({ type: DELETE_REPORTED_OBJECT_FAILED, payload: error.response?.data || error.message });
+    dispatch({
+      type: DELETE_REPORTED_OBJECT_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };

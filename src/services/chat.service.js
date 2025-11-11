@@ -2,6 +2,9 @@ import { Stomp } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { API_BASE_URL } from "../api/api";
 import { RECEIVE_MESSAGE } from "../redux/chat/chat.actionType";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger("ChatService");
 
 class ChatService {
   constructor() {
@@ -37,20 +40,20 @@ class ChatService {
         this.stompClient.connect(
           {},
           () => {
-            console.log("Chat WebSocket connected");
+            logger.success("Chat WebSocket connected");
             this.isConnected = true;
             this.reconnectAttempts = 0;
             resolve();
           },
           (error) => {
-            console.error("Chat WebSocket connection error:", error);
+            logger.error("Chat WebSocket connection error:", error);
             this.isConnected = false;
             this.attemptReconnect();
             reject(error);
           }
         );
       } catch (error) {
-        console.error("Error setting up chat WebSocket:", error);
+        logger.error("Error setting up chat WebSocket:", error);
         reject(error);
       }
     });
@@ -59,7 +62,7 @@ class ChatService {
   // Subscribe to a chat
   subscribeToChat(chatId) {
     if (!this.stompClient || !this.isConnected) {
-      console.warn("WebSocket not connected, attempting to connect...");
+      logger.warn("WebSocket not connected, attempting to connect...");
       this.connect().then(() => this.subscribeToChat(chatId));
       return;
     }
@@ -80,19 +83,19 @@ class ChatService {
             this.dispatch({ type: RECEIVE_MESSAGE, payload: normalizedMessage });
           }
         } catch (error) {
-          console.error("Error processing received message:", error);
+          logger.error("Error processing received message:", error);
         }
       });
-      console.log(`Subscribed to chat ${chatId}`);
+      logger.info(`Subscribed to chat ${chatId}`);
     } catch (error) {
-      console.error("Error subscribing to chat:", error);
+      logger.error("Error subscribing to chat:", error);
     }
   }
 
   // Send message to server
   sendMessage(message) {
     if (!this.stompClient || !this.isConnected || !this.currentChatId) {
-      console.error("Cannot send message: WebSocket not connected or no chat selected");
+      logger.error("Cannot send message: WebSocket not connected or no chat selected");
       return false;
     }
 
@@ -100,7 +103,7 @@ class ChatService {
       this.stompClient.send(`/app/chat/${this.currentChatId}`, {}, JSON.stringify(message));
       return true;
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       return false;
     }
   }
@@ -120,7 +123,7 @@ class ChatService {
     if (this.stompClient && this.isConnected) {
       this.stompClient.disconnect();
       this.isConnected = false;
-      console.log("Chat WebSocket disconnected");
+      logger.info("Chat WebSocket disconnected");
     }
   }
 
@@ -129,7 +132,7 @@ class ChatService {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       setTimeout(() => {
-        console.log(`Attempting chat WebSocket reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+        logger.info(`Attempting chat WebSocket reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
         this.connect()
           .then(() => {
             if (this.currentChatId) {
@@ -141,7 +144,7 @@ class ChatService {
           });
       }, this.reconnectInterval);
     } else {
-      console.error("Max chat WebSocket reconnect attempts reached");
+      logger.error("Max chat WebSocket reconnect attempts reached");
     }
   }
 

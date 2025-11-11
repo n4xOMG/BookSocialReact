@@ -30,6 +30,20 @@ const initialState = {
   requestingPayout: false,
 };
 
+const ensureObject = (value) => {
+  if (value && typeof value === "object") {
+    return value;
+  }
+  return null;
+};
+
+const ensureArray = (value) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  return [];
+};
+
 export const authorReducer = (state = initialState, action) => {
   switch (action.type) {
     case GET_AUTHOR_DASHBOARD_REQUEST:
@@ -42,26 +56,59 @@ export const authorReducer = (state = initialState, action) => {
       return { ...state, requestingPayout: true, error: null };
 
     case GET_AUTHOR_DASHBOARD_SUCCESS:
-      return { ...state, loading: false, dashboard: action.payload };
+      return {
+        ...state,
+        loading: false,
+        dashboard: ensureObject(action.payload),
+        error: null,
+      };
     case GET_AUTHOR_EARNINGS_SUCCESS:
-      return { ...state, loading: false, earningsPage: action.payload };
+      return {
+        ...state,
+        loading: false,
+        earningsPage: ensureObject(action.payload),
+        error: null,
+      };
     case GET_AUTHOR_PAYOUTS_SUCCESS:
-      return { ...state, loading: false, payoutsPage: action.payload };
+      return {
+        ...state,
+        loading: false,
+        payoutsPage: ensureObject(action.payload),
+        error: null,
+      };
     case GET_PAYOUT_SETTINGS_SUCCESS:
-      return { ...state, loading: false, payoutSettings: action.payload };
+      return {
+        ...state,
+        loading: false,
+        payoutSettings: ensureObject(action.payload),
+        error: null,
+      };
     case GET_BOOK_PERFORMANCE_SUCCESS:
-      return { ...state, loading: false, bookPerformance: action.payload };
+      return {
+        ...state,
+        loading: false,
+        bookPerformance: ensureArray(action.payload),
+        error: null,
+      };
     case REQUEST_PAYOUT_SUCCESS:
-      return { ...state, requestingPayout: false };
+      return { ...state, requestingPayout: false, error: null };
 
     case GET_AUTHOR_DASHBOARD_FAILURE:
     case GET_AUTHOR_EARNINGS_FAILURE:
     case GET_AUTHOR_PAYOUTS_FAILURE:
     case GET_PAYOUT_SETTINGS_FAILURE:
     case GET_BOOK_PERFORMANCE_FAILURE:
-      return { ...state, loading: false, error: action.payload };
+      return {
+        ...state,
+        loading: false,
+        error: action.payload || "Unable to load author information.",
+      };
     case REQUEST_PAYOUT_FAILURE:
-      return { ...state, requestingPayout: false, error: action.payload };
+      return {
+        ...state,
+        requestingPayout: false,
+        error: action.payload || "Unable to submit payout request.",
+      };
     default:
       return state;
   }

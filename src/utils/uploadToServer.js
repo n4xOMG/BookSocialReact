@@ -1,20 +1,45 @@
-import { API_BASE_URL } from "../api/api";
+import { api, authApi } from "../api/api";
+import { createLogger } from "./logger";
+
 export const generateUniqueUploadId = () => {
   return `uqid-${Date.now()}`;
 };
-export async function UploadToServer(file, username, folderName) {
+const logger = createLogger("ImageServer");
+
+export async function UploadToServer(file, username, folderName, { useAuth = true } = {}) {
   const formData = new FormData();
-  formData.append("file", file); // must be "file"
+  formData.append("file", file);
   formData.append("username", username);
   formData.append("folderName", folderName);
 
-  const response = await fetch(`${API_BASE_URL}/images/upload`, {
-    method: "POST",
-    body: formData,
-  });
+  const client = useAuth ? api : authApi;
 
-  if (!response.ok) {
-    throw new Error(await response.text());
+  try {
+    const response = await client.post("/images/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    const payload = response?.data;
+    const message = payload?.message || "Failed to upload image.";
+
+    if (payload?.success === false) {
+      logger.error("Upload failed", { message, status: response.status });
+      throw new Error(message);
+    }
+
+    const imagePath = payload?.data;
+    if (!imagePath) {
+      logger.warn("Upload succeeded but no image path was returned", payload);
+      throw new Error("Upload succeeded but no image path was returned.");
+    }
+
+    logger.debug("Upload succeeded", { imagePath });
+    return imagePath;
+  } catch (error) {
+    const message = error?.response?.data?.message || error.message || "Failed to upload image.";
+    logger.error("Upload failed", { message, status: error?.response?.status });
+    throw new Error(message);
   }
-  return await response.text();
 }

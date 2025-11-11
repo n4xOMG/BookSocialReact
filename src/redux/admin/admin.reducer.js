@@ -20,6 +20,7 @@ const initialState = {
   contentAnalyticsLoading: false,
   platformAnalyticsLoading: false,
   usersLoading: false,
+  userStatusCountsLoading: false,
 
   // Error states
   error: null,
@@ -28,6 +29,7 @@ const initialState = {
   contentAnalyticsError: null,
   platformAnalyticsError: null,
   usersError: null,
+  userStatusCountsError: null,
 };
 
 export const adminReducer = (state = initialState, action) => {
@@ -40,6 +42,9 @@ export const adminReducer = (state = initialState, action) => {
         ...state,
         userAnalyticsLoading: false,
         userAnalytics: action.payload,
+        totalUsers: typeof action.payload?.totalUsers === "number" ? action.payload.totalUsers : state.totalUsers,
+        bannedUsers: typeof action.payload?.bannedUsers === "number" ? action.payload.bannedUsers : state.bannedUsers,
+        suspendedUsers: typeof action.payload?.suspendedUsers === "number" ? action.payload.suspendedUsers : state.suspendedUsers,
         userAnalyticsError: null,
       };
     case types.FETCH_USER_ANALYTICS_FAILURE:
@@ -107,7 +112,7 @@ export const adminReducer = (state = initialState, action) => {
       return {
         ...state,
         usersLoading: false,
-        users: action.payload,
+        users: Array.isArray(action.payload) ? action.payload : [],
         usersError: null,
       };
     case types.FETCH_ALL_USERS_FAILURE:
@@ -115,6 +120,24 @@ export const adminReducer = (state = initialState, action) => {
         ...state,
         usersLoading: false,
         usersError: action.payload,
+      };
+
+    case types.FETCH_USER_STATUS_COUNTS_REQUEST:
+      return { ...state, userStatusCountsLoading: true, userStatusCountsError: null };
+    case types.FETCH_USER_STATUS_COUNTS_SUCCESS:
+      return {
+        ...state,
+        userStatusCountsLoading: false,
+        totalUsers: typeof action.payload?.totalUsers === "number" ? action.payload.totalUsers : state.totalUsers,
+        bannedUsers: typeof action.payload?.bannedUsers === "number" ? action.payload.bannedUsers : state.bannedUsers,
+        suspendedUsers: typeof action.payload?.suspendedUsers === "number" ? action.payload.suspendedUsers : state.suspendedUsers,
+        userStatusCountsError: null,
+      };
+    case types.FETCH_USER_STATUS_COUNTS_FAILURE:
+      return {
+        ...state,
+        userStatusCountsLoading: false,
+        userStatusCountsError: action.payload,
       };
 
     // User Actions
@@ -138,7 +161,7 @@ export const adminReducer = (state = initialState, action) => {
         loading: false,
         error: null,
         // Update the user in the users array
-        users: state.users.map((user) => (user.id === action.payload.id ? action.payload : user)),
+        users: action.payload ? state.users.map((user) => (user.id === action.payload.id ? action.payload : user)) : state.users,
       };
 
     case types.DELETE_USER_SUCCESS:

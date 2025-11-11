@@ -29,11 +29,11 @@ function Copyright(props) {
   );
 }
 
-export default function SignIn({toggleTheme}) {
+export default function SignIn({ toggleTheme }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const error = useSelector((store) => store.auth.error);
+  const authError = useSelector((store) => store.auth.error);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
   const theme = useTheme();
@@ -60,6 +60,11 @@ export default function SignIn({toggleTheme}) {
       const rememberMe = data.get("remember") === "remember";
 
       const result = await dispatch(loginUserAction({ data: json, rememberMe }));
+      if (result?.error) {
+        setLoginError(result.error);
+        return;
+      }
+
       if (result?.payload?.token) {
         const userResult = await dispatch(getCurrentUserByJwt(result.payload.token));
         if (userResult?.payload) {
@@ -69,8 +74,9 @@ export default function SignIn({toggleTheme}) {
         } else if (userResult?.error === "UNAUTHORIZED") {
           setLoginError("Session expired. Please try logging in again.");
         }
-      } else if (error) {
-        setLoginError(error);
+      } else {
+        const message = result?.payload?.message || "Authentication failed.";
+        setLoginError(message);
       }
     } catch (e) {
       console.error("Error signing in: ", e);
@@ -82,6 +88,12 @@ export default function SignIn({toggleTheme}) {
 
   const isDarkMode = theme.palette.mode === "dark";
 
+  useEffect(() => {
+    if (authError) {
+      setLoginError(authError);
+    }
+  }, [authError]);
+
   return (
     <>
       {loading ? (
@@ -89,8 +101,7 @@ export default function SignIn({toggleTheme}) {
       ) : (
         <Box
           sx={{
-            backgroundImage:
-              `url(${background})`,
+            backgroundImage: `url(${background})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             minHeight: "100vh",
@@ -101,9 +112,9 @@ export default function SignIn({toggleTheme}) {
           }}
         >
           <CssBaseline />
-          <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+          <Box sx={{ position: "absolute", top: 16, right: 16 }}>
             <IconButton onClick={toggleTheme} color="inherit">
-            {isDarkMode ? <Brightness7 sx={{ color: "text.primary"  }} /> : <Brightness4 sx={{ color: "text.primary"  }} />}
+              {isDarkMode ? <Brightness7 sx={{ color: "text.primary" }} /> : <Brightness4 sx={{ color: "text.primary" }} />}
             </IconButton>
           </Box>
 
@@ -113,7 +124,7 @@ export default function SignIn({toggleTheme}) {
               sx={{
                 p: 4,
                 display: "flex",
-                flexDirection: "column", 
+                flexDirection: "column",
                 alignItems: "center",
               }}
             >

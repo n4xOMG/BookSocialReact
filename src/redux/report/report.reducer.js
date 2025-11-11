@@ -12,7 +12,9 @@ import {
   DELETE_REPORT_REQUEST,
   DELETE_REPORT_SUCCESS,
   DELETE_REPORT_FAILED,
+  DELETE_REPORTED_OBJECT_REQUEST,
   DELETE_REPORTED_OBJECT_SUCCESS,
+  DELETE_REPORTED_OBJECT_FAILED,
 } from "./report.actionType";
 
 const initialState = {
@@ -28,6 +30,7 @@ export const reportReducer = (state = initialState, action) => {
     case GET_ALL_REPORTS_REQUEST:
     case RESOLVE_REPORT_REQUEST:
     case DELETE_REPORT_REQUEST:
+    case DELETE_REPORTED_OBJECT_REQUEST:
       return {
         ...state,
         loading: true,
@@ -39,7 +42,7 @@ export const reportReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         newReport: action.payload,
-        reports: [...state.reports, action.payload],
+        reports: action.payload ? [...state.reports, action.payload] : state.reports,
         error: null,
       };
 
@@ -54,7 +57,7 @@ export const reportReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        reports: action.payload,
+        reports: Array.isArray(action.payload) ? action.payload : [],
         error: null,
       };
 
@@ -90,6 +93,7 @@ export const reportReducer = (state = initialState, action) => {
       };
 
     case DELETE_REPORT_FAILED:
+    case DELETE_REPORTED_OBJECT_FAILED:
       return {
         ...state,
         loading: false,

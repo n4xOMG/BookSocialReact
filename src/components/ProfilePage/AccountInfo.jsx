@@ -5,24 +5,32 @@ import PersonIcon from "@mui/icons-material/Person";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SaveIcon from "@mui/icons-material/Save";
 import { Alert, Avatar, Badge, Box, Button, Divider, Grid, IconButton, Paper, TextField, Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
 
-const AccountInfo = ({ user, setUser }) => {
-  const [fullname, setFullname] = useState(user.fullname || "");
-  const [username, setUsername] = useState(user.username || "");
-  const [email, setEmail] = useState(user.email || "");
+const AccountInfo = ({ user }) => {
+  const [fullname, setFullname] = useState(user?.fullname || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
-  const [bio, setBio] = useState(user.bio || "");
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || "");
+  const [bio, setBio] = useState(user?.bio || "");
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || "");
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewURL, setPreviewURL] = useState("");
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    setFullname(user?.fullname || "");
+    setUsername(user?.username || "");
+    setEmail(user?.email || "");
+    setBio(user?.bio || "");
+    setAvatarUrl(user?.avatarUrl || "");
+  }, [user]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -55,12 +63,17 @@ const AccountInfo = ({ user, setUser }) => {
         avatarUrl: uploadedAvatarUrl,
       };
 
-      const updatedUser = await dispatch(updateUserProfile(updatedData));
-      setUser(updatedUser.payload);
-      setMessage("Account information updated successfully.");
+      const result = await dispatch(updateUserProfile(updatedData));
+      if (result?.error) {
+        setError(result.error || "Failed to update account information.");
+        return;
+      }
+
+      setMessage(result?.message || "Account information updated successfully.");
       setPassword("");
       setSelectedFile(null);
       setPreviewURL("");
+      setAvatarUrl(uploadedAvatarUrl);
     } catch (err) {
       setError("Failed to update account information.");
     } finally {

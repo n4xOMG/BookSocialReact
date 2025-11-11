@@ -58,7 +58,19 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
     <>
       <List sx={{ spaceY: isMobile ? 1 : 2 }}>
         {chapters?.map((chapter) => {
-          const progress = Array.isArray(progresses) ? progresses.find((p) => Number(p.chapterId) === Number(chapter.id)) : null;
+          const progress = Array.isArray(progresses)
+            ? progresses.find((p) => {
+                const progressChapterId = p?.chapterId || p?.chapter?.id;
+                if (!progressChapterId || !chapter?.id) {
+                  return false;
+                }
+                return String(progressChapterId).toLowerCase() === String(chapter.id).toLowerCase();
+              })
+            : null;
+
+          const rawProgress = progress?.progress;
+          const numericProgress = typeof rawProgress === "number" ? rawProgress : parseFloat(rawProgress);
+          const progressValue = Number.isFinite(numericProgress) ? Math.min(Math.max(numericProgress, 0), 100) : 0;
 
           const isLocked = chapter?.locked && !chapter?.unlockedByUser && chapter?.price > 0;
 
@@ -77,7 +89,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
                 borderRadius: 1.5,
                 border: "1px solid",
                 borderColor: "divider",
-                boxShadow: '0 8px 8px 0 rgba(0, 0, 0, 0.37)',
+                boxShadow: "0 8px 8px 0 rgba(0, 0, 0, 0.37)",
                 bgcolor: isLocked ? "background.paper" : "action.notselect",
                 "&:hover": {
                   backgroundColor: isLocked ? "grey.100" : "action.hover",
@@ -114,7 +126,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
                 ) : (
                   // Display progress or other indicators for unlocked chapters
                   <Typography variant="body2" color="textSecondary">
-                    {progress ? `${progress.progress.toFixed(2)}%` : "0%"}
+                    {`${progressValue.toFixed(0)}%`}
                   </Typography>
                 )}
               </div>

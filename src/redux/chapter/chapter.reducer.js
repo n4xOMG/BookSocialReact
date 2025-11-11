@@ -57,6 +57,7 @@ const initialState = {
   unlockError: null,
   creditPackages: [],
   paymentIntent: null,
+  errorPaymentIntent: null,
   loadingPaymentIntent: false,
   paymentProviders: [],
   paymentData: null,
@@ -90,7 +91,13 @@ export const chapterReducer = (state = initialState, action) => {
       return {
         ...state,
         loadingPaymentIntent: false,
-        paymentIntent: action.payload.clientSecret,
+        paymentIntent: action.payload?.clientSecret || action.payload || null,
+      };
+    case CREATE_PAYMENT_INTENT_FAILED:
+      return {
+        ...state,
+        loadingPaymentIntent: false,
+        errorPaymentIntent: action.payload,
       };
 
     // New unified payment actions
@@ -104,7 +111,7 @@ export const chapterReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        paymentProviders: action.payload.providers,
+        paymentProviders: Array.isArray(action.payload) ? action.payload : action.payload?.providers || [],
       };
     case GET_PAYMENT_PROVIDERS_FAILED:
       return {
@@ -150,53 +157,80 @@ export const chapterReducer = (state = initialState, action) => {
         confirmingPayment: false,
         error: action.payload,
       };
-    case UNLOCK_CHAPTER_SUCCESS:
+    case UNLOCK_CHAPTER_SUCCESS: {
+      const unlockedChapterId = action.meta?.chapterId;
       return {
         ...state,
         loading: false,
         unlockSuccess: true,
-        chapters: state.chapters.map((chapter) => (chapter.id === action.payload.id ? { ...chapter, unlockedByUser: true } : chapter)),
-        chapter: state.chapter && state.chapter.id === action.payload.id ? { ...state.chapter, unlockedByUser: true } : state.chapter,
+        chapters: unlockedChapterId
+          ? state.chapters.map((chapter) => (chapter.id === unlockedChapterId ? { ...chapter, unlockedByUser: true } : chapter))
+          : state.chapters,
+        chapter:
+          state.chapter && unlockedChapterId && state.chapter.id === unlockedChapterId
+            ? { ...state.chapter, unlockedByUser: true }
+            : state.chapter,
       };
+    }
 
     case GET_CHAPTER_SUCCESS:
-      return { ...state, loading: false, error: null, chapter: action.payload };
+      return { ...state, loading: false, error: null, chapter: action.payload || null };
     case CHAPTER_UPLOAD_SUCCEED:
-      return { ...state, loading: false, error: null, chapters: [...state.chapters, action.payload] };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        chapters: action.payload ? [...state.chapters, action.payload] : state.chapters,
+      };
     case EDIT_CHAPTER_SUCCEED:
       return {
         ...state,
         loading: false,
         error: null,
-        chapters: state.chapters.map((chapter) => (chapter.id === action.payload.id ? action.payload : chapter)),
+        chapters: action.payload
+          ? state.chapters.map((chapter) => (chapter.id === action.payload.id ? { ...chapter, ...action.payload } : chapter))
+          : state.chapters,
       };
     case SAVE_PROGRESS_SUCCESS:
     case GET_PROGRESS_SUCCESS:
-      return { ...state, loading: false, error: null, readingProgress: action.payload };
+      return { ...state, loading: false, error: null, readingProgress: action.payload ?? null };
     case DELETE_CHAPTER_SUCCEED:
-      return { ...state, loading: false, error: null, chapters: state.chapters.filter((chapter) => chapter.id !== action.payload) };
-    case GET_ALL_CHAPTER_SUCCESS:
-    case GET_CHAPTERS_BY_BOOK_SUCCESS:
-      return { ...state, loading: false, error: null, chapters: action.payload };
-    case CLEAR_CHAPTERS:
-      return { ...state, chapters: [] };
-
-    case LIKE_CHAPTER_SUCCESS:
       return {
         ...state,
         loading: false,
-        chapter:
-          state.chapter.id === action.payload.id
-            ? { ...state.chapter, likedByCurrentUser: action.payload.likedByCurrentUser }
-            : state.chapter,
+        error: null,
+        chapters: state.chapters.filter((chapter) => chapter.id !== action.payload),
       };
+    case GET_ALL_CHAPTER_SUCCESS:
+    case GET_CHAPTERS_BY_BOOK_SUCCESS:
+      return { ...state, loading: false, error: null, chapters: action.payload || [] };
+    case CLEAR_CHAPTERS:
+      return { ...state, chapters: [] };
+
+    case LIKE_CHAPTER_SUCCESS: {
+      const likedChapter = action.payload;
+      return {
+        ...state,
+        loading: false,
+        chapters: likedChapter
+          ? state.chapters.map((chapter) => (chapter.id === likedChapter.id ? { ...chapter, ...likedChapter } : chapter))
+          : state.chapters,
+        chapter:
+          state.chapter && likedChapter && state.chapter.id === likedChapter.id ? { ...state.chapter, ...likedChapter } : state.chapter,
+      };
+    }
 
     case UNLIKE_CHAPTER_SUCCESS:
       return {
         ...state,
         loading: false,
-        chapters: state.chapters.map((chapter) => (chapter.id === action.payload.id ? { ...chapter, likedByCurrentUser: false } : chapter)),
-        chapter: state.chapter && state.chapter.id === action.payload.id ? { ...state.chapter, likedByCurrentUser: false } : state.chapter,
+        chapters: action.payload
+          ? state.chapters.map((chapter) => (chapter.id === action.payload.id ? { ...chapter, likedByCurrentUser: false } : chapter))
+          : state.chapters,
+        chapter:
+          state.chapter && action.payload && state.chapter.id === action.payload.id
+            ? { ...state.chapter, likedByCurrentUser: false }
+            : state.chapter,
       };
     case UNLOCK_CHAPTER_FAILED:
       return { ...state, loading: false, unlockError: action.payload };
@@ -208,7 +242,6 @@ export const chapterReducer = (state = initialState, action) => {
     case SAVE_PROGRESS_FAILED:
     case GET_PROGRESS_FAILED:
     case GET_CHAPTERS_BY_BOOK_FAILED:
-    case CREATE_PAYMENT_INTENT_FAILED:
     case LIKE_CHAPTER_FAILED:
     case UNLIKE_CHAPTER_FAILED:
       return { ...state, loading: false, error: action.payload };

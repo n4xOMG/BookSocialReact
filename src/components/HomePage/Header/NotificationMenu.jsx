@@ -1,6 +1,6 @@
 import { Notifications, MarkChatRead } from "@mui/icons-material";
 import { Badge, Box, Button, Divider, IconButton, Menu, Paper, Tooltip, Typography, CircularProgress } from "@mui/material";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getNotifications,
@@ -9,8 +9,47 @@ import {
   markNotificationAsRead,
 } from "../../../redux/notification/notification.action";
 import LoadingSpinner from "../../LoadingSpinner";
-import { connectWebSocket, disconnectWebSocket, checkWebSocketConnection } from "../../../services/websocket.service";
 import { formatExactTime, formatRelativeTime } from "../../../utils/formatDate";
+import { useNavigate } from "react-router-dom";
+
+const getNotificationDestination = (notification, currentUser) => {
+  if (!notification) return null;
+
+  if (notification.targetPath) return notification.targetPath;
+  if (notification.targetUrl) return notification.targetUrl;
+
+  const entityType = notification.notificationEntityType || notification.entityType;
+  const entityId = notification.entityId;
+  const meta = notification.metadata || notification.extraData || notification.data || {};
+  const bookId = notification.bookId || meta.bookId || meta.parentBookId || meta.bookUUID || meta.bookUuid;
+  const postId = notification.postId || meta.postId || meta.postUuid || meta.postUUID;
+
+  switch (entityType) {
+    case "BOOK":
+      return entityId ? `/books/${entityId}` : bookId ? `/books/${bookId}` : "/";
+    case "CHAPTER":
+      if (bookId && entityId) {
+        return `/books/${bookId}/chapters/${entityId}`;
+      }
+      return bookId ? `/books/${bookId}` : entityId ? `/books/${entityId}` : "/";
+    case "COMMENT":
+      if (postId) return `/posts/${postId}`;
+      if (bookId) return `/books/${bookId}`;
+      return entityId ? `/posts/${entityId}` : "/book-clubs";
+    case "PAYMENT":
+      return "/credit-packages";
+    case "POST":
+      return entityId ? `/posts/${entityId}` : postId ? `/posts/${postId}` : "/book-clubs";
+    case "REPORT":
+      if (currentUser?.roles?.some((role) => role === "ADMIN" || role === "ROLE_ADMIN" || role?.name === "ROLE_ADMIN")) {
+        return "/admin/reports";
+      }
+      return "/";
+    case "GLOBAL":
+    default:
+      return "/";
+  }
+};
 
 export default function NotificationMenu() {
   const dispatch = useDispatch();
@@ -18,13 +57,15 @@ export default function NotificationMenu() {
   const { user } = useSelector((state) => state.auth);
   const [anchorEl, setAnchorEl] = useState(null);
   const observer = useRef();
-  const wsCheckInterval = useRef(null);
+  const navigate = useNavigate();
   const open = Boolean(anchorEl);
 
   // Sort notifications by date
-  const sortedNotifications = notifications
-    ? [...notifications].sort((a, b) => new Date(b.createdDate || b.time) - new Date(a.createdDate || a.time))
-    : [];
+  const sortedNotifications = useMemo(() => {
+    if (!notifications?.length) return [];
+
+    return [...notifications].sort((a, b) => new Date(b.createdDate || b.time) - new Date(a.createdDate || a.time));
+  }, [notifications]);
 
   const unreadCount = notifications?.filter((noti) => !noti.read)?.length || 0;
 
@@ -46,9 +87,26 @@ export default function NotificationMenu() {
     dispatch(markAllNotificationsAsRead());
   };
 
-  const handleMarkAsRead = (notificationId) => {
-    dispatch(markNotificationAsRead(notificationId));
-  };
+  const handleNotificationClick = useCallback(
+    (notification) => {
+      if (!notification) return;
+
+      const { id, read } = notification;
+
+      if (id && !read) {
+        dispatch(markNotificationAsRead(id));
+      }
+
+      const destination = getNotificationDestination(notification, user);
+
+      setAnchorEl(null);
+
+      if (destination) {
+        navigate(destination);
+      }
+    },
+    [dispatch, navigate, user]
+  );
 
   // Fetch notifications on component mount
   useEffect(() => {
@@ -86,28 +144,6 @@ export default function NotificationMenu() {
     },
     [loading, loadingMore, hasMore, loadMore]
   );
-
-  // Connect to WebSocket when component mounts
-  useEffect(() => {
-    if (user?.id) {
-      // Connect to WebSocket
-      console.log("Establishing WebSocket connection for user:", user.username);
-      connectWebSocket(user.username);
-
-      // Periodically check WebSocket connection health
-      wsCheckInterval.current = setInterval(() => {
-        checkWebSocketConnection();
-      }, 30000); // Check every 30 seconds
-
-      return () => {
-        // Clean up on unmount
-        disconnectWebSocket();
-        if (wsCheckInterval.current) {
-          clearInterval(wsCheckInterval.current);
-        }
-      };
-    }
-  }, [user]);
 
   return (
     <>
@@ -207,7 +243,7 @@ export default function NotificationMenu() {
                         },
                         borderLeft: noti?.read ? "none" : "4px solid #1976d2",
                       }}
-                      onClick={() => !noti.read && handleMarkAsRead(noti.id)}
+                      onClick={() => handleNotificationClick(noti)}
                     >
                       {!noti?.read && (
                         <Box

@@ -19,7 +19,11 @@ const adminPayoutReducer = (state = initialState, action) => {
     case ADMIN_GET_PAYOUTS_REQUEST:
       return { ...state, loading: true, error: null };
     case ADMIN_GET_PAYOUTS_SUCCESS:
-      return { ...state, loading: false, payoutsPage: action.payload };
+      return {
+        ...state,
+        loading: false,
+        payoutsPage: action.payload && typeof action.payload === "object" ? action.payload : null,
+      };
     case ADMIN_GET_PAYOUTS_FAILURE:
       return { ...state, loading: false, error: action.payload };
     case ADMIN_PROCESS_PAYOUT_REQUEST:

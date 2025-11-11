@@ -12,17 +12,44 @@ const ReadingHistory = ({ userId }) => {
   const { readingProgresses = [] } = useSelector((state) => state.user);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchReadingHistory = async () => {
+      if (!userId) {
+        if (isMounted) {
+          setLoading(false);
+          setError(null);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setLoading(true);
+        setError(null);
+      }
+
       try {
-        dispatch(getReadingProgressByUser());
+        const result = await dispatch(getReadingProgressByUser());
+        if (isMounted && result?.error) {
+          setError(result.error || "Failed to load reading history.");
+        }
       } catch (err) {
-        setError("Failed to load reading history.");
+        if (isMounted) {
+          setError("Failed to load reading history.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchReadingHistory();
-  }, [userId]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, userId]);
 
   if (loading) {
     return (

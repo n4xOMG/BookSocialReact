@@ -16,10 +16,14 @@ export const adminListPayouts =
       const params = { page, size, sort };
       if (status) params.status = status;
       const { data } = await api.get(`${API_BASE_URL}/admin/payouts`, { params });
-      dispatch({ type: ADMIN_GET_PAYOUTS_SUCCESS, payload: data });
-      return { payload: data };
+      const payload = data?.data || null;
+      dispatch({ type: ADMIN_GET_PAYOUTS_SUCCESS, payload });
+      return { payload };
     } catch (error) {
-      dispatch({ type: ADMIN_GET_PAYOUTS_FAILURE, payload: error.response?.data || error.message });
+      dispatch({
+        type: ADMIN_GET_PAYOUTS_FAILURE,
+        payload: error.response?.data?.message || error.message,
+      });
     }
   };
 
@@ -27,11 +31,16 @@ export const adminProcessPayout = (payoutId) => async (dispatch) => {
   dispatch({ type: ADMIN_PROCESS_PAYOUT_REQUEST, meta: { payoutId } });
   try {
     const { data } = await api.post(`${API_BASE_URL}/admin/payouts/${payoutId}/process`);
-    dispatch({ type: ADMIN_PROCESS_PAYOUT_SUCCESS, payload: data });
+    const payload = data?.data || null;
+    dispatch({ type: ADMIN_PROCESS_PAYOUT_SUCCESS, payload });
     // refresh list after processing to reflect new status
     dispatch(adminListPayouts());
-    return { payload: data };
+    return { payload };
   } catch (error) {
-    dispatch({ type: ADMIN_PROCESS_PAYOUT_FAILURE, payload: error.response?.data || error.message, meta: { payoutId } });
+    dispatch({
+      type: ADMIN_PROCESS_PAYOUT_FAILURE,
+      payload: error.response?.data?.message || error.message,
+      meta: { payoutId },
+    });
   }
 };

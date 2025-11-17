@@ -180,8 +180,17 @@ httpClient.interceptors.request.use(
       config.headers = {};
     }
 
+    const hasCustomAuthHeader = Object.prototype.hasOwnProperty.call(config.headers, "Authorization");
+
     if (!useAuth) {
-      delete config.headers.Authorization;
+      if (!hasCustomAuthHeader) {
+        delete config.headers.Authorization;
+      }
+      delete config.useAuth;
+      return config;
+    }
+
+    if (hasCustomAuthHeader) {
       delete config.useAuth;
       return config;
     }

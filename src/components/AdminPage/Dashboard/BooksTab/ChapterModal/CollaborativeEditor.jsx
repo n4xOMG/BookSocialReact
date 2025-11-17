@@ -19,6 +19,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { editChapterAction, getChapterByRoomId, publishChapterAction } from "../../../../../redux/chapter/chapter.action";
 import { useYjs } from "../../../../../hooks/useYjs";
 import { processChapterContent, prepareContentForSaving } from "./contentProcessing";
+import { buildPresenceUser } from "../../../../../utils/presenceUtils";
 import { EditorHeader } from "./EditorHeader";
 import { CollaborativeSlateEditor } from "./CollaborativeSlateEditor";
 
@@ -27,26 +28,8 @@ import { CollaborativeSlateEditor } from "./CollaborativeSlateEditor";
  */
 export const CollaborativeEditorWrapper = () => {
   const { roomId } = useParams();
-  const dispatch = useDispatch();
-
-  // Generate a random color for the user's cursor
-  const userColor = useMemo(() => {
-    const COLORS = ["#DC2626", "#D97706", "#059669", "#7C3AED", "#DB2777"];
-    return COLORS[Math.floor(Math.random() * COLORS.length)];
-  }, []);
-
-  useEffect(() => {
-    if (!roomId) return;
-
-    console.log("Dispatching getChapterByRoomId with roomId:", roomId);
-    dispatch(getChapterByRoomId(roomId))
-      .then((result) => {
-        console.log("getChapterByRoomId result:", result);
-      })
-      .catch((error) => {
-        console.error("getChapterByRoomId error:", error);
-      });
-  }, [dispatch, roomId]);
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const presenceUser = useMemo(() => buildPresenceUser(currentUser), [currentUser]);
 
   if (!roomId) {
     return (
@@ -65,14 +48,11 @@ export const CollaborativeEditorWrapper = () => {
         initialPresence={{
           cursor: null,
           selection: null,
-          user: {
-            name: "Anonymous",
-            color: userColor,
-          },
+          user: presenceUser,
         }}
       >
         <ClientSideSuspense fallback={<LoadingEditor />}>
-          <CollaborativeEditor />
+          {() => <CollaborativeEditor presenceUser={presenceUser} roomId={roomId} />}
         </ClientSideSuspense>
       </RoomProvider>
     </LiveblocksProvider>
@@ -91,12 +71,16 @@ const LoadingEditor = () => (
 /**
  * Main collaborative editor component
  */
-export const CollaborativeEditor = () => {
-  const { chapter } = useSelector((store) => store.chapter);
-  const [content, setContent] = useState("");
-  const [isLoadingChapter, setIsLoadingChapter] = useState(true);
+export const CollaborativeEditor = ({ presenceUser, roomId }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { chapter } = useSelector((store) => store.chapter);
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const [content, setContent] = useState("");
+  const [isLoadingChapter, setIsLoadingChapter] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -112,18 +96,105 @@ export const CollaborativeEditor = () => {
   const { provider, sharedType, connected } = useYjs(processedContent);
 
   useEffect(() => {
-    if (chapter) {
+    if (!roomId) {
+      setLoadError("Room ID is missing.");
       setIsLoadingChapter(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingChapter(true);
+    setLoadError(null);
+
+    dispatch(getChapterByRoomId(roomId))
+      .then((result) => {
+        if (!isMounted) return;
+        if (result?.error) {
+          setLoadError(result.error);
+        }
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setLoadError(error?.message || "Failed to load chapter.");
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsLoadingChapter(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, roomId]);
+
+  useEffect(() => {
+    if (chapter) {
       setContent(processedContent);
-    } else {
-      setIsLoadingChapter(true);
+      setIsLoadingChapter(false);
     }
   }, [chapter, processedContent]);
 
+  const chapterAuthorId = useMemo(() => {
+    if (!chapter) return null;
+    const candidates = [
+      chapter.authorId,
+      chapter.author?.id,
+      chapter.ownerId,
+      chapter.owner?.id,
+      chapter.createdById,
+      chapter.createdBy?.id,
+      chapter.userId,
+      chapter.user?.id,
+      chapter.book?.authorId,
+      chapter.book?.author?.id,
+      chapter.book?.createdById,
+      chapter.book?.createdBy?.id,
+    ].filter((value) => value !== undefined && value !== null);
+
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    return String(candidates[0]);
+  }, [chapter]);
+
+  const isAdmin = useMemo(() => {
+    const roleName = currentUser?.role?.name;
+    if (!roleName) return false;
+    return roleName.toString().toUpperCase().includes("ADMIN");
+  }, [currentUser?.role?.name]);
+
+  const canManageChapter = useMemo(() => {
+    if (isAdmin) return true;
+    if (!currentUser?.id || !chapterAuthorId) return false;
+    return String(currentUser.id) === chapterAuthorId;
+  }, [isAdmin, currentUser?.id, chapterAuthorId]);
+
+  const shareUrl = useMemo(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return `${window.location.origin}/edit-chapter/${roomId}`;
+  }, [roomId]);
+
   const handleSaveDraft = async () => {
     if (content && provider) {
+      if (!canManageChapter) {
+        setSnackbarMessage("Only the chapter author can save drafts.");
+        setSnackbarSeverity("warning");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      if (!chapter?.id) {
+        setSnackbarMessage("Chapter data is not available yet.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      setIsSaving(true);
       const jsonContent = prepareContentForSaving(content);
-      console.log("Saving draft with content:", content);
 
       try {
         await dispatch(
@@ -141,10 +212,11 @@ export const CollaborativeEditor = () => {
           navigate(-1);
         }, 1500);
       } catch (error) {
-        console.error("Error saving draft:", error);
         setSnackbarMessage("Failed to save draft.");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+      } finally {
+        setIsSaving(false);
       }
     }
   };
@@ -160,12 +232,32 @@ export const CollaborativeEditor = () => {
   const confirmPublish = async () => {
     setDialogOpen(false);
     if (content && provider) {
+      if (!canManageChapter) {
+        setSnackbarMessage("Only the chapter author can publish chapters.");
+        setSnackbarSeverity("warning");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      if (!chapter?.id) {
+        setSnackbarMessage("Chapter data is not available yet.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      setIsPublishing(true);
       const jsonContent = prepareContentForSaving(content);
-      console.log("Publishing chapter with content:", content);
 
       try {
+        const bookId = chapter.bookId || chapter.book?.id;
+
+        if (!bookId) {
+          throw new Error("Missing book identifier for chapter.");
+        }
+
         await dispatch(
-          publishChapterAction(chapter.bookId, {
+          publishChapterAction(bookId, {
             ...chapter,
             content: jsonContent,
           })
@@ -178,11 +270,36 @@ export const CollaborativeEditor = () => {
           navigate(-1);
         }, 1500);
       } catch (error) {
-        console.error("Error publishing chapter:", error);
         setSnackbarMessage("Failed to publish chapter.");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+      } finally {
+        setIsPublishing(false);
       }
+    }
+  };
+
+  const handleShare = async () => {
+    if (!shareUrl) return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: chapter?.title || "Chapter",
+          url: shareUrl,
+        });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setSnackbarMessage("Link copied to clipboard.");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } else {
+        throw new Error("Share not supported");
+      }
+    } catch (error) {
+      setSnackbarMessage("Unable to share link automatically.");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
     }
   };
 
@@ -201,6 +318,16 @@ export const CollaborativeEditor = () => {
     return <LoadingEditor />;
   }
 
+  if (loadError) {
+    return (
+      <Paper elevation={3} sx={{ p: 4, m: 2, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          {loadError}
+        </Typography>
+      </Paper>
+    );
+  }
+
   if (!chapter) {
     return (
       <Paper elevation={3} sx={{ p: 4, m: 2, textAlign: "center" }}>
@@ -217,13 +344,29 @@ export const CollaborativeEditor = () => {
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <EditorHeader onSaveDraft={handleSaveDraft} onPublish={handlePublish} onNavigateBack={onNavigateBack} chapterTitle={chapter.title} />
+      <EditorHeader
+        onSaveDraft={handleSaveDraft}
+        onPublish={handlePublish}
+        onNavigateBack={onNavigateBack}
+        onShare={handleShare}
+        chapterTitle={chapter.title}
+        canManageChapter={canManageChapter}
+        isSaving={isSaving}
+        isPublishing={isPublishing}
+      />
+
+      {!canManageChapter && (
+        <Alert severity="info" sx={{ mx: 2, mb: 2 }}>
+          You can participate in editing, but only the chapter author can save drafts or publish changes.
+        </Alert>
+      )}
 
       <CollaborativeSlateEditor
         sharedType={sharedType}
         provider={provider}
         initialContent={content}
         onContentChange={(newContent) => setContent(newContent)}
+        presenceUser={presenceUser}
       />
 
       <Snackbar

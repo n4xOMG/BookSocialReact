@@ -166,7 +166,6 @@ export const getCurrentUserByJwt = (jwt) => async (dispatch) => {
     }
 
     const { data } = await httpClient.get(`${API_BASE_URL}/api/user/profile`);
-    logger.debug("Get profile response: ", { data });
 
     // Backend returns: { message, success, data: UserDTO }
     // Extract the actual user data from the response

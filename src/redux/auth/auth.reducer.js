@@ -28,6 +28,7 @@ const initialState = {
   error: null,
   user: null,
   loading: false,
+  isAuthenticated: false,
   forgotPasswordMessage: null,
   otpVerificationMessage: null,
   authMessage: null,
@@ -56,7 +57,13 @@ export const authReducer = (state = initialState, action) => {
 
     case GET_PROFILE_SUCCESS:
     case UPDATE_PROFILE_SUCCESS:
-      return { ...state, loading: false, error: null, user: action.payload };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        user: action.payload,
+        isAuthenticated: true,
+      };
 
     case LOGIN_SUCCEED:
       return {
@@ -66,6 +73,7 @@ export const authReducer = (state = initialState, action) => {
         error: null,
         authMessage: action.payload?.message || null,
         success: action.payload?.success !== false,
+        isAuthenticated: !!action.payload?.token,
       };
 
     case REGISTER_SUCCEED:
@@ -76,6 +84,7 @@ export const authReducer = (state = initialState, action) => {
         error: null,
         authMessage: action.payload?.message || null,
         success: action.payload?.success !== false,
+        isAuthenticated: !!action.payload?.token,
       };
 
     case FORGOT_PASSWORD_SUCCEED:
@@ -89,10 +98,22 @@ export const authReducer = (state = initialState, action) => {
 
     case LOGIN_FAILED:
     case REGISTER_FAILED:
-      return { ...state, loading: false, error: action.payload, authMessage: null };
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+        authMessage: null,
+        isAuthenticated: false,
+      };
 
     case GET_PROFILE_FAILED:
-      return { ...state, loading: false, error: action.payload, user: null };
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+        user: null,
+        isAuthenticated: false,
+      };
 
     case FORGOT_PASSWORD_FAILED:
       return { ...state, loading: false, error: action.payload, forgotPasswordMessage: null };
@@ -110,6 +131,7 @@ export const authReducer = (state = initialState, action) => {
       return {
         ...initialState,
         loading: false,
+        isAuthenticated: false,
       };
     default:
       return state;

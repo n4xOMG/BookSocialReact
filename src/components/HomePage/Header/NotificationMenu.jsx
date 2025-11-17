@@ -12,6 +12,13 @@ import LoadingSpinner from "../../LoadingSpinner";
 import { formatExactTime, formatRelativeTime } from "../../../utils/formatDate";
 import { useNavigate } from "react-router-dom";
 
+const isAdminUser = (user) => {
+  const roleName = user?.role?.name;
+  if (!roleName) return false;
+  const normalized = roleName.trim().toUpperCase();
+  return normalized === "ADMIN" || normalized === "ROLE_ADMIN";
+};
+
 const getNotificationDestination = (notification, currentUser) => {
   if (!notification) return null;
 
@@ -41,7 +48,7 @@ const getNotificationDestination = (notification, currentUser) => {
     case "POST":
       return entityId ? `/posts/${entityId}` : postId ? `/posts/${postId}` : "/book-clubs";
     case "REPORT":
-      if (currentUser?.roles?.some((role) => role === "ADMIN" || role === "ROLE_ADMIN" || role?.name === "ROLE_ADMIN")) {
+      if (isAdminUser(currentUser)) {
         return "/admin/reports";
       }
       return "/";

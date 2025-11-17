@@ -1,4 +1,5 @@
-import { Brightness7, Brightness4, Check, Error, Visibility, VisibilityOff } from "@mui/icons-material";
+import { useTheme } from "@emotion/react";
+import { Brightness4, Brightness7, Check, Error, Visibility, VisibilityOff } from "@mui/icons-material";
 import DangerousIcon from "@mui/icons-material/Dangerous";
 import {
   Alert,
@@ -7,7 +8,6 @@ import {
   CssBaseline,
   FormControl,
   FormControlLabel,
-  FormLabel,
   IconButton,
   InputAdornment,
   Paper,
@@ -22,11 +22,10 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import background from "../../assets/images/signin_background.png";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import { registerUserAction } from "../../redux/auth/auth.action";
 import UploadToCloudinary from "../../utils/uploadToCloudinary";
-import { useTheme } from "@emotion/react";
-import LoadingSpinner from "../../components/LoadingSpinner";
-import background from "../../assets/images/signin_background.png";
 
 function Copyright(props) {
   return (

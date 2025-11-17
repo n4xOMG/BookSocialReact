@@ -1,18 +1,33 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useUpdateMyPresence } from "@liveblocks/react";
 import { ReactEditor } from "slate-react";
+import { buildPresenceUser } from "../utils/presenceUtils";
 
 /**
  * Custom hook for managing collaboration presence (cursor position, user info)
  * @param {Object} editor - Slate editor instance
  * @param {boolean} editorReady - Whether the editor is ready
+ * @param {Object} presenceUser - User details to broadcast
  * @returns {Object} - Presence management functions
  */
-export const useCollaborationPresence = (editor, editorReady) => {
+export const useCollaborationPresence = (editor, editorReady, presenceUser) => {
   const updateMyPresence = useUpdateMyPresence();
-  const [userName] = useState(`User-${Math.floor(Math.random() * 10000)}`);
-  const userColorRef = useRef("#" + Math.floor(Math.random() * 16777215).toString(16));
+  const [fallbackUser] = useState(() => buildPresenceUser());
+  const presenceRef = useRef(buildPresenceUser(presenceUser || fallbackUser));
   const editorDomRef = useRef(null);
+
+  useEffect(() => {
+    if (!presenceUser) {
+      return;
+    }
+
+    presenceRef.current = buildPresenceUser(presenceUser);
+
+    updateMyPresence((prevPresence) => ({
+      ...prevPresence,
+      user: presenceRef.current,
+    }));
+  }, [presenceUser, updateMyPresence]);
 
   // Initialize presence
   useEffect(() => {
@@ -21,12 +36,9 @@ export const useCollaborationPresence = (editor, editorReady) => {
     updateMyPresence({
       cursor: null,
       selection: null,
-      user: {
-        name: userName,
-        color: userColorRef.current,
-      },
+      user: presenceRef.current,
     });
-  }, [editorReady, updateMyPresence, userName]);
+  }, [editorReady, updateMyPresence]);
 
   // Store editor DOM reference
   useEffect(() => {
@@ -54,14 +66,14 @@ export const useCollaborationPresence = (editor, editorReady) => {
 
       updateMyPresence({
         cursor: { x, y },
-        user: { name: userName, color: userColorRef.current },
+        user: presenceRef.current,
       });
     };
 
     const handleMouseLeave = () => {
       updateMyPresence({
         cursor: null,
-        user: { name: userName, color: userColorRef.current },
+        user: presenceRef.current,
       });
     };
 
@@ -74,7 +86,7 @@ export const useCollaborationPresence = (editor, editorReady) => {
       editorElement.removeEventListener("mousemove", handleMouseMove);
       editorElement.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [editorReady, updateMyPresence, userName]);
+  }, [editorReady, updateMyPresence]);
 
   // Update selection presence
   const updateSelection = useCallback(() => {
@@ -82,13 +94,12 @@ export const useCollaborationPresence = (editor, editorReady) => {
       updateMyPresence((prevPresence) => ({
         ...prevPresence,
         selection: editor.selection,
+        user: presenceRef.current,
       }));
     }
   }, [editor, updateMyPresence]);
 
   return {
-    userName,
-    userColor: userColorRef.current,
     editorDomRef,
     updateSelection,
   };

@@ -30,6 +30,13 @@ export default function ProfileMenu() {
     navigate("/admin/overview");
   };
 
+  const isAdmin = (() => {
+    const roleName = user?.role?.name;
+    if (!roleName) return false;
+    const normalized = roleName.trim().toUpperCase();
+    return normalized === "ADMIN" || normalized === "ROLE_ADMIN";
+  })();
+
   return (
     <>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
@@ -104,7 +111,7 @@ export default function ProfileMenu() {
                 <Avatar src={user?.avatarUrl} /> Profile
               </MenuItem>,
 
-              user?.role?.[0]?.authority === "ROLE_ADMIN" && (
+              isAdmin && (
                 <MenuItem onClick={navigateToAdmin} key="admin-dashboard">
                   <ListItemIcon>
                     <AdminPanelSettings fontSize="small" />

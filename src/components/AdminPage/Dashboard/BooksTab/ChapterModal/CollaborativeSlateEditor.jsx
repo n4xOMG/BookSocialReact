@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { Paper, Box, Typography } from "@mui/material";
 import { Slate, Editable } from "slate-react";
 import isHotkey from "is-hotkey";
@@ -14,7 +14,7 @@ import { EditorToolbar } from "./EditorToolbar";
 /**
  * Collaborative Slate Editor component
  */
-export const CollaborativeSlateEditor = ({ sharedType, provider, initialContent, onContentChange }) => {
+export const CollaborativeSlateEditor = ({ sharedType, provider, initialContent, onContentChange, presenceUser }) => {
   const { editor, editorRef, editorReady, initialValue, handleSlateChange } = useSlateEditor(
     sharedType,
     provider,
@@ -22,10 +22,7 @@ export const CollaborativeSlateEditor = ({ sharedType, provider, initialContent,
     onContentChange
   );
 
-  const { updateSelection, editorDomRef } = useCollaborationPresence(editor, editorReady);
-  useEffect(() => {
-    console.log("Received content in slate editor: ", initialContent);
-  });
+  const { updateSelection, editorDomRef } = useCollaborationPresence(editor, editorReady, presenceUser);
   // Handle content changes with presence updates
   const handleChange = useCallback(
     (newValue) => {

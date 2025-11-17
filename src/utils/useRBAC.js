@@ -1,14 +1,18 @@
-const normalize = (val) => {
-  const s = (val || "").toString().trim().toUpperCase();
-  return s.startsWith("ROLE_") ? s.slice(5) : s;
-};
-
 const useRBAC = (user, roles) => {
-  if (!user) return false;
-  const required = (roles || []).map(normalize);
-  // Support user.role being string or object with name
-  const userRole = user.role?.name ?? user.role ?? user?.authorRole ?? user?.roleName;
-  return required.includes(normalize(userRole));
+  if (!user || !Array.isArray(roles) || roles.length === 0) {
+    return false;
+  }
+
+  const normalize = (value) => {
+    if (!value) return null;
+    const upper = value.trim().toUpperCase();
+    return upper.startsWith("ROLE_") ? upper.slice(5) : upper;
+  };
+
+  const userRole = normalize(user.role?.name || "");
+  if (!userRole) return false;
+
+  return roles.some((role) => normalize(role) === userRole);
 };
 
 export default useRBAC;

@@ -47,6 +47,9 @@ import {
   GET_BOOK_COMMENT_COUNT_REQUEST,
   GET_BOOK_COMMENT_COUNT_SUCCESS,
   GET_BOOK_COMMENT_COUNT_FAILED,
+  DELETE_SENSITIVE_WORD_REQUEST,
+  DELETE_SENSITIVE_WORD_SUCCESS,
+  DELETE_SENSITIVE_WORD_FAILED,
 } from "./comment.actionType";
 
 const logger = createLogger("CommentActions");
@@ -374,16 +377,16 @@ export const addNewSensitiveWord = (reqData) => async (dispatch) => {
 };
 
 export const deleteSensitiveWord = (wordId) => async (dispatch) => {
-  dispatch({ type: ADD_SENSITIVE_WORD_REQUEST });
+  dispatch({ type: DELETE_SENSITIVE_WORD_REQUEST });
   try {
     const response = await api.delete(`${API_BASE_URL}/translator/sensitive-words/${wordId}`);
     const { data, message, success } = parseApiResponse(response);
-    dispatch({ type: ADD_SENSITIVE_WORD_SUCCESS, payload: data });
+    dispatch({ type: DELETE_SENSITIVE_WORD_SUCCESS, payload: data ?? wordId });
     return { payload: data, message, success };
   } catch (error) {
     logger.info("error", error);
     const errorMessage = getErrorMessage(error);
-    dispatch({ type: ADD_SENSITIVE_WORD_FAILED, payload: errorMessage });
+    dispatch({ type: DELETE_SENSITIVE_WORD_FAILED, payload: errorMessage });
     return { error: errorMessage };
   }
 };

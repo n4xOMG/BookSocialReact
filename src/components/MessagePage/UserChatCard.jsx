@@ -11,21 +11,33 @@ export default function UserChatCard({ chat, isSelected }) {
   return (
     <Card
       sx={{
-        mb: 1,
-        boxShadow: isSelected ? 3 : 1,
+        mb: 1.5,
+        boxShadow: "none",
         cursor: "pointer",
-        transition: "all 0.2s ease-in-out",
-        bgcolor: isSelected ? (theme.palette.mode === "light" ? "primary.light" : "primary.dark") : theme.palette.background.paper,
-        borderLeft: isSelected ? `4px solid ${theme.palette.primary.main}` : "none",
+        transition: "all 0.3s ease",
+        borderRadius: "16px",
+        background: isSelected
+          ? theme.palette.mode === "dark"
+            ? "rgba(157, 80, 187, 0.2)"
+            : "rgba(157, 80, 187, 0.15)"
+          : theme.palette.mode === "dark"
+          ? "rgba(255, 255, 255, 0.05)"
+          : "rgba(255, 255, 255, 0.5)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        border: "1px solid",
+        borderColor: isSelected
+          ? theme.palette.mode === "dark"
+            ? "rgba(157, 80, 187, 0.5)"
+            : "rgba(157, 80, 187, 0.4)"
+          : theme.palette.mode === "dark"
+          ? "rgba(255, 255, 255, 0.1)"
+          : "rgba(0, 0, 0, 0.1)",
+        borderLeft: isSelected ? `4px solid #9d50bb` : "none",
         "&:hover": {
-          bgcolor:
-            theme.palette.mode === "light"
-              ? isSelected
-                ? "primary.light"
-                : "rgba(0, 0, 0, 0.04)"
-              : isSelected
-              ? "primary.dark"
-              : "rgba(255, 255, 255, 0.08)",
+          background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.15)" : "rgba(157, 80, 187, 0.1)",
+          borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",
+          transform: "translateX(4px)",
         },
       }}
     >
@@ -52,8 +64,15 @@ export default function UserChatCard({ chat, isSelected }) {
             sx={{
               width: 48,
               height: 48,
-              bgcolor: theme.palette.mode === "light" ? "#e3f2fd" : "#1a237e",
-              color: theme.palette.mode === "light" ? "primary.main" : "white",
+              border: "2px solid",
+              borderColor: isSelected
+                ? theme.palette.mode === "dark"
+                  ? "rgba(157, 80, 187, 0.6)"
+                  : "rgba(157, 80, 187, 0.5)"
+                : theme.palette.mode === "dark"
+                ? "rgba(157, 80, 187, 0.3)"
+                : "rgba(157, 80, 187, 0.2)",
+              boxShadow: isSelected ? "0 4px 12px rgba(157, 80, 187, 0.3)" : "none",
             }}
             src={userChat.avatarUrl || "https://www.w3schools.com/howto/img_avatar.png"}
           />

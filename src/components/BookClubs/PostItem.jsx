@@ -91,8 +91,6 @@ const PostItem = ({ post, checkAuth }) => {
     return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
   };
 
-
-
   const handleLike = useCallback(
     checkAuth(async () => {
       try {
@@ -149,16 +147,22 @@ const PostItem = ({ post, checkAuth }) => {
 
   return (
     <Card
+      elevation={0}
       sx={{
         mb: 3,
         textAlign: "left",
-        borderRadius: 2,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        borderRadius: "24px",
         overflow: "hidden",
-        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+        transition: "all 0.3s ease",
+        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
         "&:hover": {
-          boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
-          transform: "translateY(-2px)",
+          boxShadow: "0 8px 32px rgba(157, 80, 187, 0.3)",
+          transform: "translateY(-4px)",
+          borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",
         },
       }}
     >
@@ -188,19 +192,19 @@ const PostItem = ({ post, checkAuth }) => {
         }
         subheader={
           <Tooltip title={formatExactTime(post.timestamp)} placement="bottom">
-            <Typography 
+            <Typography
               component={Link}
               to={`/posts/${post.id}`}
-              variant="caption" 
-              color="text.secondary" 
+              variant="caption"
+              color="text.secondary"
               sx={{
-                mt: 0, 
+                mt: 0,
                 lineHeight: 1,
                 textDecoration: "none",
                 "&:hover": {
-                          textDecoration: "underline",
-                          color: "primary.main",
-                        }
+                  textDecoration: "underline",
+                  color: "primary.main",
+                },
               }}
             >
               {formatRelativetime(post.timestamp)}
@@ -229,9 +233,9 @@ const PostItem = ({ post, checkAuth }) => {
             sx={{
               mb: 2,
               whiteSpace: "pre-line",
-              fontSize: (post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length) ? "1.5rem" : "1rem", 
-              fontWeight: (post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length) ? "bold" : "normal",
-              textAlign: 'justify',
+              fontSize: post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length ? "1.5rem" : "1rem",
+              fontWeight: post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length ? "bold" : "normal",
+              textAlign: "justify",
             }}
           >
             {post.content}
@@ -241,12 +245,14 @@ const PostItem = ({ post, checkAuth }) => {
         {/* Display shared post information */}
         {post.sharedPostId && (
           <Card
-            variant="outlined"
+            elevation={0}
             sx={{
-              borderRadius: 2,
-              borderColor: theme.palette.divider,
+              borderRadius: "16px",
               mb: 2,
-              boxShadow: "inset 0 0 10px rgba(0,0,0,0.2)",
+              background: theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.03)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid",
+              borderColor: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)",
             }}
           >
             <CardHeader
@@ -281,19 +287,19 @@ const PostItem = ({ post, checkAuth }) => {
               }
               subheader={
                 <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
-                  <Typography 
+                  <Typography
                     component={Link}
                     to={`/posts/${post.sharedPostId}`}
-                    variant="caption" 
-                    color="text.secondary" 
+                    variant="caption"
+                    color="text.secondary"
                     sx={{
-                      mt: 0, 
+                      mt: 0,
                       lineHeight: 1,
                       textDecoration: "none",
                       "&:hover": {
-                                textDecoration: "underline",
-                                color: "primary.main",
-                              }
+                        textDecoration: "underline",
+                        color: "primary.main",
+                      },
                     }}
                   >
                     {formatRelativetime(post.sharedPostTimestamp)}
@@ -329,7 +335,8 @@ const PostItem = ({ post, checkAuth }) => {
           display: "flex",
           justifyContent: "space-between",
           p: 2,
-          bgcolor: theme.palette.background.paper,
+          background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
+          backdropFilter: "blur(8px)",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -341,12 +348,21 @@ const PostItem = ({ post, checkAuth }) => {
           <Chip
             label={post.likes || 0}
             size="small"
-            variant="outlined"
             sx={{
               height: 24,
-              borderColor: isLiked ? theme.palette.error.main : "transparent",
-              color: isLiked ? theme.palette.error.main : "inherit",
               ml: 0.5,
+              borderRadius: "8px",
+              fontWeight: 600,
+              ...(isLiked
+                ? {
+                    background: "linear-gradient(135deg, #ff6b6b, #ee5a52)",
+                    color: "#fff",
+                    border: "none",
+                  }
+                : {
+                    variant: "outlined",
+                    borderColor: "transparent",
+                  }),
             }}
           />
         </Box>
@@ -357,7 +373,19 @@ const PostItem = ({ post, checkAuth }) => {
               <Message />
             </IconButton>
           </Tooltip>
-          <Chip label={post.commentCount || 0} size="small" variant="outlined" sx={{ height: 24, ml: 0.5 }} />
+          <Chip
+            label={post.commentCount || 0}
+            size="small"
+            sx={{
+              height: 24,
+              ml: 0.5,
+              borderRadius: "8px",
+              fontWeight: 600,
+              borderColor: "rgba(157, 80, 187, 0.3)",
+              background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.05)",
+              backdropFilter: "blur(8px)",
+            }}
+          />
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center" }}>

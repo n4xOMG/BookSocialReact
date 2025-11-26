@@ -1,4 +1,4 @@
-import { Alert, Box, Container, Grid } from "@mui/material";
+import { Alert, Box, Container, Grid, useTheme } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -14,10 +14,9 @@ const OtherUserProfile = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // Local state for loading and error
+  const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // Selectors to retrieve data from Redux store
   const { user, blockedUsers } = useSelector((state) => state.user, shallowEqual);
   const { user: currentUser } = useSelector((state) => state.auth, shallowEqual);
   const { booksByAuthor } = useSelector((state) => state.book, shallowEqual);
@@ -29,9 +28,7 @@ const OtherUserProfile = () => {
   const handleMessageClick = async () => {
     if (isBlocked || isViewingOwnProfile) return;
     try {
-      // Dispatch createChat action and get the chatId
       const chatId = await dispatch(createChat(userId));
-      // Navigate to the chat messages page
       navigate(`/chats/${chatId}`);
     } catch (error) {
       console.error("Failed to create or retrieve chat:", error);
@@ -105,7 +102,17 @@ const OtherUserProfile = () => {
   }
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        overscrollBehavior: "contain",
+        background:
+          theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, #0f0f1c 0%, #1a1a2e 100%)"
+            : "linear-gradient(135deg, #f8f7f4 0%, #e8e6e3 100%)",
+      }}
+    >
       <Container sx={{ width: "100%" }}>
         <Box sx={{ my: 4 }}>
           <UserInfo

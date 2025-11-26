@@ -61,14 +61,14 @@ const ForgotPassword = ({ toggleTheme }) => {
       }}
     >
       <CssBaseline />
-      <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+      <Box sx={{ position: "absolute", top: 16, right: 16 }}>
         <IconButton onClick={toggleTheme} color="inherit">
-          {isDarkMode ? <Brightness7 sx={{ color: "text.primary"  }} /> : <Brightness4 sx={{ color: "text.primary"  }} />}
+          {isDarkMode ? <Brightness7 sx={{ color: "text.primary" }} /> : <Brightness4 sx={{ color: "text.primary" }} />}
         </IconButton>
       </Box>
 
       <Paper
-        elevation={10}
+        elevation={0}
         sx={{
           p: 4,
           display: "flex",
@@ -77,9 +77,28 @@ const ForgotPassword = ({ toggleTheme }) => {
           width: "100%",
           maxWidth: 400,
           mt: 4,
+          borderRadius: "24px",
+          background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.85)" : "rgba(255, 255, 255, 0.85)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
         }}
       >
-        <Typography component="h1" variant="h5" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+        <Typography
+          component="h1"
+          variant="h5"
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: 700,
+            fontSize: "1.75rem",
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           Forgot Password
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mt: 1, mb: 2, textAlign: "center" }}>
@@ -96,6 +115,13 @@ const ForgotPassword = ({ toggleTheme }) => {
               onChange={(e) => setEmail(e.target.value)}
               required
               fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px",
+                  background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                  backdropFilter: "blur(8px)",
+                },
+              }}
             />
           </Box>
           <Button
@@ -106,6 +132,22 @@ const ForgotPassword = ({ toggleTheme }) => {
             sx={{
               mt: 3,
               mb: 3,
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "1rem",
+              py: 1.5,
+              textTransform: "none",
+              boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                transform: "translateY(-2px)",
+              },
+              "&:disabled": {
+                background: "rgba(157, 80, 187, 0.3)",
+              },
             }}
             disabled={isLoading}
           >

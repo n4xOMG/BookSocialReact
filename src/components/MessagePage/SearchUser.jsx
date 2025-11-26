@@ -64,8 +64,15 @@ export default function SearchUser() {
             }}
             sx={{
               "& .MuiOutlinedInput-root": {
-                borderRadius: 3,
-                bgcolor: theme.palette.background.paper,
+                borderRadius: "16px",
+                background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.8)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                "&:hover": {
+                  borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.5)" : "rgba(157, 80, 187, 0.4)",
+                },
               },
             }}
           />
@@ -79,8 +86,10 @@ export default function SearchUser() {
               cursor: "pointer",
               boxShadow: "none",
               borderRadius: 0,
+              background: "transparent",
               "&:hover": {
-                bgcolor: theme.palette.mode === "light" ? "rgba(0, 0, 0, 0.04)" : "rgba(255, 255, 255, 0.08)",
+                background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.15)" : "rgba(157, 80, 187, 0.1)",
+                backdropFilter: "blur(8px)",
               },
             }}
             onClick={() => handleClick(option.id)}

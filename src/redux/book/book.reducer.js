@@ -77,6 +77,7 @@ const initialState = {
   featuredBooks: [],
   trendingBooks: [],
   searchResults: [],
+  searchPageInfo: null,
   relatedBooks: [],
   avgRating: null,
   progresses: [],
@@ -212,8 +213,36 @@ export const bookReducer = (state = initialState, action) => {
       };
     }
 
-    case SEARCH_BOOK_SUCCESS:
-      return { ...state, loading: false, searchResults: action.payload };
+    case SEARCH_BOOK_SUCCESS: {
+      const payload = action.payload;
+      const content = Array.isArray(payload) ? payload : payload?.content || [];
+      const pageInfo = Array.isArray(payload)
+        ? {
+            page: 0,
+            size: content.length,
+            totalPages: 1,
+            totalElements: content.length,
+            sortBy: "id",
+            first: true,
+            last: true,
+          }
+        : {
+            page: payload?.number ?? payload?.pageable?.pageNumber ?? 0,
+            size: payload?.size ?? payload?.pageable?.pageSize ?? content.length,
+            totalPages: payload?.totalPages ?? 1,
+            totalElements: payload?.totalElements ?? content.length,
+            sortBy: payload?.sortBy ?? payload?.sort?.orders?.[0]?.property ?? "id",
+            first: payload?.first ?? payload?.pageable?.pageNumber === 0,
+            last: payload?.last ?? false,
+          };
+
+      return {
+        ...state,
+        loading: false,
+        searchResults: content,
+        searchPageInfo: pageInfo,
+      };
+    }
 
     case GET_BOOKS_BY_MONTH_SUCCESS:
       return { ...state, loading: false, error: null, booksByMonth: action.payload };
@@ -253,6 +282,7 @@ export const bookReducer = (state = initialState, action) => {
     case FOLLOW_BOOK_FAILED:
     case RATING_BOOK_FAILED:
     case SEARCH_BOOK_FAILED:
+      return { ...state, loading: false, error: action.payload, searchResults: [], searchPageInfo: null };
     case GET_READING_PROGRESSES_BY_BOOK_FAILED:
     case GET_LATEST_UPDATE_BOOK_FAILED:
     case GET_FAVOURED_BOOK_FAILED:

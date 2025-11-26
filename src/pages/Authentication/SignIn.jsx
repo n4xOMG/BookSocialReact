@@ -120,18 +120,50 @@ export default function SignIn({ toggleTheme }) {
 
           <Container component="main" maxWidth="xs">
             <Paper
-              elevation={10}
+              elevation={0}
               sx={{
                 p: 4,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                borderRadius: "24px",
+                background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.85)" : "rgba(255, 255, 255, 0.85)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
               }}
             >
-              <Avatar sx={{ m: 1, bgcolor: "primary.main" }}>
-                <LockOutlinedIcon sx={{ color: "background.default" }} />
-              </Avatar>
-              <Typography component="h1" variant="h5" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "16px",
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mb: 2,
+                  mt: 1,
+                  boxShadow: "0 8px 24px rgba(157, 80, 187, 0.4)",
+                }}
+              >
+                <LockOutlinedIcon sx={{ color: "#fff", fontSize: 32 }} />
+              </Box>
+              <Typography
+                component="h1"
+                variant="h5"
+                sx={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 700,
+                  fontSize: "2rem",
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
                 Sign in
               </Typography>
               <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: "100%" }}>
@@ -144,6 +176,13 @@ export default function SignIn({ toggleTheme }) {
                   name="email"
                   autoComplete="email"
                   autoFocus
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                      backdropFilter: "blur(8px)",
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -154,6 +193,13 @@ export default function SignIn({ toggleTheme }) {
                   type="password"
                   id="password"
                   autoComplete="current-password"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                      backdropFilter: "blur(8px)",
+                    },
+                  }}
                 />
                 {loginError && (
                   <Alert severity="error" sx={{ mt: 2 }}>
@@ -171,6 +217,19 @@ export default function SignIn({ toggleTheme }) {
                   sx={{
                     mt: 3,
                     mb: 3,
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "1rem",
+                    py: 1.5,
+                    textTransform: "none",
+                    boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                      boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                      transform: "translateY(-2px)",
+                    },
                   }}
                 >
                   Sign In

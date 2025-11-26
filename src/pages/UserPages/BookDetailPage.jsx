@@ -161,18 +161,16 @@ export const BookDetailPage = () => {
 
   if (loading || !book) {
     return (
-      <Box sx={{ display: "flex", height: "100vh" }}>
-        <Box sx={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <LoadingSpinner />
-        </Box>
+      <Box sx={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>
+        <LoadingSpinner />
         <AuthDialog />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ flex: 1, width: "100%" }}>
-      <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 4 }}>
+    <Box sx={{ flex: 1, width: "100%", minHeight: "100vh" }}>
+      <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 5 }}>
         <Grid
           container
           spacing={isMobile ? 1.5 : 3}
@@ -194,7 +192,24 @@ export const BookDetailPage = () => {
             }}
           >
             {/* KHỐI 1: Cover/Actions/Rating */}
-            <Paper elevation={2} sx={{ p: isMobile ? 1 : 3, borderRadius: 2 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: isMobile ? 2 : 3,
+                borderRadius: "20px",
+                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid",
+                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&:hover": {
+                  boxShadow: "0 12px 48px rgba(0, 0, 0, 0.15)",
+                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.25)"),
+                },
+              }}
+            >
               <Box
                 sx={{
                   display: "flex",
@@ -218,10 +233,17 @@ export const BookDetailPage = () => {
                     alt={`Cover of ${book.title}`}
                     sx={{
                       width: "100%",
-                      borderRadius: 2,
-                      boxShadow: "0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+                      borderRadius: "16px",
+                      boxShadow: "0 16px 48px rgba(0, 0, 0, 0.2)",
                       // Mobile: 0, Desktop: 1
                       mb: isMobile ? 0 : 1,
+                      border: "2px solid",
+                      borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"),
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "scale(1.02)",
+                        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+                      },
                     }}
                   />
                 </Box>
@@ -238,13 +260,15 @@ export const BookDetailPage = () => {
                     <Box
                       sx={{
                         display: "inline-flex",
+                        background: "rgba(255, 215, 0, 0.1)",
+                        backdropFilter: "blur(10px)",
                         border: "1px solid",
-                        borderColor: "#fbc02d",
-                        // Mobile: 2, Desktop: 4
-                        borderRadius: isMobile ? 2 : 4,
-                        p: 0.7,
+                        borderColor: "rgba(255, 215, 0, 0.3)",
+                        borderRadius: "12px",
+                        p: 1,
                         alignItems: "center",
                         mb: 1,
+                        boxShadow: "0 4px 12px rgba(255, 215, 0, 0.15)",
                       }}
                     >
                       <Typography
@@ -313,8 +337,21 @@ export const BookDetailPage = () => {
                       variant="contained"
                       onClick={handleFollowBook}
                       startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorder />}
-                      color={isFavorite ? "error" : "primary"}
-                      sx={{ py: 1.5 }}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: "12px",
+                        background: isFavorite ? "linear-gradient(135deg, #ff6b6b, #ee5a52)" : "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                        color: "#fff",
+                        fontWeight: 600,
+                        boxShadow: isFavorite ? "0 4px 16px rgba(255, 107, 107, 0.3)" : "0 4px 16px rgba(157, 80, 187, 0.3)",
+                        "&:hover": {
+                          background: isFavorite
+                            ? "linear-gradient(135deg, #ff7b7b, #ff6b6b)"
+                            : "linear-gradient(135deg, #b968c7, #9d50bb)",
+                          transform: "translateY(-2px)",
+                          boxShadow: isFavorite ? "0 6px 24px rgba(255, 107, 107, 0.4)" : "0 6px 24px rgba(157, 80, 187, 0.5)",
+                        },
+                      }}
                     >
                       {isFavorite ? "Following" : "Follow"}
                     </Button>
@@ -323,9 +360,16 @@ export const BookDetailPage = () => {
                       onClick={handleOpenReportModal}
                       sx={{
                         border: "1px solid",
-                        borderColor: "grey.300",
-                        borderRadius: 1,
+                        borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)"),
+                        borderRadius: "12px",
                         p: 1.5,
+                        background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)"),
+                        backdropFilter: "blur(10px)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.06)"),
+                          transform: "scale(1.05)",
+                        },
                       }}
                     >
                       <Report />
@@ -339,14 +383,18 @@ export const BookDetailPage = () => {
                       variant="contained"
                       onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
                       sx={{
-                        py: 1.5,
-                        backgroundColor: "primary.dark",
-                        color: "primary.contrastText",
-                        borderRadius: 1,
-                        boxShadow: 3,
+                        py: 1.8,
+                        borderRadius: "12px",
+                        background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                        color: "#fff",
+                        fontWeight: 700,
+                        fontSize: "1rem",
+                        boxShadow: "0 4px 20px rgba(0, 201, 167, 0.3)",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                         "&:hover": {
-                          backgroundColor: "primary.light",
-                          boxShadow: 4,
+                          background: "linear-gradient(135deg, #56efca, #84fab0)",
+                          boxShadow: "0 6px 28px rgba(0, 201, 167, 0.5)",
+                          transform: "translateY(-2px) scale(1.02)",
                         },
                       }}
                       startIcon={<MenuBook />}
@@ -386,11 +434,18 @@ export const BookDetailPage = () => {
           >
             {/* Book Details */}
             <Paper
-              elevation={2}
+              elevation={0}
               sx={{
                 order: isMobile ? 2 : "initial",
-                p: isMobile ? 1 : 4,
-                borderRadius: 2,
+                p: isMobile ? 2 : 4,
+                borderRadius: "20px",
+                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid",
+                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
               <BookDetails book={book} categories={categories} tags={tags} />
@@ -398,11 +453,18 @@ export const BookDetailPage = () => {
 
             {/* Author */}
             <Paper
-              elevation={2}
+              elevation={0}
               sx={{
                 order: isMobile ? 3 : "initial",
-                p: isMobile ? 1 : 4,
-                borderRadius: 2,
+                p: isMobile ? 2 : 4,
+                borderRadius: "20px",
+                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid",
+                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
               <AuthorCard author={book.author} checkAuth={checkAuth} />
@@ -410,18 +472,38 @@ export const BookDetailPage = () => {
 
             {/* Progress */}
             <Box sx={{ order: isMobile ? 4 : "initial" }}>
-              <Paper elevation={2} sx={{ p: isMobile ? 1 : 4, borderRadius: 2 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: isMobile ? 2 : 4,
+                  borderRadius: "20px",
+                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border: "1px solid",
+                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+              >
                 <ProgressBar progress={overallProgress} />
               </Paper>
             </Box>
 
             {/* Chapter List */}
             <Paper
-              elevation={2}
+              elevation={0}
               sx={{
                 order: isMobile ? 5 : "initial",
-                p: isMobile ? 1 : 4,
-                borderRadius: 2,
+                p: isMobile ? 2 : 4,
+                borderRadius: "20px",
+                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid",
+                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
               <ChapterList
@@ -437,21 +519,35 @@ export const BookDetailPage = () => {
             {/* Comments + Related */}
             <Suspense fallback={<LoadingSpinner />}>
               <Paper
-                elevation={2}
+                elevation={0}
                 sx={{
                   order: isMobile ? 6 : "initial",
-                  p: isMobile ? 1 : 4,
-                  borderRadius: 2,
+                  p: isMobile ? 2 : 4,
+                  borderRadius: "20px",
+                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border: "1px solid",
+                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
                 <BookCommentSection bookId={book.id} user={user} />
               </Paper>
               <Paper
-                elevation={2}
+                elevation={0}
                 sx={{
                   order: isMobile ? 7 : "initial",
-                  p: isMobile ? 1 : 4,
-                  borderRadius: 2,
+                  p: isMobile ? 2 : 4,
+                  borderRadius: "20px",
+                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border: "1px solid",
+                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
                 <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />

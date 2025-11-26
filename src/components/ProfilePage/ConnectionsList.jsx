@@ -1,6 +1,6 @@
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import { Avatar, Box, Button, Divider, Grid, Paper, Skeleton, Typography } from "@mui/material";
+import { Avatar, Box, Button, Divider, Grid, Paper, Skeleton, Typography, useTheme } from "@mui/material";
 import PropTypes from "prop-types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -53,6 +53,8 @@ const ConnectionsList = ({ userId, variant }) => {
         return blockedUsers;
     }
   }, [blockedUsers, userFollowers, userFollowings, variant]);
+
+  const theme = useTheme();
 
   const fetchConnections = useCallback(async () => {
     if ((variant === "followers" || variant === "following") && !userId) {
@@ -179,9 +181,30 @@ const ConnectionsList = ({ userId, variant }) => {
   }
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
-      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
-        <Typography variant="h5" gutterBottom fontWeight="medium">
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: "16px",
+        overflow: "hidden",
+        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.5)",
+        backdropFilter: "blur(10px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          fontWeight="medium"
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           {meta?.title}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -200,21 +223,33 @@ const ConnectionsList = ({ userId, variant }) => {
                   elevation={0}
                   sx={{
                     p: 2,
-                    borderRadius: 2,
+                    borderRadius: "12px",
                     display: "flex",
                     alignItems: "center",
                     transition: "all 0.3s",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid",
+                    borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
                     "&:hover": {
-                      bgcolor: "rgba(0, 0, 0, 0.02)",
+                      background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.08)",
                       transform: "translateY(-2px)",
-                      boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                      boxShadow: "0 8px 24px rgba(157, 80, 187, 0.2)",
+                      borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
                     },
                   }}
                 >
                   <Avatar
                     src={user.avatarUrl || null}
                     alt={displayName}
-                    sx={{ width: 60, height: 60, mr: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      mr: 2,
+                      border: "2px solid",
+                      borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                      boxShadow: "0 4px 12px rgba(157, 80, 187, 0.2)",
+                    }}
                   />
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="subtitle1" fontWeight="medium" noWrap>

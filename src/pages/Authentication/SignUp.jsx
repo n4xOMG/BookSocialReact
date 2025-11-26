@@ -229,19 +229,45 @@ export default function SignUp({ toggleTheme }) {
 
           <Container component="main" maxWidth="xs">
             <Paper
-              elevation={10}
+              elevation={0}
               sx={{
                 p: 4,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 marginTop: 8,
+                borderRadius: "24px",
+                background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.85)" : "rgba(255, 255, 255, 0.85)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
               }}
             >
-              <Typography component="h1" variant="h5" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+              <Typography
+                component="h1"
+                variant="h5"
+                sx={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 700,
+                  fontSize: "1.75rem",
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
                 Create an account
               </Typography>
-              <Typography component="h2" variant="subTitle1" sx={{ color: "primary.main", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+              <Typography
+                component="h2"
+                variant="subtitle1"
+                sx={{
+                  color: "text.secondary",
+                  mb: 2,
+                }}
+              >
                 Sign up to get started
               </Typography>
               <form onSubmit={handleSubmit}>
@@ -254,6 +280,13 @@ export default function SignUp({ toggleTheme }) {
                     required
                     value={registerData.username}
                     onChange={handleInputChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                        backdropFilter: "blur(8px)",
+                      },
+                    }}
                   />
 
                   <TextField
@@ -265,6 +298,13 @@ export default function SignUp({ toggleTheme }) {
                     required
                     value={registerData.email}
                     onChange={handleInputChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                        backdropFilter: "blur(8px)",
+                      },
+                    }}
                   />
 
                   <TextField
@@ -275,6 +315,13 @@ export default function SignUp({ toggleTheme }) {
                     required
                     value={registerData.fullname}
                     onChange={handleInputChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                        backdropFilter: "blur(8px)",
+                      },
+                    }}
                   />
 
                   <TextField
@@ -287,6 +334,13 @@ export default function SignUp({ toggleTheme }) {
                     }}
                     value={registerData.birthdate}
                     onChange={(e) => setRegisterData((prev) => ({ ...prev, birthdate: e.target.value }))}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                        backdropFilter: "blur(8px)",
+                      },
+                    }}
                   />
                   <FormControl component="fieldset">
                     <RadioGroup
@@ -307,11 +361,41 @@ export default function SignUp({ toggleTheme }) {
                   <Box>
                     <input accept="image/*" type="file" id="avatar" onChange={handleAvatarChange} style={{ display: "none" }} />
                     <label htmlFor="avatar">
-                      <Button variant="outlined" component="span" fullWidth>
+                      <Button
+                        variant="outlined"
+                        component="span"
+                        fullWidth
+                        sx={{
+                          borderRadius: "12px",
+                          borderColor: "#9d50bb",
+                          color: "#9d50bb",
+                          background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.05)",
+                          backdropFilter: "blur(8px)",
+                          textTransform: "none",
+                          fontWeight: 600,
+                          "&:hover": {
+                            borderColor: "#b968c7",
+                            background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
+                          },
+                        }}
+                      >
                         Upload Avatar
                       </Button>
                     </label>
-                    {avatar.file && <img src={avatar.url} alt="Avatar Preview" style={{ width: "100%", height: "auto", marginTop: 8 }} />}
+                    {avatar.file && (
+                      <Box
+                        sx={{
+                          mt: 2,
+                          borderRadius: "16px",
+                          overflow: "hidden",
+                          border: "2px solid",
+                          borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+                        }}
+                      >
+                        <img src={avatar.url} alt="Avatar Preview" style={{ width: "100%", height: "auto", display: "block" }} />
+                      </Box>
+                    )}
                     {avatar.error && (
                       <Typography variant="body2" color="error">
                         {avatar.error}
@@ -330,6 +414,13 @@ export default function SignUp({ toggleTheme }) {
                       required
                       value={registerData.password}
                       onChange={(e) => updatePassword(e.target.value)}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "12px",
+                          background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                          backdropFilter: "blur(8px)",
+                        },
+                      }}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -341,17 +432,34 @@ export default function SignUp({ toggleTheme }) {
                       }}
                     />
                     <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <Box
-                          key={level}
-                          sx={{
-                            height: 8,
-                            width: "100%",
-                            borderRadius: 1,
-                            bgcolor: strength >= level ? "green" : "grey.300",
-                          }}
-                        />
-                      ))}
+                      {[1, 2, 3, 4, 5].map((level) => {
+                        const getStrengthColor = () => {
+                          if (strength >= level) {
+                            if (level <= 2) return "#ff6b6b";
+                            if (level <= 3) return "#ffa500";
+                            if (level <= 4) return "#00c9a7";
+                            return "#00c9a7";
+                          }
+                          return theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+                        };
+                        return (
+                          <Box
+                            key={level}
+                            sx={{
+                              height: 8,
+                              width: "100%",
+                              borderRadius: 1,
+                              bgcolor: getStrengthColor(),
+                              background:
+                                strength >= level
+                                  ? `linear-gradient(90deg, ${getStrengthColor()}, ${getStrengthColor()})`
+                                  : getStrengthColor(),
+                              transition: "all 0.3s ease",
+                              boxShadow: strength >= level ? `0 2px 8px ${getStrengthColor()}50` : "none",
+                            }}
+                          />
+                        );
+                      })}
                     </Box>
                   </Box>
                   <TextField
@@ -363,6 +471,13 @@ export default function SignUp({ toggleTheme }) {
                     required
                     value={confirmPassword}
                     onChange={handleConfirmPasswordChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                        backdropFilter: "blur(8px)",
+                      },
+                    }}
                   />
                   {confirmPassword && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -408,6 +523,24 @@ export default function SignUp({ toggleTheme }) {
                     color="primary"
                     fullWidth
                     disabled={!Object.values(requirements).every(Boolean) || !passwordsMatch || isLoading}
+                    sx={{
+                      borderRadius: "12px",
+                      background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: "1rem",
+                      py: 1.5,
+                      textTransform: "none",
+                      boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                        boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                        transform: "translateY(-2px)",
+                      },
+                      "&:disabled": {
+                        background: "rgba(157, 80, 187, 0.3)",
+                      },
+                    }}
                   >
                     {isLoading ? (
                       <>

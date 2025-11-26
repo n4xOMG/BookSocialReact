@@ -25,22 +25,69 @@ export const UserBookChapterList = React.memo(({ chapters, onEditChapter, onDele
           alignItems: "center",
           justifyContent: "center",
           height: "100%",
-          p: 3,
-          borderRadius: 2,
-          bgcolor: "background.default",
-          border: "1px dashed",
-          borderColor: "divider",
+          p: 4,
+          borderRadius: "24px",
+          background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)"),
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)"),
         }}
       >
-        <MenuBookIcon sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
-        <Typography variant="h6" sx={{ mb: 1, color: "text.secondary" }}>
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: "20px",
+            background: "linear-gradient(135deg, #00c9a7, #56efca)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mb: 2.5,
+            boxShadow: "0 8px 24px rgba(0, 201, 167, 0.3)",
+          }}
+        >
+          <MenuBookIcon sx={{ fontSize: 48, color: "#fff" }} />
+        </Box>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 1,
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            background: "linear-gradient(135deg, #00c9a7, #56efca)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           No Chapters Yet
         </Typography>
-        <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+        <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3, lineHeight: 1.6, maxWidth: 300 }}>
           Start adding chapters to your book to engage your readers
         </Typography>
         {onAddChapter && (
-          <Button variant="contained" color="primary" startIcon={<AddCircleOutlineIcon />} onClick={onAddChapter}>
+          <Button
+            variant="contained"
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={onAddChapter}
+            sx={{
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #00c9a7, #56efca)",
+              color: "#fff",
+              fontWeight: 700,
+              textTransform: "none",
+              px: 3,
+              py: 1,
+              boxShadow: "0 4px 16px rgba(0, 201, 167, 0.3)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #56efca, #84fab0)",
+                boxShadow: "0 6px 24px rgba(0, 201, 167, 0.5)",
+                transform: "translateY(-2px)",
+              },
+            }}
+          >
             Add First Chapter
           </Button>
         )}

@@ -1,17 +1,5 @@
 import { Explore, MenuBook, Recommend, TrendingUp } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Fade,
-  Grid,
-  Tab,
-  Tabs,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import { Box, Button, CircularProgress, Container, Fade, Grid, Tab, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +17,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
   const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedTag, setSelectedTag] = useState(null);
 
   const { books, categories, tags } = useSelector(
     (state) => ({
@@ -56,12 +43,7 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     if (tabValue !== "all" || !hasMore) return;
     setIsLoading(true);
     dispatch(getAllBookAction(page, 10)).then((result) => {
-      if (
-        !result?.payload ||
-        (Array.isArray(result.payload)
-          ? result.payload.length === 0
-          : result.payload.content?.length === 0)
-      ) {
+      if (!result?.payload || (Array.isArray(result.payload) ? result.payload.length === 0 : result.payload.content?.length === 0)) {
         setHasMore(false);
       }
       setIsLoading(false);
@@ -96,30 +78,16 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     };
   }, [tabValue, isLoading, hasMore]);
 
-  const featuredBooksArray = useMemo(
-    () => (Array.isArray(featuredBooks) ? featuredBooks : []),
-    [featuredBooks]
-  );
-  const trendingBooksArray = useMemo(
-    () => (Array.isArray(trendingBooks) ? trendingBooks : []),
-    [trendingBooks]
-  );
-  const allBooksArray = useMemo(
-    () => (Array.isArray(books) ? books : []),
-    [books]
-  );
+  const featuredBooksArray = useMemo(() => (Array.isArray(featuredBooks) ? featuredBooks : []), [featuredBooks]);
+  const trendingBooksArray = useMemo(() => (Array.isArray(trendingBooks) ? trendingBooks : []), [trendingBooks]);
+  const allBooksArray = useMemo(() => (Array.isArray(books) ? books : []), [books]);
 
   const renderBookGrid = useCallback(
     (bookList) => (
       <Grid container spacing={3}>
         {bookList.map((book) => (
           <Grid item xs={6} sm={4} md={3} lg={2.4} key={book.id || book.title}>
-            <BookCard
-              book={book}
-              onClick={() => navigateToBook(book.id)}
-              categories={categories}
-              tags={tags}
-            />
+            <BookCard book={book} onClick={() => navigateToBook(book.id)} categories={categories} tags={tags} />
           </Grid>
         ))}
       </Grid>
@@ -128,50 +96,59 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
   );
 
   const handleTagSelect = (tag) => {
-    setSelectedTag(tag);
-    console.log('Tag selected:', tag ? tag.name : 'None');
-  }
+    const params = new URLSearchParams();
+    if (tag?.id) {
+      params.append("tagIds", tag.id);
+    }
+    const query = params.toString();
+    navigate(query ? `/search-results?${query}` : "/search-results");
+  };
 
   return (
     <Fade in timeout={500}>
-      <Box>
+      <Box className="fade-in-up">
         <Container maxWidth="xl" sx={{ p: isMobile ? 0 : 3 }}>
           {/* Header Section */}
-          <Box sx={{ mb: isMobile ? 0 : 6 }}>
+          <Box sx={{ mb: isMobile ? 2 : 6 }}>
             {!isLoading && trendingBooksArray?.length > 0 && (
-              <Box sx={{ overflow: "hidden", boxShadow: '0 5px 5px 0 rgba(0, 0, 0, 0.3)', borderRadius: 2 }}>
-                <BookHeroCarousel 
-                  books={trendingBooksArray}
-                  categories={categories}
-                  tags={tags}
-                />
+              <Box
+                sx={{
+                  overflow: "hidden",
+                  borderRadius: "20px",
+                  boxShadow: "0 16px 48px rgba(0, 0, 0, 0.25)",
+                  border: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
+                  mb: isMobile ? 2 : 4,
+                }}
+              >
+                <BookHeroCarousel books={trendingBooksArray} categories={categories} tags={tags} />
               </Box>
             )}
 
             {/* Tag Bar */}
-            <Box sx={{ mt: isMobile ? 1 : 4 }}>
-              <TagBarList 
-                onTagSelect={handleTagSelect}
-                tags={tags} 
-              />
+            <Box sx={{ mt: isMobile ? 1 : 3, mb: isMobile ? 2 : 4 }}>
+              <TagBarList onTagSelect={handleTagSelect} tags={tags} />
             </Box>
 
             <Typography
               variant="h3"
               component="h1"
+              className="font-serif"
               sx={{
                 mb: 2,
-                mt: isMobile ? 2 : 4,
+                mt: isMobile ? 2 : 3,
                 fontWeight: 800,
-                fontSize: { xs: "2rem", md: "2.5rem" },
-                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                fontSize: { xs: "2rem", md: "3rem", lg: "3.5rem" },
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
                 textAlign: "left",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.15,
               }}
             >
-              Discover Your Next Favorite Book
+              Discover Your Next Favorite Story
             </Typography>
             <Typography
               variant="body1"
@@ -180,35 +157,64 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 fontSize: { xs: "1rem", md: "1.125rem" },
                 maxWidth: "700px",
                 textAlign: "left",
+                fontWeight: 400,
+                lineHeight: 1.6,
               }}
             >
-              Explore our curated collection of books across various genres.
+              Explore our curated collection of stories, novels, and poetry across various genres.
             </Typography>
           </Box>
 
           {/* Editor's Choices Section */}
           {featuredBooksArray.length > 0 && (
             <Box sx={{ mb: { xs: 6, md: 8 } }}>
-              <Typography
-                variant="h5"
+              <Box
                 sx={{
-                  mb: 3,
+                  mb: 4,
+                  p: 2,
+                  background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)",
+                  backdropFilter: "blur(15px)",
+                  border: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
+                  borderRadius: "16px",
                   display: "flex",
                   alignItems: "center",
-                  fontWeight: 700,
-                  py: 1,
-                  borderBottom: `2px solid ${theme.palette.divider}`,
+                  gap: 2,
                 }}
               >
-                <Recommend sx={{ mr: 1.5, color: "primary.main" }} />
-                Editor's Choices
-              </Typography>
+                <Recommend
+                  sx={{
+                    fontSize: 32,
+                    color: "primary.main",
+                    filter: "drop-shadow(0 2px 8px rgba(157, 80, 187, 0.3))",
+                  }}
+                />
+                <Box>
+                  <Typography
+                    variant="h5"
+                    className="font-serif"
+                    sx={{
+                      fontWeight: 700,
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      mb: 0.5,
+                    }}
+                  >
+                    Editor's Choices
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Handpicked stories from our curators
+                  </Typography>
+                </Box>
+              </Box>
               {renderBookGrid(featuredBooksArray)}
             </Box>
           )}
 
           {/* Tabs Section */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 4 }}>
             <Tabs
               value={tabValue}
               onChange={handleTabChange}
@@ -216,13 +222,26 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
               scrollButtons={isMobile ? "auto" : false}
               allowScrollButtonsMobile
               sx={{
-                borderBottom: 1,
-                borderColor: "divider",
+                backgroundColor: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)",
+                backdropFilter: "blur(15px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
+                borderRadius: "16px",
+                p: 1,
                 "& .MuiTab-root": {
                   textTransform: "none",
                   fontWeight: 600,
                   fontSize: "1rem",
                   px: 3,
+                  borderRadius: "12px",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  "&.Mui-selected": {
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    color: "#fff",
+                  },
+                },
+                "& .MuiTabs-indicator": {
+                  display: "none",
                 },
               }}
             >
@@ -239,7 +258,7 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 label={
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Explore />
-                    All Books
+                    All Stories
                   </Box>
                 }
                 value="all"
@@ -273,20 +292,47 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
           {/* All Books Section */}
           {tabValue === "all" && (
             <Box sx={{ mb: { xs: 4, md: 6 } }}>
-              <Typography
-                variant="h5"
+              <Box
                 sx={{
-                  mb: 3,
+                  mb: 4,
+                  p: 2,
+                  background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)",
+                  backdropFilter: "blur(15px)",
+                  border: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
+                  borderRadius: "16px",
                   display: "flex",
                   alignItems: "center",
-                  fontWeight: 700,
-                  py: 1,
-                  borderBottom: `2px solid ${theme.palette.divider}`,
+                  gap: 2,
                 }}
               >
-                <MenuBook sx={{ mr: 1.5, color: "primary.main" }} />
-                Explore All Books
-              </Typography>
+                <MenuBook
+                  sx={{
+                    fontSize: 32,
+                    color: "secondary.main",
+                    filter: "drop-shadow(0 2px 8px rgba(0, 201, 167, 0.3))",
+                  }}
+                />
+                <Box>
+                  <Typography
+                    variant="h5"
+                    className="font-serif"
+                    sx={{
+                      fontWeight: 700,
+                      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      mb: 0.5,
+                    }}
+                  >
+                    Explore All Stories
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Browse our complete collection
+                  </Typography>
+                </Box>
+              </Box>
               {allBooksArray.length > 0 ? (
                 renderBookGrid(allBooksArray)
               ) : (

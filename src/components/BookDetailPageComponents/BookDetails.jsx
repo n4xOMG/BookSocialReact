@@ -10,7 +10,7 @@ export const BookDetails = ({ book, categories, tags }) => {
 
   const MAX_CHARS_DESKTOP = 210;
   const MAX_CHARS_MOBILE = 100;
-  
+
   const currentMaxChars = isMobile ? MAX_CHARS_MOBILE : MAX_CHARS_DESKTOP;
   const shouldTruncate = book.description && book.description.length > currentMaxChars;
 
@@ -37,26 +37,20 @@ export const BookDetails = ({ book, categories, tags }) => {
 
   return (
     <Fade in={true} timeout={800}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2, sm: 3, md: 4 },
-          borderRadius: 2,
-          backgroundColor: "background.paper",
-          transition: "all 0.3s ease-in-out",
-          "&:hover": {
-            boxShadow: (theme) => theme.shadows[2], 
-          },
-        }}
-      >
+      <Box>
         <Typography
           variant="h4"
           sx={{
-            fontWeight: "bold",
-            mb: isMobile ? 1 : 3,
-            fontSize: { xs: "1.8rem", md: "2.2rem" },
-            color: "primary.main",
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: 700,
+            mb: isMobile ? 2 : 3,
+            fontSize: { xs: "1.8rem", md: "2.4rem" },
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
             lineHeight: 1.2,
+            letterSpacing: "-0.5px",
           }}
         >
           {book.title}
@@ -72,13 +66,13 @@ export const BookDetails = ({ book, categories, tags }) => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {getCategoryName(book.categoryId) === 'Text-Dominant Books' ? (
+            {getCategoryName(book.categoryId) === "Text-Dominant Books" ? (
               <EditNote sx={{ mr: 1, color: "primary.main", fontSize: "1.2rem" }} />
             ) : (
               <Brush sx={{ mr: 1, color: "primary.main", fontSize: "1.2rem" }} />
             )}
             <Typography variant="body1" sx={{ color: "text.primary" }}>
-              {getCategoryName(book.categoryId) === 'Text-Dominant Books' ? "Written by " : "Illustrated by "}
+              {getCategoryName(book.categoryId) === "Text-Dominant Books" ? "Written by " : "Illustrated by "}
               <Box component="span" sx={{ fontWeight: "600" }}>
                 {book.artistName || book.authorName}
               </Box>
@@ -109,7 +103,6 @@ export const BookDetails = ({ book, categories, tags }) => {
               </Box>
             </Typography>
           </Box>
-          
         </Box>
 
         <Box sx={{ position: "relative", mb: isMobile ? 0 : 2 }}>
@@ -121,11 +114,11 @@ export const BookDetails = ({ book, categories, tags }) => {
               fontSize: "1.05rem",
               opacity: 0.9,
               maxWidth: "95%",
-              textAlign: 'justify',
+              textAlign: "justify",
             }}
           >
             {/* 3. Gọi hàm mà không cần truyền isMobile */}
-            {getDisplayDescription()} 
+            {getDisplayDescription()}
           </Typography>
 
           {/* 4. Sử dụng biến shouldTruncate đã được tính toán ở cấp component */}
@@ -156,31 +149,36 @@ export const BookDetails = ({ book, categories, tags }) => {
           sx={{ mb: isMobile ? 0 : 4 }}
         >
           {/* Category Section */}
-          <Box >
+          <Box>
             <Box sx={{ display: "flex", alignItems: "center", mb: isMobile ? 1 : 1.5 }}>
               <Category sx={{ mr: 1, color: "primary.main", fontSize: "1.3rem" }} />
               <Typography variant="h6" sx={{ fontWeight: "600", fontSize: "1.1rem" }}>
                 Category
               </Typography>
             </Box>
-            <Box sx={{
-              display: "flex", 
-              justifyContent: isMobile ? "flex-start" : "center", 
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: isMobile ? "flex-start" : "center",
+              }}
+            >
               <Chip
                 label={getCategoryName(book.categoryId)}
-                color="primary"
                 variant="filled"
                 sx={{
-                  borderRadius: "16px",
-                  fontWeight: "500",
-                  px: 1.5,
+                  borderRadius: "12px",
+                  fontWeight: 600,
+                  px: 2,
                   py: 0.75,
                   fontSize: "0.9rem",
-                  transition: "all 0.2s ease",
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  color: "#fff",
+                  border: "1px solid rgba(157, 80, 187, 0.3)",
+                  boxShadow: "0 4px 12px rgba(157, 80, 187, 0.25)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: (theme) => theme.shadows[2], 
+                    transform: "translateY(-2px) scale(1.05)",
+                    boxShadow: "0 6px 20px rgba(157, 80, 187, 0.4)",
                   },
                 }}
               />
@@ -195,24 +193,30 @@ export const BookDetails = ({ book, categories, tags }) => {
                 Status
               </Typography>
             </Box>
-            <Box sx={{
-              display: "flex", 
-              justifyContent: isMobile ? "flex-start" : "center", 
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: isMobile ? "flex-start" : "center",
+              }}
+            >
               <Chip
                 label={book.status}
-                color={book.status === "COMPLETED" ? "success" : "warning"}
                 variant="filled"
                 sx={{
-                  borderRadius: "16px",
-                  fontWeight: "500",
-                  px: 1.5,
+                  borderRadius: "12px",
+                  fontWeight: 600,
+                  px: 2,
                   py: 0.75,
                   fontSize: "0.9rem",
-                  transition: "all 0.2s ease",
+                  background:
+                    book.status === "COMPLETED" ? "linear-gradient(135deg, #00c9a7, #56efca)" : "linear-gradient(135deg, #ff6b6b, #ee5a52)",
+                  color: "#fff",
+                  border: book.status === "COMPLETED" ? "1px solid rgba(0, 201, 167, 0.3)" : "1px solid rgba(255, 107, 107, 0.3)",
+                  boxShadow: book.status === "COMPLETED" ? "0 4px 12px rgba(0, 201, 167, 0.25)" : "0 4px 12px rgba(255, 107, 107, 0.25)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: (theme) => theme.shadows[2], 
+                    transform: "translateY(-2px) scale(1.05)",
+                    boxShadow: book.status === "COMPLETED" ? "0 6px 20px rgba(0, 201, 167, 0.4)" : "0 6px 20px rgba(255, 107, 107, 0.4)",
                   },
                 }}
               />
@@ -242,23 +246,29 @@ export const BookDetails = ({ book, categories, tags }) => {
                 key={tag}
                 label={tag}
                 variant="outlined"
-                color="secondary"
                 sx={{
-                  borderRadius: "16px",
-                  fontWeight: "500",
-                  px: 1,
+                  borderRadius: "12px",
+                  fontWeight: 500,
+                  px: 1.5,
                   fontSize: "0.85rem",
-                  transition: "all 0.2s ease",
+                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.08)" : "rgba(0, 201, 167, 0.08)"),
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid",
+                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.2)" : "rgba(0, 201, 167, 0.25)"),
+                  color: (theme) => (theme.palette.mode === "dark" ? "#84fab0" : "#00c9a7"),
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
-                    backgroundColor: "secondary.light",
-                    transform: "translateY(-2px)",
+                    background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.15)" : "rgba(0, 201, 167, 0.15)"),
+                    borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.4)" : "rgba(0, 201, 167, 0.4)"),
+                    transform: "translateY(-2px) scale(1.05)",
+                    boxShadow: "0 4px 12px rgba(0, 201, 167, 0.2)",
                   },
                 }}
               />
             ))}
           </Stack>
         </Box>
-      </Paper>
+      </Box>
     </Fade>
   );
 };

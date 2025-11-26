@@ -96,18 +96,34 @@ const BookClubs = () => {
     <Box sx={{ display: "flex", minHeight: "100%" }}>
       <Container maxWidth="md" sx={{ mt: 3, mb: 3 }}>
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
             p: 3,
             mb: 4,
-            borderRadius: 2,
-            background: theme.palette.background.paper,
+            borderRadius: "24px",
+            background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid",
+            borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
           }}
         >
-          <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              mb: 2,
+              fontFamily: '"Playfair Display", serif',
+              fontWeight: 700,
+              fontSize: "1.75rem",
+              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             Share with the community
           </Typography>
-          <Divider sx={{ mb: 2 }} />
+          <Divider sx={{ mb: 2, borderColor: "rgba(157, 80, 187, 0.2)" }} />
           <Stack direction="row" spacing={2} alignItems="flex-start">
             <Avatar alt={user?.username || "User"} src={user?.avatarUrl || ""} sx={{ width: 48, height: 48 }} />
             <Box sx={{ flexGrow: 1 }}>
@@ -121,11 +137,30 @@ const BookClubs = () => {
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
                 placeholder="Share your thoughts..."
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "16px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
+                  },
+                }}
               />
               {/* Images Preview */}
               {selectedImages.length > 0 && (
-                <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 1,
+                    p: 2,
+                    borderRadius: "16px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
+                    border: "1px solid",
+                    borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+                  }}
+                >
                   {selectedImages.map((image, index) => (
                     <Box
                       key={index}
@@ -180,7 +215,24 @@ const BookClubs = () => {
                       multiple
                       onChange={handleImageChange}
                     />
-                    <Button variant="outlined" component="span" startIcon={<ImageIcon />}>
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<ImageIcon />}
+                      sx={{
+                        borderRadius: "12px",
+                        borderColor: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.3)" : "rgba(0, 201, 167, 0.3)",
+                        color: theme.palette.mode === "dark" ? "#84fab0" : "#00c9a7",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.05)" : "rgba(0, 201, 167, 0.05)",
+                        backdropFilter: "blur(8px)",
+                        "&:hover": {
+                          borderColor: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.5)" : "rgba(0, 201, 167, 0.5)",
+                          background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.1)" : "rgba(0, 201, 167, 0.1)",
+                        },
+                      }}
+                    >
                       {isMobile ? "Photo" : "Add Photo"}
                     </Button>
                   </label>
@@ -195,7 +247,19 @@ const BookClubs = () => {
                     textTransform: "none",
                     px: 3,
                     py: 1,
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                      boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                      transform: "translateY(-2px)",
+                    },
+                    "&:disabled": {
+                      background: "rgba(157, 80, 187, 0.3)",
+                    },
                   }}
                 >
                   {isSubmitting ? <CircularProgress size={24} color="inherit" /> : "Post"}

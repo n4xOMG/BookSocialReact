@@ -14,6 +14,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -42,6 +43,7 @@ const formatPaymentId = (id) => {
 
 const PurchaseHistory = () => {
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { loading, purchases, error } = useSelector((state) => state.purchase);
 
   useEffect(() => {
@@ -163,11 +165,31 @@ const PurchaseHistory = () => {
   }
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
-      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: "16px",
+        overflow: "hidden",
+        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.5)",
+        backdropFilter: "blur(10px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
+      }}
+    >
+      <Box sx={{ p: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <ReceiptIcon color="primary" sx={{ mr: 1 }} />
-          <Typography variant="h5" fontWeight="medium">
+          <ReceiptIcon sx={{ mr: 1, color: "#9d50bb" }} />
+          <Typography
+            variant="h5"
+            fontWeight="medium"
+            sx={{
+              fontFamily: '"Playfair Display", serif',
+              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             Purchase History
           </Typography>
         </Box>
@@ -180,7 +202,15 @@ const PurchaseHistory = () => {
         <TableContainer sx={{ overflowX: "auto" }}>
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
-              <TableRow sx={{ "& th": { fontWeight: "bold", bgcolor: (theme) => theme.palette.background.default } }}>
+              <TableRow
+                sx={{
+                  "& th": {
+                    fontWeight: "bold",
+                    background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.08)",
+                    backdropFilter: "blur(8px)",
+                  },
+                }}
+              >
                 <TableCell>ID</TableCell>
                 <TableCell>Amount</TableCell>
                 <TableCell>Package</TableCell>

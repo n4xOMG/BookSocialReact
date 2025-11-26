@@ -1,6 +1,6 @@
 import BookIcon from "@mui/icons-material/Book";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { Box, Button, Chip, Divider, Grid, LinearProgress, Paper, Skeleton, Typography } from "@mui/material";
+import { Box, Button, Chip, Divider, Grid, LinearProgress, Paper, Skeleton, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
@@ -9,6 +9,7 @@ const ReadingHistory = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { readingProgresses = [] } = useSelector((state) => state.user);
 
   useEffect(() => {
@@ -132,9 +133,30 @@ const ReadingHistory = ({ userId }) => {
   }
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
-      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
-        <Typography variant="h5" gutterBottom fontWeight="medium">
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: "16px",
+        overflow: "hidden",
+        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.5)",
+        backdropFilter: "blur(10px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          fontWeight="medium"
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           Your Reading History
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -150,13 +172,17 @@ const ReadingHistory = ({ userId }) => {
                 elevation={0}
                 sx={{
                   p: 2,
-                  borderRadius: 2,
+                  borderRadius: "12px",
                   display: "flex",
-                  bgcolor: (theme) => theme.palette.background.default,
+                  background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
                   transition: "all 0.3s",
                   "&:hover": {
                     transform: "translateY(-2px)",
-                    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                    boxShadow: "0 8px 24px rgba(157, 80, 187, 0.2)",
+                    borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
                   },
                 }}
               >
@@ -214,8 +240,14 @@ const ReadingHistory = ({ userId }) => {
                       startIcon={<MenuBookIcon fontSize="small" />}
                       sx={{
                         textTransform: "none",
-                        borderRadius: 6,
+                        borderRadius: "12px",
                         px: 2,
+                        background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                        boxShadow: "0 4px 12px rgba(157, 80, 187, 0.3)",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                          boxShadow: "0 6px 16px rgba(157, 80, 187, 0.4)",
+                        },
                       }}
                     >
                       Continue Reading

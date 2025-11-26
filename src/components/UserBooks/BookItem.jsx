@@ -25,23 +25,29 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
   return (
     <Card
       onClick={() => onSelect(book.id)}
-      elevation={isSelected ? 3 : 1}
+      elevation={0}
       sx={{
         display: "flex",
         height: 170,
-        transition: "all 0.2s ease-in-out",
-        border: isSelected ? `2px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
-        borderRadius: 2,
+        transition: "all 0.3s ease",
+        border: isSelected ? `2px solid ${theme.palette.primary.main}` : "1px solid",
+        borderColor: isSelected
+          ? theme.palette.primary.main
+          : theme.palette.mode === "dark"
+          ? "rgba(157, 80, 187, 0.2)"
+          : "rgba(157, 80, 187, 0.15)",
+        borderRadius: "16px",
         position: "relative",
+        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         "&:hover": {
-          boxShadow: 4,
+          boxShadow: isSelected ? "0 8px 32px rgba(157, 80, 187, 0.4)" : "0 8px 24px rgba(0, 0, 0, 0.15)",
           transform: "translateY(-3px)",
-          bgcolor: "action.hover",
+          borderColor: theme.palette.primary.main,
         },
         cursor: "pointer",
         overflow: "hidden",
-        bgcolor: isSelected ? "action.selected" : "action.notselect",
-        boxShadow: '0 8px 8px 0 rgba(0, 0, 0, 0.37)',
       }}
     >
       <CardMedia
@@ -101,11 +107,16 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
                   variant="h6"
                   component="div"
                   sx={{
-                    fontWeight: 600,
+                    fontFamily: '"Playfair Display", serif',
+                    fontWeight: 700,
+                    fontSize: "1.1rem",
                     textOverflow: "ellipsis",
                     overflow: "hidden",
                     whiteSpace: "nowrap",
-                    color: theme.palette.primary.dark,
+                    background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
                     textAlign: "left",
                   }}
                 >
@@ -148,13 +159,16 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
                     onEdit(book);
                   }}
                   sx={{
-                    color: "action.active",
+                    color: "#00c9a7",
                     p: 0.5,
                     mr: 0.5,
-                    bgcolor: "background.paper",
-                    boxShadow: 1,
+                    background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(0, 201, 167, 0.3)",
                     "&:hover": {
-                      bgcolor: "action.hover",
+                      background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                      color: "#fff",
+                      transform: "scale(1.05)",
                     },
                   }}
                 >
@@ -169,12 +183,15 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
                     onDelete(book);
                   }}
                   sx={{
-                    color: "error.main",
+                    color: "#ff6b6b",
                     p: 0.5,
-                    bgcolor: "background.paper",
-                    boxShadow: 1,
+                    background: theme.palette.mode === "dark" ? "rgba(255, 107, 107, 0.2)" : "rgba(255, 107, 107, 0.15)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255, 107, 107, 0.3)",
                     "&:hover": {
-                      bgcolor: "error.lighter",
+                      background: "linear-gradient(135deg, #ff6b6b, #ee5a52)",
+                      color: "#fff",
+                      transform: "scale(1.05)",
                     },
                   }}
                 >
@@ -185,7 +202,7 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
           </Box>
         </Box>
         {/* Divider và các tag, rating */}
-        <Box sx={{ mt: 'auto', flexShrink: 0 }}>
+        <Box sx={{ mt: "auto", flexShrink: 0 }}>
           <Divider sx={{ mb: 1.5 }} />
           <Box
             sx={{
@@ -201,29 +218,50 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
                 <Chip
                   label={book.status.charAt(0).toUpperCase() + book.status.slice(1).toLowerCase()}
                   size="small"
-                  color={book.status === "COMPLETED" ? "success" : "info"}
-                  sx={chipLabelSx}
+                  sx={{
+                    ...chipLabelSx,
+                    borderRadius: "8px",
+                    fontWeight: 600,
+                    background:
+                      book.status === "COMPLETED"
+                        ? "linear-gradient(135deg, #00c9a7, #56efca)"
+                        : "linear-gradient(135deg, #667eea, #764ba2)",
+                    color: "#fff",
+                    border: "none",
+                  }}
                 />
               )}
               {book.chapterCount > 0 && (
                 <Tooltip title="Chapters">
                   <Chip
-                    icon={<LibraryBooksIcon />}
+                    icon={<LibraryBooksIcon sx={{ color: "#9d50bb !important" }} />}
                     label={`${book.chapterCount}`}
                     size="small"
                     variant="outlined"
-                    sx={statChipSx}
+                    sx={{
+                      ...statChipSx,
+                      borderRadius: "8px",
+                      borderColor: "rgba(157, 80, 187, 0.3)",
+                      background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.05)",
+                      backdropFilter: "blur(8px)",
+                    }}
                   />
                 </Tooltip>
               )}
               {book.tagIds?.length > 0 && (
                 <Tooltip title={`${book.tagIds.length} ${book.tagIds.length === 1 ? "tag" : "tags"}`}>
                   <Chip
-                    icon={<LabelIcon />}
+                    icon={<LabelIcon sx={{ color: "#00c9a7 !important" }} />}
                     label={book.tagIds.length}
                     size="small"
                     variant="outlined"
-                    sx={statChipSx}
+                    sx={{
+                      ...statChipSx,
+                      borderRadius: "8px",
+                      borderColor: "rgba(0, 201, 167, 0.3)",
+                      background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.1)" : "rgba(0, 201, 167, 0.05)",
+                      backdropFilter: "blur(8px)",
+                    }}
                   />
                 </Tooltip>
               )}
@@ -239,27 +277,60 @@ export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDele
               }}
             >
               <Tooltip title={`${book.avgRating?.toFixed(1) || 0} avg rating (${book.ratingCount || 0} ratings)`} placement="top">
-                <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", px: 0.8, py: 0.3, borderRadius: 1 }}>
-                  <StarIcon sx={{ fontSize: "0.9rem", color: "warning.main", mr: 0.5 }} />
-                  <Typography variant="caption" fontWeight={500}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    px: 0.8,
+                    py: 0.3,
+                    borderRadius: "8px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 193, 7, 0.15)" : "rgba(255, 193, 7, 0.1)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(255, 193, 7, 0.3)",
+                  }}
+                >
+                  <StarIcon sx={{ fontSize: "0.9rem", color: "#ffc107", mr: 0.5 }} />
+                  <Typography variant="caption" fontWeight={600} sx={{ color: "#ffc107" }}>
                     {book.avgRating?.toFixed(1) || "0.0"}
                   </Typography>
                 </Box>
               </Tooltip>
 
               <Tooltip title={`${book.viewCount || 0} views`} placement="top">
-                <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", px: 0.8, py: 0.3, borderRadius: 1 }}>
-                  <VisibilityIcon sx={{ fontSize: "0.9rem", color: "text.secondary", mr: 0.5 }} />
-                  <Typography variant="caption" fontWeight={500}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    px: 0.8,
+                    py: 0.3,
+                    borderRadius: "8px",
+                    background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.15)" : "rgba(157, 80, 187, 0.1)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(157, 80, 187, 0.3)",
+                  }}
+                >
+                  <VisibilityIcon sx={{ fontSize: "0.9rem", color: "#9d50bb", mr: 0.5 }} />
+                  <Typography variant="caption" fontWeight={600} sx={{ color: "#9d50bb" }}>
                     {book.viewCount || 0}
                   </Typography>
                 </Box>
               </Tooltip>
 
               <Tooltip title={`${book.favCount || 0} favorites`} placement="top">
-                <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", px: 0.8, py: 0.3, borderRadius: 1 }}>
-                  <FavoriteIcon sx={{ fontSize: "0.9rem", color: "error.main", mr: 0.5 }} />
-                  <Typography variant="caption" fontWeight={500}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    px: 0.8,
+                    py: 0.3,
+                    borderRadius: "8px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 107, 107, 0.15)" : "rgba(255, 107, 107, 0.1)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(255, 107, 107, 0.3)",
+                  }}
+                >
+                  <FavoriteIcon sx={{ fontSize: "0.9rem", color: "#ff6b6b", mr: 0.5 }} />
+                  <Typography variant="caption" fontWeight={600} sx={{ color: "#ff6b6b" }}>
                     {book.favCount || 0}
                   </Typography>
                 </Box>

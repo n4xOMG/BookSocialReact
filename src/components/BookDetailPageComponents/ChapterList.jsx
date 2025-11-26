@@ -31,18 +31,28 @@ export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, use
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", mb: isMobile ? 1 : 2 }}>
-        <MenuBook sx={{ mr: 1.5 }} />
-        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: isMobile ? 2 : 3 }}>
+        <MenuBook sx={{ mr: 1.5, color: "#9d50bb" }} />
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: 700,
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           Chapters
         </Typography>
       </Box>
 
-      <Divider sx={{ mb: isMobile ? 1 : 3 }} />
+      <Divider sx={{ mb: isMobile ? 2 : 3, opacity: 0.3 }} />
 
       {chapters === undefined ? (
         <Box sx={{ py: 4, textAlign: "center" }}>
-          <CircularProgress size={30} thickness={4} />
+          <CircularProgress size={30} thickness={4} sx={{ color: "#9d50bb" }} />
           <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
             Loading chapters...
           </Typography>
@@ -52,21 +62,30 @@ export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, use
           <Tabs
             value={value}
             onChange={handleChange}
-            indicatorColor="primary"
             variant="fullWidth"
             aria-label="Chapters tab"
+            TabIndicatorProps={{
+              style: {
+                background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                height: "3px",
+                borderRadius: "3px 3px 0 0",
+              },
+            }}
             sx={{
               borderBottom: 1,
-              borderColor: "divider",
+              borderColor: "rgba(157, 80, 187, 0.2)",
               mb: isMobile ? 0 : 2,
               "& .MuiTab-root": {
-                fontWeight: "bold",
+                fontWeight: 600,
                 textTransform: "none",
                 fontSize: "1rem",
                 py: 1.5,
+                color: (theme) => theme.palette.text.secondary,
+                transition: "all 0.3s ease",
               },
               "& .Mui-selected": {
-                color: "primary.main",
+                color: "#9d50bb",
+                fontWeight: 700,
               },
             }}
           >

@@ -4,7 +4,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SaveIcon from "@mui/icons-material/Save";
-import { Alert, Avatar, Badge, Box, Button, Divider, Grid, IconButton, Paper, TextField, Typography } from "@mui/material";
+import { Alert, Avatar, Badge, Box, Button, Divider, Grid, IconButton, Paper, TextField, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
@@ -81,17 +81,40 @@ const AccountInfo = ({ user }) => {
     }
   };
 
+  const theme = useTheme();
+
   return (
-    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
-      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
-        <Typography variant="h5" gutterBottom fontWeight="medium">
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: "16px",
+        overflow: "hidden",
+        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.5)",
+        backdropFilter: "blur(10px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          fontWeight="medium"
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           Account Information
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Manage your account details and credentials
         </Typography>
 
-        <Divider sx={{ mb: 4 }} />
+        <Divider sx={{ mb: 4, opacity: 0.3 }} />
 
         <Box component="form" onSubmit={handleUpdate}>
           {message && (
@@ -123,13 +146,15 @@ const AccountInfo = ({ user }) => {
                   <IconButton
                     component="label"
                     sx={{
-                      bgcolor: "primary.main",
+                      background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
                       color: "white",
                       "&:hover": {
-                        bgcolor: "primary.dark",
+                        background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                        transform: "scale(1.05)",
                       },
                       width: 36,
                       height: 36,
+                      boxShadow: "0 4px 12px rgba(157, 80, 187, 0.4)",
                     }}
                   >
                     <PhotoCameraIcon fontSize="small" />
@@ -143,7 +168,9 @@ const AccountInfo = ({ user }) => {
                   sx={{
                     width: 120,
                     height: 120,
-                    boxShadow: 2,
+                    border: "3px solid",
+                    borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",
+                    boxShadow: "0 8px 24px rgba(157, 80, 187, 0.3)",
                     transition: "all 0.3s",
                     "&:hover": {
                       transform: "scale(1.05)",
@@ -178,7 +205,9 @@ const AccountInfo = ({ user }) => {
                 placeholder="Enter your full name"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               />
@@ -201,7 +230,9 @@ const AccountInfo = ({ user }) => {
                 placeholder="Choose a unique username"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               />
@@ -225,7 +256,9 @@ const AccountInfo = ({ user }) => {
                 placeholder="Enter your email address"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               />
@@ -249,7 +282,9 @@ const AccountInfo = ({ user }) => {
                 helperText="Leave blank to keep your current password"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               />
@@ -274,7 +309,9 @@ const AccountInfo = ({ user }) => {
                 helperText="Share a little about yourself with the community"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               />
@@ -290,11 +327,20 @@ const AccountInfo = ({ user }) => {
                 disabled={loading}
                 startIcon={<SaveIcon />}
                 sx={{
-                  borderRadius: 2,
+                  borderRadius: "12px",
                   py: 1.5,
                   textTransform: "none",
                   fontWeight: "bold",
-                  boxShadow: 2,
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                    boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                    transform: "translateY(-2px)",
+                  },
+                  "&:disabled": {
+                    background: "rgba(157, 80, 187, 0.3)",
+                  },
                 }}
               >
                 {loading ? "Updating..." : "Save Account Changes"}

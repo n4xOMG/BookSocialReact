@@ -1,6 +1,7 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { Alert, Box, Button, IconButton, LinearProgress, Snackbar, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Alert, Box, Button, IconButton, Snackbar, Step, StepLabel, Stepper, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +12,6 @@ import CategoriesAndTagsStep from "../../components/UserUploadBook/CategoriesAnd
 import SettingsStep from "../../components/UserUploadBook/SettingsStep";
 import { addNewBookAction } from "../../redux/book/book.action";
 import { UploadToServer } from "../../utils/uploadToServer";
-import { useTheme } from "@emotion/react";
 
 export default function UserUploadBook() {
   const navigate = useNavigate();
@@ -106,14 +106,12 @@ export default function UserUploadBook() {
     try {
       setLoading(true);
       const imageUrl = await UploadToServer(bookInfo.coverFile, user.username, `book_${bookInfo.title}_${Date.now()}`);
-      // Prepare the book data with the image URL
       const bookData = {
         ...bookInfo,
         bookCover: imageUrl,
         categoryId: bookInfo.category.id,
         tagIds: bookInfo.tags.map((tag) => tag.id),
       };
-      // Dispatch the action to add the new book
       dispatch(addNewBookAction(bookData));
       setSnackbarMessage("Book uploaded successfully!");
       setSnackbarOpen(true);
@@ -145,64 +143,181 @@ export default function UserUploadBook() {
       ) : (
         <Box
           sx={{
-          backgroundImage: theme.palette.background.backgroundImage,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+            background:
+              theme.palette.mode === "dark"
+                ? "linear-gradient(135deg, #0f0f1c 0%, #1a1a2e 100%)"
+                : "linear-gradient(135deg, #f8f7f4 0%, #e8e6e3 100%)",
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            py: 4,
+          }}
         >
-          <Box 
+          <Box
             sx={{
-            maxWidth: 800,
-            width: "100%",
-            mx: "auto",
-            p: { xs: 2, sm: 3, md: 4 },
-            backgroundColor: "rgba(255, 255, 255, 0.15)", 
-            backdropFilter: "blur(10px) saturate(180%)",
-            border: "1px solid rgba(255, 255, 255, 0.125)", 
-            borderRadius: "20px", 
-            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.2)", 
+              maxWidth: 900,
+              width: "100%",
+              mx: "auto",
+              px: { xs: 2, sm: 3 },
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <IconButton onClick={() => navigate("/")} sx={{ color: "text.primary" }} >
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h4" sx={{ fontWeight: "bold", ml: 1 }}>
-                Upload New Book
-              </Typography>
-            </Box>
-            <Box sx={{ mb: 4 }}>
-              <Stepper activeStep={currentStep} alternativeLabel>
-                {steps.map((step, index) => (
-                  <Step key={index}>
-                    <StepLabel>{step.title}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-              <LinearProgress variant="determinate" value={(currentStep / steps.length) * 100} sx={{ mt: 2 }} />
-            </Box>
-            <form>
-              {steps[currentStep].component}
-              <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
-                {currentStep > 0 && (
-                  <Button variant="outlined" startIcon={<ChevronLeftIcon />} onClick={handleBack} sx={{ mr: 2 }}>
+            <Box
+              sx={{
+                backgroundColor: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.7)" : "rgba(255, 255, 255, 0.7)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                border: `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
+                borderRadius: "24px",
+                boxShadow: theme.palette.mode === "dark" ? "0 8px 32px rgba(0, 0, 0, 0.4)" : "0 8px 32px rgba(0, 0, 0, 0.1)",
+                p: { xs: 3, sm: 4, md: 5 },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
+                <IconButton
+                  onClick={() => navigate("/")}
+                  sx={{
+                    backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+                    backdropFilter: "blur(8px)",
+                    border: `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
+                    borderRadius: "12px",
+                    "&:hover": {
+                      backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)",
+                      transform: "translateX(-2px)",
+                    },
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    ml: 2,
+                    background: "linear-gradient(135deg, #9d50bb 0%, #6e48aa 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    fontFamily: '"Playfair Display", serif',
+                  }}
+                >
+                  Upload New Book
+                </Typography>
+              </Box>
+              <Box sx={{ mb: 5 }}>
+                <Stepper
+                  activeStep={currentStep}
+                  alternativeLabel
+                  sx={{
+                    "& .MuiStepLabel-root .Mui-completed": {
+                      color: "#9d50bb",
+                    },
+                    "& .MuiStepLabel-root .Mui-active": {
+                      color: "#9d50bb",
+                    },
+                    "& .MuiStepLabel-label.Mui-active": {
+                      fontWeight: 600,
+                    },
+                    "& .MuiStepConnector-line": {
+                      borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+                    },
+                    "& .Mui-completed .MuiStepConnector-line": {
+                      borderColor: "#9d50bb",
+                    },
+                  }}
+                >
+                  {steps.map((step, index) => (
+                    <Step key={index}>
+                      <StepLabel
+                        sx={{
+                          "& .MuiStepLabel-label": {
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                          },
+                        }}
+                      >
+                        {step.title}
+                      </StepLabel>
+                    </Step>
+                  ))}
+                </Stepper>
+              </Box>
+              <Box
+                sx={{
+                  backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
+                  backdropFilter: "blur(8px)",
+                  border: `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)"}`,
+                  borderRadius: "16px",
+                  p: { xs: 3, sm: 4 },
+                  mb: 4,
+                }}
+              >
+                {steps[currentStep].component}
+              </Box>
+              <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                {currentStep > 0 ? (
+                  <Button
+                    variant="outlined"
+                    startIcon={<ChevronLeftIcon />}
+                    onClick={handleBack}
+                    sx={{
+                      borderRadius: "12px",
+                      px: 3,
+                      py: 1.5,
+                      borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)",
+                      backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
+                      backdropFilter: "blur(8px)",
+                      "&:hover": {
+                        borderColor: "#9d50bb",
+                        backgroundColor: "rgba(157, 80, 187, 0.1)",
+                        transform: "translateY(-2px)",
+                      },
+                      transition: "all 0.3s ease",
+                    }}
+                  >
                     Back
                   </Button>
+                ) : (
+                  <Box />
                 )}
-                <Button variant="contained" color="primary" onClick={handleNext}>
+                <Button
+                  variant="contained"
+                  endIcon={currentStep === steps.length - 1 ? null : <ChevronRightIcon />}
+                  onClick={handleNext}
+                  sx={{
+                    borderRadius: "12px",
+                    px: 4,
+                    py: 1.5,
+                    background: "linear-gradient(135deg, #9d50bb 0%, #6e48aa 100%)",
+                    boxShadow: "0 4px 12px rgba(157, 80, 187, 0.3)",
+                    fontWeight: 600,
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #b35fd1 0%, #8558c4 100%)",
+                      boxShadow: "0 6px 20px rgba(157, 80, 187, 0.4)",
+                      transform: "translateY(-2px)",
+                    },
+                    transition: "all 0.3s ease",
+                  }}
+                >
                   {currentStep === steps.length - 1 ? "Submit" : "Next"}
                 </Button>
               </Box>
-            </form>
-            <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-              <Alert onClose={() => setSnackbarOpen(false)} severity="error" sx={{ width: "100%" }}>
-                {snackbarMessage}
-              </Alert>
-            </Snackbar>
+              <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+                <Alert
+                  onClose={() => setSnackbarOpen(false)}
+                  severity={snackbarMessage.includes("success") ? "success" : "error"}
+                  sx={{
+                    width: "100%",
+                    backgroundColor: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(20px)",
+                    border: `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+                    borderRadius: "12px",
+                  }}
+                >
+                  {snackbarMessage}
+                </Alert>
+              </Snackbar>
+            </Box>
           </Box>
         </Box>
       )}

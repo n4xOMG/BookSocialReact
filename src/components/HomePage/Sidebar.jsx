@@ -50,6 +50,11 @@ const openedMixin = (theme) => ({
   overflowX: "hidden",
   borderTopRightRadius: 0,
   borderBottomRightRadius: 0,
+  backgroundColor: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.75)" : "rgba(255, 255, 255, 0.75)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  borderRight: `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
+  boxShadow: "4px 0 24px rgba(0, 0, 0, 0.08)",
 });
 
 const closedMixin = (theme) => ({
@@ -64,6 +69,11 @@ const closedMixin = (theme) => ({
   },
   borderTopRightRadius: 0,
   borderBottomRightRadius: 0,
+  backgroundColor: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.75)" : "rgba(255, 255, 255, 0.75)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  borderRight: `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
+  boxShadow: "4px 0 24px rgba(0, 0, 0, 0.08)",
 });
 
 const DrawerHeader = styled("div")(({ theme }) => ({
@@ -149,10 +159,19 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        backgroundColor: theme.palette.background.paper,
         overflowY: "auto",
-        scrollbarWidth: "none",
-        "&::-webkit-scrollbar": { display: "none" },
+        scrollbarWidth: "thin",
+        scrollbarColor: `${theme.palette.primary.main} transparent`,
+        "&::-webkit-scrollbar": {
+          width: "6px",
+        },
+        "&::-webkit-scrollbar-track": {
+          background: "transparent",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          background: theme.palette.primary.main,
+          borderRadius: "10px",
+        },
       }}
     >
       {/* Sidebar Header */}
@@ -176,24 +195,35 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
                 selected={isActive}
                 sx={{
                   my: 0.5,
-                  borderRadius: 1.5,
-                  py: 1,
+                  mx: 1,
+                  borderRadius: "12px",
+                  py: 1.2,
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&.Mui-selected": {
-                    backgroundColor: theme.palette.primary.main + "15",
+                    background: "linear-gradient(135deg, rgba(157, 80, 187, 0.15), rgba(0, 201, 167, 0.1))",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid",
+                    borderColor: "rgba(157, 80, 187, 0.3)",
+                    boxShadow: "0 4px 12px rgba(157, 80, 187, 0.2)",
                     "&:hover": {
-                      backgroundColor: theme.palette.primary.main + "25",
+                      background: "linear-gradient(135deg, rgba(157, 80, 187, 0.25), rgba(0, 201, 167, 0.15))",
+                      transform: "translateX(4px)",
                     },
                   },
                   "&:hover": {
-                    backgroundColor: theme.palette.action.hover,
+                    backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+                    transform: "translateX(4px)",
                   },
                 }}
               >
                 <ListItemIcon
                   sx={{
-                    minWidth: 40,
+                    minWidth: 0,
+                    width: 40,
                     color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
+                    display: "flex",
                     justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
                   {item.icon}
@@ -262,7 +292,18 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
               py: 1,
             }}
           >
-            <ListItemIcon sx={{ color: theme.palette.text.primary }}>{isDarkMode ? <Brightness7 /> : <Brightness4 />}</ListItemIcon>
+            <ListItemIcon
+              sx={{
+                color: theme.palette.text.primary,
+                minWidth: 0,
+                width: 40,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {isDarkMode ? <Brightness7 /> : <Brightness4 />}
+            </ListItemIcon>
             <ListItemText primary={isDarkMode ? "Light Mode" : "Dark Mode"} sx={{ opacity: open ? 1 : 0 }} />
           </ListItemButton>
         </Tooltip>

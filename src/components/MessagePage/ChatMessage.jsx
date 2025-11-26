@@ -18,20 +18,27 @@ export default function ChatMessage({ message }) {
         }}
       >
         <Paper
-          elevation={1}
+          elevation={0}
           sx={{
             p: 1.5,
-            borderRadius: 2,
+            borderRadius: "16px",
             maxWidth: "70%",
-            bgcolor: isReqUserMessages
-              ? theme.palette.mode === "light"
-                ? "primary.light"
-                : "primary.dark"
-              : theme.palette.mode === "light"
-              ? "background.paper"
-              : "grey.800",
-            borderTopLeftRadius: !isReqUserMessages ? 0 : 2,
-            borderTopRightRadius: isReqUserMessages ? 0 : 2,
+            background: isReqUserMessages
+              ? "linear-gradient(135deg, rgba(157, 80, 187, 0.8), rgba(110, 72, 170, 0.8))"
+              : theme.palette.mode === "dark"
+              ? "rgba(255, 255, 255, 0.08)"
+              : "rgba(255, 255, 255, 0.8)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            border: "1px solid",
+            borderColor: isReqUserMessages
+              ? "rgba(157, 80, 187, 0.4)"
+              : theme.palette.mode === "dark"
+              ? "rgba(255, 255, 255, 0.15)"
+              : "rgba(0, 0, 0, 0.1)",
+            boxShadow: isReqUserMessages ? "0 4px 16px rgba(157, 80, 187, 0.3)" : "0 2px 8px rgba(0, 0, 0, 0.1)",
+            borderTopLeftRadius: !isReqUserMessages ? 0 : "16px",
+            borderTopRightRadius: isReqUserMessages ? 0 : "16px",
           }}
         >
           {message.imageUrl && (
@@ -41,9 +48,15 @@ export default function ChatMessage({ message }) {
                 width: "100%",
                 maxHeight: "200px",
                 objectFit: "cover",
-                borderRadius: 1,
+                borderRadius: "12px",
                 mb: 1,
                 cursor: "pointer",
+                border: "2px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)",
+                transition: "transform 0.2s ease",
+                "&:hover": {
+                  transform: "scale(1.02)",
+                },
               }}
               src={message.imageUrl}
               alt="Message attachment"

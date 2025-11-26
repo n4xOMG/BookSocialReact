@@ -330,7 +330,7 @@ const UserBooks = () => {
           <Panel minSize={30} defaultSize={60}>
             <Box
               component={Paper}
-              elevation={1}
+              elevation={0}
               sx={{
                 width: "100%",
                 height: "100%",
@@ -345,21 +345,86 @@ const UserBooks = () => {
                 flexDirection: "column",
                 overflow: "hidden",
                 borderRadius: 0,
-                backdropFilter: "blur(0px)",
+                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                <Typography variant="h4" sx={{ fontWeight: "bold", color: "primary.main" }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontFamily: '"Playfair Display", serif',
+                    fontWeight: 700,
+                    fontSize: { xs: "1.75rem", md: "2rem" },
+                    background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
                   My Books
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1 }}>
-                  <Button size="small" variant="outlined" onClick={() => navigate("/author/dashboard")}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navigate("/author/dashboard")}
+                    sx={{
+                      borderRadius: "10px",
+                      borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.3)" : "rgba(0, 201, 167, 0.3)"),
+                      color: (theme) => (theme.palette.mode === "dark" ? "#84fab0" : "#00c9a7"),
+                      fontWeight: 600,
+                      textTransform: "none",
+                      background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.05)" : "rgba(0, 201, 167, 0.05)"),
+                      backdropFilter: "blur(8px)",
+                      "&:hover": {
+                        borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.5)" : "rgba(0, 201, 167, 0.5)"),
+                        background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.1)" : "rgba(0, 201, 167, 0.1)"),
+                      },
+                    }}
+                  >
                     Author Dashboard
                   </Button>
-                  <Button size="small" variant="outlined" onClick={() => navigate("/author/payout-settings")}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navigate("/author/payout-settings")}
+                    sx={{
+                      borderRadius: "10px",
+                      borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.3)" : "rgba(0, 201, 167, 0.3)"),
+                      color: (theme) => (theme.palette.mode === "dark" ? "#84fab0" : "#00c9a7"),
+                      fontWeight: 600,
+                      textTransform: "none",
+                      background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.05)" : "rgba(0, 201, 167, 0.05)"),
+                      backdropFilter: "blur(8px)",
+                      "&:hover": {
+                        borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.5)" : "rgba(0, 201, 167, 0.5)"),
+                        background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.1)" : "rgba(0, 201, 167, 0.1)"),
+                      },
+                    }}
+                  >
                     Payout Settings
                   </Button>
-                  <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/upload-book")}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => navigate("/upload-book")}
+                    sx={{
+                      borderRadius: "10px",
+                      background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                      color: "#fff",
+                      fontWeight: 700,
+                      textTransform: "none",
+                      boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                        boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                        transform: "translateY(-2px)",
+                      },
+                    }}
+                  >
                     Add Book
                   </Button>
                 </Box>
@@ -368,11 +433,16 @@ const UserBooks = () => {
               {/* Search and Filter Bar */}
               <Box
                 component={Paper}
+                elevation={0}
                 sx={{
                   mb: 2,
                   width: "100%",
                   boxSizing: "border-box",
-                  backgroundColor: theme.palette.background.paper,
+                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)"),
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid",
+                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"),
+                  borderRadius: "16px",
                 }}
               >
                 <Grid container spacing={1} alignItems="center" sx={{ p: 1 }}>
@@ -385,7 +455,9 @@ const UserBooks = () => {
                       onChange={handleSearchChange}
                       sx={{
                         "& .MuiOutlinedInput-root": {
-                          borderRadius: "10px",
+                          borderRadius: "12px",
+                          background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)"),
+                          backdropFilter: "blur(8px)",
                         },
                       }}
                       InputProps={{
@@ -406,8 +478,20 @@ const UserBooks = () => {
                   </Grid>
                   <Grid item>
                     <Tooltip title="Filter">
-                      <IconButton size="small" onClick={toggleFilterDrawer}>
-                        <FilterListIcon />
+                      <IconButton
+                        size="small"
+                        onClick={toggleFilterDrawer}
+                        sx={{
+                          background: (theme) => (theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.15)" : "rgba(157, 80, 187, 0.1)"),
+                          backdropFilter: "blur(8px)",
+                          border: "1px solid",
+                          borderColor: "rgba(157, 80, 187, 0.3)",
+                          "&:hover": {
+                            background: (theme) => (theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.25)" : "rgba(157, 80, 187, 0.2)"),
+                          },
+                        }}
+                      >
+                        <FilterListIcon sx={{ color: "#9d50bb" }} />
                       </IconButton>
                     </Tooltip>
                   </Grid>
@@ -418,8 +502,11 @@ const UserBooks = () => {
                         onChange={handleSortChange}
                         displayEmpty
                         sx={{
+                          borderRadius: "12px",
+                          background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)"),
+                          backdropFilter: "blur(8px)",
                           "& .MuiOutlinedInput-notchedOutline": {
-                            borderRadius: "10px",
+                            borderRadius: "12px",
                           },
                         }}
                         startAdornment={
@@ -547,7 +634,7 @@ const UserBooks = () => {
             {/* Rest of component remains the same */}
             <Box
               component={Paper}
-              elevation={1}
+              elevation={0}
               sx={{
                 width: "100%",
                 boxSizing: "border-box",
@@ -559,20 +646,69 @@ const UserBooks = () => {
                 flexDirection: "column",
                 overflow: "hidden",
                 borderRadius: 0,
-                backdropFilter: "blur(0px)",
+                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                <Typography variant="h4" sx={{ fontWeight: "bold", color: "primary.main" }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontFamily: '"Playfair Display", serif',
+                    fontWeight: 700,
+                    fontSize: { xs: "1.75rem", md: "2rem" },
+                    background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
                   Chapters
                 </Typography>
                 {selectedBookId ? (
                   isManga ? (
-                    <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addMangaChapter")}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => handleOpenModal("addMangaChapter")}
+                      sx={{
+                        borderRadius: "10px",
+                        background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                        color: "#fff",
+                        fontWeight: 700,
+                        textTransform: "none",
+                        boxShadow: "0 4px 16px rgba(0, 201, 167, 0.3)",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #56efca, #84fab0)",
+                          boxShadow: "0 6px 24px rgba(0, 201, 167, 0.5)",
+                          transform: "translateY(-2px)",
+                        },
+                      }}
+                    >
                       Add Manga Chapter
                     </Button>
                   ) : (
-                    <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal("addNovelChapter")}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => handleOpenModal("addNovelChapter")}
+                      sx={{
+                        borderRadius: "10px",
+                        background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                        color: "#fff",
+                        fontWeight: 700,
+                        textTransform: "none",
+                        boxShadow: "0 4px 16px rgba(0, 201, 167, 0.3)",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #56efca, #84fab0)",
+                          boxShadow: "0 6px 24px rgba(0, 201, 167, 0.5)",
+                          transform: "translateY(-2px)",
+                        },
+                      }}
+                    >
                       Add Chapter
                     </Button>
                   )

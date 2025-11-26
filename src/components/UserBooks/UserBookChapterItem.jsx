@@ -14,19 +14,21 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
   return (
     <Box style={style} padding={1}>
       <Card
+        elevation={0}
         sx={{
-          transition: "all 0.2s ease",
+          transition: "all 0.3s ease",
           "&:hover": {
-            bgcolor: "action.hover",
             transform: "translateY(-2px)",
-            boxShadow: 2,
+            boxShadow: "0 6px 20px rgba(0, 201, 167, 0.3)",
+            borderColor: "#00c9a7",
           },
           textAlign: "left",
-          borderRadius: 1.5,
+          borderRadius: "16px",
           border: "1px solid",
-          borderColor: "divider",
-          boxShadow: '0 8px 8px 0 rgba(0, 0, 0, 0.37)',
-          bgcolor: "action.notselect",
+          borderColor: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)",
+          background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       >
         <CardContent
@@ -46,15 +48,17 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
               <Typography
                 variant="subtitle1"
                 sx={{
-                  fontWeight: 600,
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 700,
+                  fontSize: "1.1rem",
                   textOverflow: "ellipsis",
                   overflow: "hidden",
                   whiteSpace: "nowrap",
-                  color: theme.palette.text.primary,
                   mr: 1,
-                  "&:hover": {
-                    color: "primary.main",
-                  },
+                  background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
                 }}
               >
                 {isSmallScreen ? `Ch. ${chapter.chapterNum}` : `Chapter ${chapter.chapterNum}: ${chapter.title || "Untitled"}`}
@@ -65,12 +69,15 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
                   <Chip
                     size="small"
                     label="Premium"
-                    color="secondary"
-                    icon={<LockIcon sx={{ fontSize: "0.8rem !important" }} />}
+                    icon={<LockIcon sx={{ fontSize: "0.8rem !important", color: "#fff !important" }} />}
                     sx={{
                       height: 22,
-                      fontWeight: 500,
+                      fontWeight: 600,
                       fontSize: "0.7rem",
+                      borderRadius: "8px",
+                      background: "linear-gradient(135deg, #667eea, #764ba2)",
+                      color: "#fff",
+                      border: "none",
                     }}
                   />
                 )}
@@ -78,11 +85,14 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
                   <Chip
                     size="small"
                     label="Draft"
-                    color="default"
                     sx={{
                       height: 22,
-                      fontWeight: 500,
+                      fontWeight: 600,
                       fontSize: "0.7rem",
+                      borderRadius: "8px",
+                      background: "linear-gradient(135deg, #ffc107, #ff9800)",
+                      color: "#fff",
+                      border: "none",
                     }}
                   />
                 )}
@@ -108,22 +118,26 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
               right: { xs: "auto", sm: 16 },
               top: { xs: "auto", sm: "50%" },
               transform: { xs: "none", sm: "translateY(-50%)" },
+              background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+              backdropFilter: "blur(12px)",
+              borderRadius: "12px",
+              p: 0.5,
+              border: "1px solid",
+              borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
             }}
           >
             <Tooltip title="View chapter" placement="top">
               <IconButton
                 size="small"
-                color="info"
                 onClick={(event) => {
                   event.stopPropagation();
                   // TODO: Navigate to chapter view page
                 }}
                 sx={{
-                  bgcolor: "background.paper",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  boxShadow: 1,
-                  "&:hover": { bgcolor: "action.hover" },
+                  color: "#9d50bb",
+                  "&:hover": {
+                    background: "rgba(157, 80, 187, 0.15)",
+                  },
                 }}
               >
                 <VisibilityIcon fontSize="small" />
@@ -132,17 +146,15 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
             <Tooltip title="Edit chapter" placement="top">
               <IconButton
                 size="small"
-                color="primary"
                 onClick={(event) => {
                   event.stopPropagation();
                   onEdit(chapter);
                 }}
                 sx={{
-                  bgcolor: "background.paper",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  boxShadow: 1,
-                  "&:hover": { bgcolor: "action.hover" },
+                  color: "#00c9a7",
+                  "&:hover": {
+                    background: "rgba(0, 201, 167, 0.15)",
+                  },
                 }}
               >
                 <EditIcon fontSize="small" />
@@ -151,16 +163,15 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
             <Tooltip title="Delete chapter" placement="top">
               <IconButton
                 size="small"
-                color="error"
                 onClick={(event) => {
                   event.stopPropagation();
                   onDelete(chapter);
                 }}
                 sx={{
-                  bgcolor: "background.paper",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  boxShadow: 1,
+                  color: "#ff6b6b",
+                  "&:hover": {
+                    background: "rgba(255, 107, 107, 0.15)",
+                  },
                   "&:hover": { bgcolor: "error.lighter" },
                 }}
               >

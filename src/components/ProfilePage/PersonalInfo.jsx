@@ -1,7 +1,7 @@
 import CakeIcon from "@mui/icons-material/Cake";
 import SaveIcon from "@mui/icons-material/Save";
 import WcIcon from "@mui/icons-material/Wc";
-import { Alert, Box, Button, Divider, Grid, MenuItem, Paper, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Divider, Grid, MenuItem, Paper, TextField, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
@@ -79,17 +79,40 @@ const PersonalInfo = ({ user }) => {
     },
   };
 
+  const theme = useTheme();
+
   return (
-    <Paper elevation={0} sx={{ borderRadius: 3, overflow: "hidden" }}>
-      <Box sx={{ p: 3, bgcolor: (theme) => theme.palette.background.paper }}>
-        <Typography variant="h5" gutterBottom fontWeight="medium">
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: "16px",
+        overflow: "hidden",
+        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.5)",
+        backdropFilter: "blur(10px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          fontWeight="medium"
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           Personal Information
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Update your personal details and preferences
         </Typography>
 
-        <Divider sx={{ mb: 4 }} />
+        <Divider sx={{ mb: 4, opacity: 0.3 }} />
 
         <Box component="form" onSubmit={handleUpdate}>
           {message && (
@@ -133,7 +156,9 @@ const PersonalInfo = ({ user }) => {
                 variant="outlined"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               />
@@ -159,7 +184,9 @@ const PersonalInfo = ({ user }) => {
                 placeholder="Select your gender"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               >
@@ -180,11 +207,20 @@ const PersonalInfo = ({ user }) => {
                 disabled={loading}
                 startIcon={<SaveIcon />}
                 sx={{
-                  borderRadius: 2,
+                  borderRadius: "12px",
                   py: 1.5,
                   textTransform: "none",
                   fontWeight: "bold",
-                  boxShadow: 2,
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                    boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                    transform: "translateY(-2px)",
+                  },
+                  "&:disabled": {
+                    background: "rgba(157, 80, 187, 0.3)",
+                  },
                 }}
               >
                 {loading ? "Updating..." : "Save Changes"}

@@ -47,15 +47,29 @@ const PostList = ({ posts, loading, error, checkAuth }) => {
         sx={{
           textAlign: "center",
           py: 5,
-          bgcolor: "background.paper",
-          borderRadius: 2,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+          borderRadius: "24px",
+          background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)"),
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)"),
         }}
       >
-        <Typography variant="h6" color="text.secondary">
+        <Typography
+          variant="h6"
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            background: "linear-gradient(135deg, #00c9a7, #56efca)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           No posts yet
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.6 }}>
           Be the first to share something with the community!
         </Typography>
       </Box>

@@ -30,7 +30,6 @@ import NotificationMenu from "./Header/NotificationMenu";
 import ProfileMenu from "./Header/ProfileMenu";
 import SearchDropdown from "./SearchDropdown";
 
-// ✅ Custom HideOnScroll: ẩn khi scroll xuống, hiện khi scroll lên
 function HideOnScroll({ children }) {
   const [show, setShow] = useState(true);
   const [lastScroll, setLastScroll] = useState(0);
@@ -38,20 +37,15 @@ function HideOnScroll({ children }) {
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
-      
-      // 1. Nếu cuộn xuống
+
       if (currentScroll > lastScroll) {
-        // Chỉ ẩn khi cuộn xuống và đã vượt qua 1 ngưỡng nhất định
-        if (currentScroll > 80) { 
+        if (currentScroll > 80) {
           setShow(false);
         }
-      } 
-      // 2. Nếu cuộn lên
-      else if (currentScroll < lastScroll) {
+      } else if (currentScroll < lastScroll) {
         setShow(true);
       }
-      
-      // 3. Cập nhật vị trí cuộn
+
       setLastScroll(currentScroll);
     };
 
@@ -180,11 +174,14 @@ const Header = ({ onSidebarToggle }) => {
             color="default"
             elevation={0}
             sx={{
-              borderBottom: `1px solid ${theme.palette.divider}`,
-              backgroundColor: theme.palette.background.paper,
-              backdropFilter: "blur(8px)",
+              borderBottom: `1px solid`,
+              borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
+              backgroundColor: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.75)" : "rgba(255, 255, 255, 0.75)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
               zIndex: theme.zIndex.drawer + 1,
               borderRadius: 0,
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.08)",
             }}
           >
             <Toolbar
@@ -210,6 +207,10 @@ const Header = ({ onSidebarToggle }) => {
                     alignItems: "center",
                     cursor: "pointer",
                     mr: 2,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                    },
                   }}
                   onClick={() => navigate("/")}
                 >
@@ -217,23 +218,29 @@ const Header = ({ onSidebarToggle }) => {
                     src="/logo.png"
                     alt="BookSocial"
                     sx={{
-                      width: 32,
-                      height: 32,
-                      mr: 1,
-                      background: theme.palette.primary.main,
+                      width: 40,
+                      height: 40,
+                      mr: 1.5,
+                      background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
                       display: { xs: "none", sm: "flex" },
+                      border: "2px solid",
+                      borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.15)" : "rgba(157, 80, 187, 0.2)",
+                      boxShadow: "0 4px 12px rgba(157, 80, 187, 0.3)",
                     }}
                   >
                     T
                   </Avatar>
                   <Typography
                     variant="h6"
-                    fontWeight="bold"
+                    className="font-serif"
+                    fontWeight="800"
                     sx={{
-                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
+                      fontSize: { xs: "1.1rem", sm: "1.3rem" },
+                      letterSpacing: "-0.01em",
                     }}
                   >
                     TailVerse
@@ -243,9 +250,9 @@ const Header = ({ onSidebarToggle }) => {
 
               {/* Desktop Search Input */}
               {!isMobile && (
-                <Box sx={{ flex: 1, maxWidth: 440, mx: 2, position: "relative" }}>
+                <Box sx={{ flex: 1, maxWidth: 480, mx: 2, position: "relative" }}>
                   <TextField
-                    placeholder="Quick search for books..."
+                    placeholder="Search for stories, novels, poetry..."
                     size="small"
                     fullWidth
                     value={searchQuery}
@@ -256,7 +263,7 @@ const Header = ({ onSidebarToggle }) => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Search fontSize="small" color="action" />
+                          <Search fontSize="small" sx={{ color: "text.secondary" }} />
                         </InputAdornment>
                       ),
                       endAdornment: searchQuery && (
@@ -268,6 +275,9 @@ const Header = ({ onSidebarToggle }) => {
                               fontSize: "0.75rem",
                               textTransform: "none",
                               py: 0,
+                              px: 1,
+                              borderRadius: "8px",
+                              fontWeight: 600,
                             }}
                             onClick={() => {
                               setSearchQuery("");
@@ -276,27 +286,24 @@ const Header = ({ onSidebarToggle }) => {
                           >
                             Clear
                           </Button>
-                          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-                          <Button
-                            size="small"
-                            color="primary"
-                            sx={{
-                              minWidth: "auto",
-                              fontSize: "0.75rem",
-                              textTransform: "none",
-                              py: 0,
-                            }}
-                            onClick={() => navigate("/advanced-search")}
-                          >
-                            Advanced
-                          </Button>
+                          <Divider orientation="vertical" flexItem sx={{ mx: 0.5, opacity: 0.3 }} />
                         </InputAdornment>
                       ),
                       sx: {
-                        borderRadius: 2,
-                        backgroundColor: theme.palette.background.paper,
+                        borderRadius: "12px",
+                        backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid",
+                        borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
+                        transition: "all 0.3s ease",
                         "&:hover": {
-                          backgroundColor: theme.palette.action.hover,
+                          backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)",
+                          borderColor: theme.palette.primary.main,
+                        },
+                        "&.Mui-focused": {
+                          backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)",
+                          borderColor: theme.palette.primary.main,
+                          boxShadow: `0 0 0 3px ${theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.15)" : "rgba(157, 80, 187, 0.1)"}`,
                         },
                         "& fieldset": {
                           border: "none",
@@ -352,11 +359,33 @@ const Header = ({ onSidebarToggle }) => {
                 {isMobile ? (
                   <>
                     {!showSearchBar && (
-                      <IconButton onClick={() => setShowSearchBar(true)}>
+                      <IconButton
+                        onClick={() => setShowSearchBar(true)}
+                        sx={{
+                          backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+                          backdropFilter: "blur(10px)",
+                          border: "1px solid",
+                          borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
+                          "&:hover": {
+                            backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)",
+                          },
+                        }}
+                      >
                         <Search />
                       </IconButton>
                     )}
-                    <IconButton onClick={handleOpenMore}>
+                    <IconButton
+                      onClick={handleOpenMore}
+                      sx={{
+                        backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid",
+                        borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
+                        "&:hover": {
+                          backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)",
+                        },
+                      }}
+                    >
                       <MoreHoriz />
                     </IconButton>
                     <Menu
@@ -371,15 +400,40 @@ const Header = ({ onSidebarToggle }) => {
                         },
                       }}
                     >
-                      <MenuItem onClick={() => navigate("/upload-book")}><Upload /></MenuItem>
-                      {user && <MenuItem><MessageMenu /></MenuItem>}
-                      {user && <MenuItem><NotificationMenu /></MenuItem>}
+                      <MenuItem onClick={() => navigate("/upload-book")}>
+                        <Upload />
+                      </MenuItem>
+                      {user && (
+                        <MenuItem>
+                          <MessageMenu />
+                        </MenuItem>
+                      )}
+                      {user && (
+                        <MenuItem>
+                          <NotificationMenu />
+                        </MenuItem>
+                      )}
                     </Menu>
                   </>
                 ) : (
                   <>
-                    <Tooltip title="Upload Book">
-                      <IconButton onClick={checkAuth(() => navigate("/upload-book"))}>
+                    <Tooltip title="Upload Story" arrow>
+                      <IconButton
+                        onClick={checkAuth(() => navigate("/upload-book"))}
+                        sx={{
+                          backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+                          backdropFilter: "blur(10px)",
+                          border: "1px solid",
+                          borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            backgroundColor: "primary.main",
+                            borderColor: "primary.main",
+                            color: "#fff",
+                            transform: "scale(1.05)",
+                          },
+                        }}
+                      >
                         <Upload />
                       </IconButton>
                     </Tooltip>

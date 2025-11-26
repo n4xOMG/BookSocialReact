@@ -1,5 +1,5 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
-import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography, useTheme } from "@mui/material";
 import { Stomp } from "@stomp/stompjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +15,7 @@ import UploadToCloudinary from "../../utils/uploadToCloudinary";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { chats } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
   const [currentChat, setCurrentChat] = useState();
@@ -242,9 +243,41 @@ export default function MessagesPage() {
   }
 
   return (
-    <Box sx={{ flex: 1, width: "100%", height: "100%" }}>
-      <Grid container sx={{ height: "100%", overflow: "hidden" }}>
-        <Grid item xs={3} sx={{ px: 3, borderRight: "1px solid #ddd" }}>
+    <Box
+      sx={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+        background:
+          theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, #0f0f1c 0%, #1a1a2e 100%)"
+            : "linear-gradient(135deg, #f8f7f4 0%, #e8e6e3 100%)",
+        p: 3,
+      }}
+    >
+      <Grid
+        container
+        sx={{
+          height: "100%",
+          overflow: "hidden",
+          borderRadius: "24px",
+          background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.6)" : "rgba(255, 255, 255, 0.6)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        <Grid
+          item
+          xs={3}
+          sx={{
+            px: 3,
+            borderRight: "1px solid",
+            borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+          }}
+        >
           <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
             <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
               <SearchUser />
@@ -266,9 +299,37 @@ export default function MessagesPage() {
         <Grid item xs={9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
           {currentChat ? (
             <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-              <Box sx={{ display: "flex", alignItems: "center", p: 2, borderBottom: "1px solid #ddd" }}>
-                <Avatar src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl} />
-                <Typography sx={{ ml: 2 }}>{currentChat.name}</Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  p: 2,
+                  borderBottom: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+                  background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.05)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                <Avatar
+                  src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl}
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    border: "2px solid",
+                    borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",
+                    boxShadow: "0 4px 12px rgba(157, 80, 187, 0.3)",
+                  }}
+                />
+                <Typography
+                  sx={{
+                    ml: 2,
+                    fontWeight: 600,
+                    fontSize: "1.1rem",
+                    color: theme.palette.mode === "dark" ? "#fff" : "#1a1a2e",
+                  }}
+                >
+                  {currentChat.name}
+                </Typography>
               </Box>
               <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
                 {messages?.map((message) => (
@@ -276,16 +337,43 @@ export default function MessagesPage() {
                 ))}
                 <div ref={messagesEndRef} />
               </Box>
-              <Box sx={{ p: 2, borderTop: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderTop: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  flexDirection: "column",
+                  background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.4)" : "rgba(255, 255, 255, 0.4)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
                 {imagePreview && (
-                  <Box sx={{ mb: 2 }}>
+                  <Box
+                    sx={{
+                      mb: 2,
+                      p: 1,
+                      borderRadius: "12px",
+                      background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+                      border: "1px solid",
+                      borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                    }}
+                  >
                     <img src={imagePreview} alt="Preview" style={{ maxWidth: "100px", borderRadius: 8 }} />
                   </Box>
                 )}
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <TextField
                     placeholder="Type a message"
-                    sx={{ flexGrow: 1, mr: 2 }}
+                    sx={{
+                      flexGrow: 1,
+                      mr: 2,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "16px",
+                        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.8)",
+                        backdropFilter: "blur(8px)",
+                      },
+                    }}
                     variant="outlined"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
@@ -298,8 +386,18 @@ export default function MessagesPage() {
                   />
                   <input type="file" accept="image/*" onChange={handleSelectImage} hidden id="image-input" />
                   <label htmlFor="image-input">
-                    <IconButton component="span">
-                      <AddPhotoAlternateIcon />
+                    <IconButton
+                      component="span"
+                      sx={{
+                        background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.1)",
+                        backdropFilter: "blur(8px)",
+                        mr: 1,
+                        "&:hover": {
+                          background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                        },
+                      }}
+                    >
+                      <AddPhotoAlternateIcon sx={{ color: "#9d50bb" }} />
                     </IconButton>
                   </label>
                   <Button
@@ -309,14 +407,62 @@ export default function MessagesPage() {
                     onClick={async () => {
                       await handleCreateMessage(messageText);
                     }}
+                    sx={{
+                      borderRadius: "12px",
+                      background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                      color: "#fff",
+                      fontWeight: 700,
+                      px: 3,
+                      textTransform: "none",
+                      boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                        boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                        transform: "translateY(-2px)",
+                      },
+                      "&:disabled": {
+                        background: "rgba(157, 80, 187, 0.3)",
+                      },
+                    }}
                   >
-                    {isSending ? <CircularProgress size={24} /> : "Send"}
+                    {isSending ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Send"}
                   </Button>
                 </Box>
               </Box>
             </Box>
           ) : (
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: 1 }}>No chat selected</Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexGrow: 1,
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              <Typography
+                variant="h5"
+                sx={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 700,
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                No chat selected
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
+                Select a conversation to start messaging
+              </Typography>
+            </Box>
           )}
         </Grid>
       </Grid>

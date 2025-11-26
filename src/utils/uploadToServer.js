@@ -28,8 +28,8 @@ export async function UploadToServer(file, username, folderName, { useAuth = tru
       logger.error("Upload failed", { message, status: response.status });
       throw new Error(message);
     }
-
-    const imagePath = payload?.data;
+    logger.debug("Payload: ", payload);
+    const imagePath = payload?.data.url;
     if (!imagePath) {
       logger.warn("Upload succeeded but no image path was returned", payload);
       throw new Error("Upload succeeded but no image path was returned.");

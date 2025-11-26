@@ -20,6 +20,7 @@ import {
   Tab,
   Tabs,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
@@ -36,12 +37,12 @@ import { getCurrentUserByJwt } from "../../redux/auth/auth.action";
 import UserPreferences from "./UserPreferences";
 
 const ProfilePage = () => {
-  const [tabValue, setTabValue] = useState(0); // State to manage active tab
+  const [tabValue, setTabValue] = useState(0);
   const dispatch = useDispatch();
   const { user, loading: authLoading, error: authError } = useSelector((state) => state.auth);
   const hasRequestedRef = useRef(false);
+  const theme = useTheme();
 
-  // Fetch user profile only if it was not populated by the global auth initialization.
   useEffect(() => {
     if (user || hasRequestedRef.current) {
       return;
@@ -98,17 +99,28 @@ const ProfilePage = () => {
   }
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100%", flexDirection: "column" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100%",
+        flexDirection: "column",
+        background:
+          theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, #0f0f1c 0%, #1a1a2e 100%)"
+            : "linear-gradient(135deg, #f8f7f4 0%, #e8e6e3 100%)",
+      }}
+    >
       <Container maxWidth="lg" sx={{ mt: 4, mb: 6, flex: 1 }}>
         <Paper
           elevation={0}
           sx={{
             height: 200,
-            borderRadius: "16px 16px 0 0",
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+            borderRadius: "24px 24px 0 0",
+            background: "linear-gradient(135deg, rgba(157, 80, 187, 0.3), rgba(110, 72, 170, 0.3))",
             mb: -8,
             position: "relative",
             overflow: "hidden",
+            backdropFilter: "blur(10px)",
           }}
         >
           <Box
@@ -118,17 +130,25 @@ const ProfilePage = () => {
               left: 0,
               width: "100%",
               height: "60%",
-              background: "linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0))",
+              background:
+                theme.palette.mode === "dark"
+                  ? "linear-gradient(to top, rgba(18, 18, 30, 0.9), rgba(18, 18, 30, 0))"
+                  : "linear-gradient(to top, rgba(248, 247, 244, 0.9), rgba(248, 247, 244, 0))",
             }}
           />
         </Paper>
 
         <Card
           sx={{
-            borderRadius: 4,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+            borderRadius: "24px",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
             overflow: "visible",
             position: "relative",
+            background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.7)" : "rgba(255, 255, 255, 0.7)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid",
+            borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
           }}
         >
           <Avatar
@@ -137,19 +157,40 @@ const ProfilePage = () => {
             sx={{
               width: 120,
               height: 120,
-              border: "4px solid white",
+              border: "4px solid",
+              borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.5)" : "rgba(157, 80, 187, 0.3)",
               position: "absolute",
               top: -40,
               left: 40,
-              boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+              boxShadow: "0 8px 24px rgba(157, 80, 187, 0.4)",
             }}
           />
 
           <CardContent sx={{ pt: 10, pb: 2 }}>
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ ml: 2 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              gutterBottom
+              sx={{
+                ml: 2,
+                fontFamily: '"Playfair Display", serif',
+                background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
               {user.fullname}
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ ml: 2, mb: 4 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                ml: 2,
+                mb: 4,
+                color: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.8)" : "rgba(110, 72, 170, 0.8)",
+                fontWeight: 500,
+              }}
+            >
               @{user.username}
             </Typography>
 
@@ -169,10 +210,24 @@ const ProfilePage = () => {
                   textTransform: "none",
                   fontSize: "0.95rem",
                   minWidth: 120,
+                  borderRadius: "12px",
+                  mx: 0.5,
+                  transition: "all 0.3s ease",
+                  "&.Mui-selected": {
+                    background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
+                    backdropFilter: "blur(8px)",
+                  },
+                  "&:hover": {
+                    background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.08)",
+                  },
                 },
               }}
               TabIndicatorProps={{
-                style: { height: 3, borderRadius: "3px 3px 0 0" },
+                style: {
+                  height: 3,
+                  borderRadius: "3px 3px 0 0",
+                  background: "linear-gradient(90deg, #9d50bb, #6e48aa)",
+                },
               }}
             >
               <Tab label="Personal Info" icon={<PersonIcon />} iconPosition="start" id="profile-tab-0" aria-controls="profile-tabpanel-0" />

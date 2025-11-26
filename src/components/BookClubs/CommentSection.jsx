@@ -117,8 +117,27 @@ const CommentSection = ({ postId }) => {
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+        <Box
+          sx={{
+            p: 2,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            background: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.1)" : "rgba(255, 255, 255, 0.3)"),
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              mb: 2,
+              fontFamily: '"Playfair Display", serif',
+              fontWeight: 700,
+              fontSize: "1.25rem",
+              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             Comments
           </Typography>
 
@@ -134,7 +153,9 @@ const CommentSection = ({ postId }) => {
                 size="small"
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
+                    borderRadius: "12px",
+                    background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)"),
+                    backdropFilter: "blur(8px)",
                   },
                 }}
               />
@@ -145,7 +166,16 @@ const CommentSection = ({ postId }) => {
                   size="small"
                   sx={{
                     textTransform: "none",
-                    borderRadius: 2,
+                    borderRadius: "10px",
+                    background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    boxShadow: "0 4px 16px rgba(0, 201, 167, 0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #56efca, #84fab0)",
+                      boxShadow: "0 6px 24px rgba(0, 201, 167, 0.5)",
+                      transform: "translateY(-2px)",
+                    },
                   }}
                 >
                   Post

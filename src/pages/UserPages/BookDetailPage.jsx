@@ -30,7 +30,6 @@ const RelatedBooks = React.lazy(() => import("../../components/BookDetailPageCom
 
 export const BookDetailPage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
   const { bookId } = useParams();
   const dispatch = useDispatch();
@@ -38,51 +37,43 @@ export const BookDetailPage = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [loading, setLoading] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [firstChapterId, setFirstChapterId] = useState(null);
 
-  // Centralized state
-  const {
-    book,
-    relatedBooks,
-    rating,
-    progresses = [],
-    categories,
-    tags,
-  } = useSelector((store) => ({
-    book: store.book.book,
-    relatedBooks: store.book.relatedBooks,
-    rating: store.book.rating,
-    progresses: store.book.progresses,
-    categories: store.category.categories,
-    tags: store.tag.tags,
-  }));
-  const { user } = useSelector((store) => store.auth);
-  const { chapters } = useSelector((store) => store.chapter);
+  // Optimized Selectors
+  const book = useSelector((store) => store.book.book);
+  const relatedBooks = useSelector((store) => store.book.relatedBooks);
+  const rating = useSelector((store) => store.book.rating);
+  const progresses = useSelector((store) => store.book.progresses || []);
+  const categories = useSelector((store) => store.category.categories);
+  const tags = useSelector((store) => store.tag.tags);
+  const user = useSelector((store) => store.auth.user);
+  const chapters = useSelector((store) => store.chapter.chapters);
+  
   const jwt = localStorage.getItem("jwt");
   const { checkAuth, AuthDialog } = useAuthCheck();
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    setIsFavorite(false);
-    setFirstChapterId(null);
 
     const fetchAll = async () => {
       try {
         const bookRes = await dispatch(getBookByIdAction(bookId));
         if (!bookRes?.payload) return;
 
-        const chaptersRes = await dispatch(getAllChaptersByBookIdAction(bookId));
-        const chapterList = chaptersRes?.payload || [];
-        if (chapterList.length > 0) setFirstChapterId(chapterList[0].id);
-
-        await Promise.all([
+        // Fetch chapters
+        await dispatch(getAllChaptersByBookIdAction(bookId));
+        
+        // Parallel fetches
+        const promises = [
           dispatch(getAvgBookRating(bookId)),
-          user && !isTokenExpired(jwt)
-            ? Promise.all([dispatch(getAllReadingProgressesByBook(bookId)), dispatch(getBookRatingByUserAction(bookId))])
-            : null,
-        ]);
+        ];
+
+        if (user && !isTokenExpired(jwt)) {
+           promises.push(dispatch(getAllReadingProgressesByBook(bookId)));
+           promises.push(dispatch(getBookRatingByUserAction(bookId)));
+        }
+
+        await Promise.all(promises);
 
         dispatch(getRelatedBooksAction(bookId, bookRes.payload.categoryId, bookRes.payload.tagIds));
         dispatch(recordBookViewAction(bookId));
@@ -102,10 +93,6 @@ export const BookDetailPage = () => {
     };
   }, [bookId, dispatch, jwt, user]);
 
-  useEffect(() => {
-    if (book && user) setIsFavorite(book.followedByCurrentUser);
-  }, [book, user]);
-
   // Memoized overall progress calculation
   const overallProgress = useMemo(() => {
     if (!book || !book.chapterCount || !progresses?.length) return 0;
@@ -121,13 +108,9 @@ export const BookDetailPage = () => {
 
   const handleFollowBook = checkAuth(async () => {
     try {
-      setLoading(true);
       await dispatch(followBookAction(bookId));
-      setIsFavorite((prev) => !prev);
     } catch (error) {
       // ignore
-    } finally {
-      setLoading(false);
     }
   });
 
@@ -154,25 +137,14 @@ export const BookDetailPage = () => {
 
   const handleRating = checkAuth(async (value) => {
     try {
-      setLoading(true);
       await dispatch(ratingBookAction(bookId, value));
     } catch {
       // ignore
-    } finally {
-      setLoading(false);
     }
   });
 
-  if (loading || !book) {
-    return (
-      <Box sx={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>
-        <LoadingSpinner />
-        <AuthDialog />
-      </Box>
-    );
-  }
-
-  const paperStyle = {
+  // Memoized styles
+  const paperStyle = useMemo(() => ({
     p: { xs: 2, md: 4 },
     borderRadius: "20px",
     bgcolor: theme.palette.background.paper,
@@ -183,7 +155,19 @@ export const BookDetailPage = () => {
       boxShadow: theme.shadows[4],
       borderColor: theme.palette.primary.main,
     },
-  };
+  }), [theme]);
+
+  if (loading || !book) {
+    return (
+      <Box sx={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>
+        <LoadingSpinner />
+        <AuthDialog />
+      </Box>
+    );
+  }
+
+  const isFavorite = book.followedByCurrentUser;
+  const firstChapterId = chapters && chapters.length > 0 ? chapters[0].id : null;
 
   return (
     <Box sx={{ flex: 1, width: "100%", minHeight: "100vh", bgcolor: theme.palette.background.default }}>
@@ -197,7 +181,7 @@ export const BookDetailPage = () => {
                   {/* Cover Image */}
                   <Box
                     component="img"
-                    src={book.bookCover}
+                    src={book.bookCover.url}
                     alt={`Cover of ${book.title}`}
                     sx={{
                       width: "100%",
@@ -332,7 +316,6 @@ export const BookDetailPage = () => {
                   onNavigate={navigate}
                   bookId={bookId}
                   user={user || null}
-                  onFirstChapterId={setFirstChapterId}
                 />
               </Paper>
 

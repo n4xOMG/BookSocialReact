@@ -67,6 +67,7 @@ import {
   SET_EDIT_CHOICE_FAILED,
   SET_EDIT_CHOICE_REQUEST,
   SET_EDIT_CHOICE_SUCCESS,
+  CLEAR_ALL_BOOKS,
 } from "./book.actionType";
 
 const logger = createLogger("BookActions");
@@ -87,6 +88,10 @@ export const getAllBookAction =
       dispatch({ type: GET_ALL_BOOK_FAILED, payload: message });
     }
   };
+
+export const clearAllBooks = () => (dispatch) => {
+  dispatch({ type: CLEAR_ALL_BOOKS });
+};
 
 export const getUserFavouredBooksAction =
   ({ page = 0, size = 10 } = {}) =>

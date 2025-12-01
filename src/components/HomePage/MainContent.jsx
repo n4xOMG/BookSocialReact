@@ -1,12 +1,12 @@
 import { Explore, MenuBook, Recommend, TrendingUp } from "@mui/icons-material";
-import { Box, Button, CircularProgress, Container, Fade, Grid, Tab, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, CircularProgress, Container, Fade, Tab, Tabs, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getAllBookAction } from "../../redux/book/book.action";
-import { BookCard } from "./BookCard";
+import { getAllBookAction, clearAllBooks } from "../../redux/book/book.action";
 import { BookHeroCarousel } from "./CarouselSlider/BookHeroCarousel";
 import TagBarList from "./TagBar/TagBarList";
+import { BookGrid } from "./BookGrid";
 
 export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => {
   const navigate = useNavigate();
@@ -30,24 +30,36 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
   const loader = useRef(null);
   const prevTabRef = useRef(tabValue);
 
+  // Handle tab change and reset state when switching to "all"
   useEffect(() => {
     if (tabValue === "all" && prevTabRef.current !== "all") {
       setPage(0);
       setHasMore(true);
-      dispatch({ type: "GET_ALL_BOOK_SUCCESS", payload: [] });
+      dispatch(clearAllBooks());
     }
     prevTabRef.current = tabValue;
   }, [tabValue, dispatch]);
 
+  // Fetch all books for "all" tab
   useEffect(() => {
     if (tabValue !== "all" || !hasMore) return;
-    setIsLoading(true);
-    dispatch(getAllBookAction(page, 10)).then((result) => {
-      if (!result?.payload || (Array.isArray(result.payload) ? result.payload.length === 0 : result.payload.content?.length === 0)) {
+    
+    const fetchBooks = async () => {
+      setIsLoading(true);
+      try {
+        const result = await dispatch(getAllBookAction(page, 10));
+        if (!result?.payload || (Array.isArray(result.payload) ? result.payload.length === 0 : result.payload.content?.length === 0)) {
+          setHasMore(false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch books", error);
         setHasMore(false);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    fetchBooks();
   }, [page, tabValue, dispatch, hasMore]);
 
   const handleTabChange = useCallback((_, newValue) => setTabValue(newValue), []);
@@ -61,18 +73,22 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
     [navigate, dispatch]
   );
 
+  // Infinite scroll observer
   useEffect(() => {
-    if (tabValue !== "all" || !loader.current || !hasMore) return;
+    if (tabValue !== "all" || !loader.current || !hasMore || isLoading) return;
+    
     const observer = new window.IntersectionObserver(
       (entities) => {
         const target = entities[0];
-        if (target.isIntersecting && !isLoading && hasMore) {
+        if (target.isIntersecting) {
           setPage((prev) => prev + 1);
         }
       },
-      { root: null, rootMargin: "100px", threshold: 0.5 }
+      { root: null, rootMargin: "100px", threshold: 0.1 }
     );
+    
     observer.observe(loader.current);
+    
     return () => {
       if (loader.current) observer.unobserve(loader.current);
     };
@@ -81,19 +97,6 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
   const featuredBooksArray = useMemo(() => (Array.isArray(featuredBooks) ? featuredBooks : []), [featuredBooks]);
   const trendingBooksArray = useMemo(() => (Array.isArray(trendingBooks) ? trendingBooks : []), [trendingBooks]);
   const allBooksArray = useMemo(() => (Array.isArray(books) ? books : []), [books]);
-
-  const renderBookGrid = useCallback(
-    (bookList) => (
-      <Grid container spacing={3}>
-        {bookList.map((book) => (
-          <Grid item xs={6} sm={4} md={3} lg={2.4} key={book.id || book.title}>
-            <BookCard book={book} onClick={() => navigateToBook(book.id)} categories={categories} tags={tags} />
-          </Grid>
-        ))}
-      </Grid>
-    ),
-    [categories, tags, navigateToBook]
-  );
 
   const handleTagSelect = (tag) => {
     const params = new URLSearchParams();
@@ -202,7 +205,12 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                   </Typography>
                 </Box>
               </Box>
-              {renderBookGrid(featuredBooksArray)}
+              <BookGrid 
+                books={featuredBooksArray} 
+                onBookClick={navigateToBook} 
+                categories={categories} 
+                tags={tags} 
+              />
             </Box>
           )}
 
@@ -262,7 +270,12 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
           {/* Trending Books Section */}
           {tabValue === "trending" && (
             <Box sx={{ mb: { xs: 4, md: 6 } }}>
-              {renderBookGrid(trendingBooksArray)}
+              <BookGrid 
+                books={trendingBooksArray} 
+                onBookClick={navigateToBook} 
+                categories={categories} 
+                tags={tags} 
+              />
               {trendingBooksArray.length > 0 && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                   <Button
@@ -325,7 +338,12 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 </Box>
               </Box>
               {allBooksArray.length > 0 ? (
-                renderBookGrid(allBooksArray)
+                <BookGrid 
+                  books={allBooksArray} 
+                  onBookClick={navigateToBook} 
+                  categories={categories} 
+                  tags={tags} 
+                />
               ) : (
                 <Box sx={{ textAlign: "center", py: 4 }}>
                   <CircularProgress size={30} />

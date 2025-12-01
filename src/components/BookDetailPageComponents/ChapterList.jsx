@@ -3,17 +3,9 @@ import { Box, CircularProgress, Divider, Typography, useMediaQuery, useTheme } f
 import { useEffect } from "react";
 import { TabChapters } from "./ChapterListComponent/TabChapters";
 
-export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, user, onFirstChapterId }) => {
+export const ChapterList = ({ chapters = [], progresses, onNavigate, bookId, user }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  // Set first chapter id if chapters change
-  useEffect(() => {
-    if (chapters?.length > 0) {
-      onFirstChapterId && onFirstChapterId(chapters[0].id);
-    }
-    // eslint-disable-next-line
-  }, [chapters]);
 
   return (
     <Box>

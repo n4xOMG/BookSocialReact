@@ -5,32 +5,31 @@ import { MainContent } from "../../components/HomePage/MainContent";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { getFeaturedBooks, getTrendingBooks, getRecentUpdatedBooks } from "../../redux/book/book.action";
 
-export default function HomePage() {
+// Custom hook for fetching home page data
+const useHomeData = () => {
   const dispatch = useDispatch();
   const { featuredBooks, trendingBooks, latestUpdateBooks, error } = useSelector((state) => state.book);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isInitialMount = useRef(true);
 
   const fetchData = useCallback(async () => {
-    if (featuredBooks?.length && trendingBooks?.length && latestUpdateBooks?.length) {
+    // Check if we already have data to avoid unnecessary fetches
+    // We check each category individually to ensure completeness
+    const missingFeatured = !featuredBooks || featuredBooks.length === 0;
+    const missingTrending = !trendingBooks || trendingBooks.length === 0;
+    const missingLatest = !latestUpdateBooks || latestUpdateBooks.length === 0;
+
+    if (!missingFeatured && !missingTrending && !missingLatest) {
       return;
     }
 
     setLoading(true);
     try {
       const promises = [];
-      if (!featuredBooks?.length) {
-        promises.push(dispatch(getFeaturedBooks()));
-      }
-      if (!trendingBooks?.length) {
-        promises.push(dispatch(getTrendingBooks()));
-      }
-      if (!latestUpdateBooks?.length) {
-        promises.push(dispatch(getRecentUpdatedBooks()));
-      }
+      if (missingFeatured) promises.push(dispatch(getFeaturedBooks()));
+      if (missingTrending) promises.push(dispatch(getTrendingBooks()));
+      if (missingLatest) promises.push(dispatch(getRecentUpdatedBooks()));
 
       await Promise.all(promises);
       setErrorMessage(null);
@@ -54,6 +53,20 @@ export default function HomePage() {
       setErrorMessage("Something went wrong while loading data.");
     }
   }, [error]);
+
+  return {
+    featuredBooks,
+    trendingBooks,
+    loading,
+    errorMessage,
+    setErrorMessage
+  };
+};
+
+export default function HomePage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { featuredBooks, trendingBooks, loading, errorMessage, setErrorMessage } = useHomeData();
 
   return (
     <Box
@@ -79,7 +92,7 @@ export default function HomePage() {
           scrollBehavior: "smooth",
         }}
       >
-        {loading ? (
+        {loading && (!featuredBooks?.length || !trendingBooks?.length) ? (
           <Box
             sx={{
               display: "flex",

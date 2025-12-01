@@ -59,6 +59,7 @@ import {
   RECORD_BOOK_VIEW_REQUEST,
   RECORD_BOOK_VIEW_SUCCESS,
   RECORD_BOOK_VIEW_FAILED,
+  CLEAR_ALL_BOOKS,
 } from "./book.actionType";
 
 const initialState = {
@@ -158,7 +159,15 @@ export const bookReducer = (state = initialState, action) => {
     case GET_LATEST_UPDATE_BOOK_SUCCESS:
       return { ...state, loading: false, latestUpdateBooks: action.payload };
     case FOLLOW_BOOK_SUCCESS:
-      return { ...state, loading: false, error: null, favoured: action.payload };
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        favoured: action.payload,
+        book: state.book
+          ? { ...state.book, followedByCurrentUser: !state.book.followedByCurrentUser }
+          : state.book,
+      };
     case GET_ALL_BOOK_SUCCESS:
       // If payload is paginated (Spring style), use .content, else fallback to array
       const booksRes = Array.isArray(action.payload) ? action.payload : action.payload.content || [];
@@ -169,6 +178,12 @@ export const bookReducer = (state = initialState, action) => {
         loading: false,
         error: null,
         books: page > 0 ? [...(state.books || []), ...booksRes] : booksRes,
+      };
+
+    case CLEAR_ALL_BOOKS:
+      return {
+        ...state,
+        books: [],
       };
 
     case GET_BOOK_RATING_BY_USER_SUCCESS:

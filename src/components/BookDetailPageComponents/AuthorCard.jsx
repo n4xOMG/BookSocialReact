@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Stack, Typography, Divider, IconButton, useMediaQuery } from "@mui/material";
+import { Avatar, Box, Button, Stack, Typography, Divider, useMediaQuery, useTheme } from "@mui/material";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,8 @@ import { Email, Person } from "@mui/icons-material";
 const AuthorCard = ({ author, checkAuth }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { user } = useSelector((store) => store.auth);
   const bookAuthor = useSelector((store) => store.user.user);
@@ -31,9 +32,7 @@ const AuthorCard = ({ author, checkAuth }) => {
 
   const handleMessageClick = async () => {
     try {
-      // Dispatch createChat action and get the chatId
       const chatId = await dispatch(createChat(author.id));
-      // Navigate to the chat messages page
       navigate(`/chats/${chatId}`);
     } catch (error) {
       console.error("Failed to create or retrieve chat:", error);
@@ -42,45 +41,40 @@ const AuthorCard = ({ author, checkAuth }) => {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", mb: isMobile ? 2 : 3 }}>
-        <Person sx={{ mr: 1.5, color: "#9d50bb" }} />
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <Person sx={{ mr: 1.5, color: theme.palette.primary.main }} />
         <Typography
           variant="h5"
+          className="font-serif"
           sx={{
-            fontFamily: '"Playfair Display", serif',
             fontWeight: 700,
-            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
+            color: theme.palette.text.primary,
           }}
         >
           Author
         </Typography>
       </Box>
 
-      <Divider sx={{ mb: isMobile ? 2 : 3, opacity: 0.3 }} />
+      <Divider sx={{ mb: 3 }} />
 
-      <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+      <Box sx={{ display: "flex", alignItems: "flex-start", flexDirection: isMobile ? "column" : "row", gap: 3 }}>
         <Avatar
           src={author.avatarUrl}
           alt={author.username}
           sx={{
             width: 80,
             height: 80,
-            mr: 3,
-            border: "3px solid",
-            borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)"),
-            boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+            border: `3px solid ${theme.palette.primary.main}40`,
+            boxShadow: theme.shadows[3],
             transition: "all 0.3s ease",
             "&:hover": {
               transform: "scale(1.05)",
-              boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+              boxShadow: theme.shadows[6],
             },
           }}
         />
 
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ flexGrow: 1, width: "100%" }}>
           <Box
             sx={{
               display: "flex",
@@ -88,18 +82,14 @@ const AuthorCard = ({ author, checkAuth }) => {
               justifyContent: "space-between",
               mb: 1,
               flexDirection: isMobile ? "column" : "row",
+              gap: 1,
             }}
           >
             <Typography
               variant="h6"
               sx={{
                 fontWeight: 700,
-                mb: isMobile ? 1 : 0,
-                background: (theme) =>
-                  theme.palette.mode === "dark" ? "linear-gradient(135deg, #9d50bb, #6e48aa)" : "linear-gradient(135deg, #6e48aa, #9d50bb)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
+                color: theme.palette.primary.main,
               }}
             >
               {author.username}
@@ -115,59 +105,32 @@ const AuthorCard = ({ author, checkAuth }) => {
                   sx={{
                     borderRadius: "12px",
                     px: 2,
-                    py: 0.75,
-                    borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.3)" : "rgba(0, 201, 167, 0.3)"),
-                    color: (theme) => (theme.palette.mode === "dark" ? "#84fab0" : "#00c9a7"),
+                    textTransform: "none",
                     fontWeight: 600,
-                    background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.08)" : "rgba(0, 201, 167, 0.08)"),
-                    backdropFilter: "blur(8px)",
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                      borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.5)" : "rgba(0, 201, 167, 0.5)"),
-                      background: (theme) => (theme.palette.mode === "dark" ? "rgba(132, 250, 176, 0.15)" : "rgba(0, 201, 167, 0.15)"),
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 4px 12px rgba(0, 201, 167, 0.2)",
-                    },
                   }}
                 >
                   Message
                 </Button>
 
                 <Button
-                  variant="contained"
+                  variant={bookAuthor?.followedByCurrentUser ? "contained" : "outlined"}
+                  color={bookAuthor?.followedByCurrentUser ? "error" : "primary"}
                   size="small"
                   onClick={handleFollow}
                   sx={{
                     borderRadius: "12px",
                     px: 2,
-                    py: 0.75,
-                    background: bookAuthor?.followedByCurrentUser
-                      ? "linear-gradient(135deg, #ff6b6b, #ee5a52)"
-                      : "linear-gradient(135deg, #9d50bb, #6e48aa)",
-                    color: "#fff",
+                    textTransform: "none",
                     fontWeight: 600,
-                    boxShadow: bookAuthor?.followedByCurrentUser
-                      ? "0 4px 12px rgba(255, 107, 107, 0.3)"
-                      : "0 4px 12px rgba(157, 80, 187, 0.3)",
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                      background: bookAuthor?.followedByCurrentUser
-                        ? "linear-gradient(135deg, #ff7b7b, #ff6b6b)"
-                        : "linear-gradient(135deg, #b968c7, #9d50bb)",
-                      transform: "translateY(-2px)",
-                      boxShadow: bookAuthor?.followedByCurrentUser
-                        ? "0 6px 20px rgba(255, 107, 107, 0.4)"
-                        : "0 6px 20px rgba(157, 80, 187, 0.5)",
-                    },
                   }}
                 >
-                  {bookAuthor?.followedByCurrentUser ? "Following" : "Follow"}
+                  {bookAuthor?.followedByCurrentUser ? "Unfollow" : "Follow"}
                 </Button>
               </Stack>
             )}
           </Box>
 
-          <Typography variant="body1" sx={{ mt: 1, lineHeight: 1.6, color: "text.secondary", display: isMobile ? "none" : "block" }}>
+          <Typography variant="body1" sx={{ mt: 1, lineHeight: 1.6, color: theme.palette.text.secondary }}>
             {author.bio || "No bio available for this author."}
           </Typography>
 
@@ -176,12 +139,13 @@ const AuthorCard = ({ author, checkAuth }) => {
             size="small"
             onClick={() => navigate(`/profile/${author.id}`)}
             sx={{
-              mt: isMobile ? 0 : 2,
+              mt: 2,
               pl: 0,
-              color: (theme) => (theme.palette.mode === "dark" ? "#9d50bb" : "#6e48aa"),
+              color: theme.palette.primary.main,
               fontWeight: 600,
+              textTransform: "none",
               "&:hover": {
-                background: "transparent",
+                bgcolor: "transparent",
                 textDecoration: "underline",
               },
             }}

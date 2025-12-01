@@ -105,10 +105,14 @@ export default function UserUploadBook() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const imageUrl = await UploadToServer(bookInfo.coverFile, user.username, `book_${bookInfo.title}_${Date.now()}`);
+      const uploadResult = await UploadToServer(bookInfo.coverFile, user.username, `book_${bookInfo.title}_${Date.now()}`);
+      const bookCoverObj = {
+        url: uploadResult.url,
+        isMild: uploadResult.safety?.level === "MILD"
+      };
       const bookData = {
         ...bookInfo,
-        bookCover: imageUrl,
+        bookCover: bookCoverObj,
         categoryId: bookInfo.category.id,
         tagIds: bookInfo.tags.map((tag) => tag.id),
       };

@@ -1,61 +1,50 @@
 import { Paper, Typography, useTheme, useMediaQuery } from "@mui/material";
 import React from "react";
 
-const GLASS_COLORS = [
-  "rgba(255, 99, 132, 0.2)",
-  "rgba(54, 162, 235, 0.2)",
-  "rgba(255, 206, 86, 0.2)",
-  "rgba(75, 192, 192, 0.2)",
-  "rgba(153, 102, 255, 0.2)",
-];
-
-const SELECTED_BORDERS = ["rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(255, 206, 86)", "rgb(75, 192, 192)", "rgb(153, 102, 255)"];
-
 const TagBarItem = ({ tag, onClick, tagIndex, isSelected }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const colorIndex = tagIndex % GLASS_COLORS.length;
-  const glassColor = GLASS_COLORS[colorIndex];
-  const selectedBorderColor = SELECTED_BORDERS[colorIndex];
-
   return (
     <Paper
       onClick={() => onClick(tag)}
-      elevation={isSelected ? 6 : 1}
+      elevation={isSelected ? 4 : 0}
       sx={{
-        pt: isMobile ? 2.5 : 5,
-        pb: isMobile ? 2.5 : 5,
-        borderRadius: 2,
+        py: 1,
+        px: 2.5,
+        borderRadius: "50px", // Pill shape
         cursor: "pointer",
-        transition: "transform 0.3s ease, border 0.3s ease, box-shadow 0.3s ease",
+        transition: "all 0.3s ease",
         textAlign: "center",
         flexShrink: 0,
-        width: isMobile ? "150px" : "250px",
-        flexGrow: 0,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
+        minWidth: "auto",
+        maxWidth: "200px",
         whiteSpace: "nowrap",
-        bgcolor: glassColor,
-        border: isSelected ? `2px solid ${selectedBorderColor}` : `1px solid ${selectedBorderColor}`,
-        color: "text.primary",
-        boxShadow: isSelected ? "0 10px 20px rgba(0,0,0,0.25)" : "0 5px 10px rgba(0,0,0,0.15)",
-        transform: isSelected ? "translateY(-6px)" : "none",
+        bgcolor: isSelected 
+          ? theme.palette.secondary.main
+          : theme.palette.background.paper,
+        border: "1px solid",
+        borderColor: isSelected 
+          ? theme.palette.secondary.main 
+          : theme.palette.divider,
+        color: isSelected ? theme.palette.secondary.contrastText : theme.palette.text.primary,
+        transform: isSelected ? "translateY(-1px)" : "none",
         "&:hover": {
-          transform: "translateY(-10px)",
-          borderColor: theme.palette.primary.light,
+          transform: "translateY(-2px)",
+          borderColor: theme.palette.secondary.main,
+          color: isSelected ? theme.palette.secondary.contrastText : theme.palette.secondary.main,
+          boxShadow: theme.shadows[2],
         },
       }}
     >
       <Typography
-        variant="h6"
+        variant="body2"
         sx={{
-          fontWeight: 500,
-          color: "text.primary",
+          fontWeight: isSelected ? 700 : 500,
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
-          px: 1,
+          fontSize: "0.9rem",
         }}
       >
         {tag.name}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, Alert } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, Alert, useTheme } from "@mui/material";
 import { Elements } from "@stripe/react-stripe-js";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import CheckoutForm from "./CheckoutForm";
@@ -7,6 +7,7 @@ import PayPalCheckout from "./PayPalCheckout";
 import PaymentEnvironmentCheck from "../../components/common/PaymentEnvironmentCheck";
 
 const PaymentDialog = ({ open, onClose, creditPackage, paymentMethod, stripePromise, onError, onSuccess, jwt }) => {
+  const theme = useTheme();
   const [checkoutError, setCheckoutError] = useState("");
 
   const handleClose = () => {
@@ -37,63 +38,49 @@ const PaymentDialog = ({ open, onClose, creditPackage, paymentMethod, stripeProm
       maxWidth="sm"
       fullWidth
       PaperProps={{
+        elevation: 0,
         sx: {
           borderRadius: "24px",
-          background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.95)" : "rgba(255, 255, 255, 0.95)"),
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          bgcolor: theme.palette.background.paper,
           border: "1px solid",
-          borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)"),
-          boxShadow: "0 16px 48px rgba(0, 0, 0, 0.3)",
+          borderColor: theme.palette.divider,
+          boxShadow: theme.shadows[10],
         },
       }}
       BackdropProps={{
         sx: {
-          backdropFilter: "blur(8px)",
+          backdropFilter: "blur(4px)",
           backgroundColor: "rgba(0, 0, 0, 0.5)",
         },
       }}
     >
-      <DialogTitle>
+      <DialogTitle sx={{ p: 3, pb: 2 }}>
         <Typography
           variant="h5"
           component="div"
+          className="font-serif"
           sx={{
-            fontFamily: '"Playfair Display", serif',
             fontWeight: 700,
-            fontSize: "1.75rem",
-            background: "linear-gradient(135deg, #00c9a7, #56efca)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
+            color: theme.palette.text.primary,
           }}
         >
           Complete Payment
         </Typography>
       </DialogTitle>
-      <DialogContent>
-        <Typography variant="body1" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-          You are about to purchase{" "}
-          <strong
-            style={{
-              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            {creditPackage?.creditAmount} credits
-          </strong>{" "}
-          for{" "}
-          <strong
-            style={{
-              background: "linear-gradient(135deg, #00c9a7, #56efca)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            ${creditPackage?.price}
-          </strong>
-        </Typography>
+      <DialogContent sx={{ p: 3 }}>
+        <Box sx={{ mb: 4, p: 2, bgcolor: theme.palette.action.hover, borderRadius: "12px" }}>
+          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1, color: theme.palette.text.primary }}>
+            Order Details
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Typography variant="body2" color="text.secondary">
+              {creditPackage?.creditAmount} Credits
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+              ${creditPackage?.price}
+            </Typography>
+          </Box>
+        </Box>
 
         <PaymentEnvironmentCheck paymentMethod={paymentMethod}>
           {paymentMethod === "stripe" && (
@@ -102,10 +89,9 @@ const PaymentDialog = ({ open, onClose, creditPackage, paymentMethod, stripeProm
                 mt: 2,
                 p: 3,
                 borderRadius: "16px",
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)"),
-                backdropFilter: "blur(8px)",
+                bgcolor: theme.palette.background.default,
                 border: "1px solid",
-                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"),
+                borderColor: theme.palette.divider,
               }}
             >
               <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
@@ -123,10 +109,9 @@ const PaymentDialog = ({ open, onClose, creditPackage, paymentMethod, stripeProm
                 mt: 2,
                 p: 3,
                 borderRadius: "16px",
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)"),
-                backdropFilter: "blur(8px)",
+                bgcolor: theme.palette.background.default,
                 border: "1px solid",
-                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"),
+                borderColor: theme.palette.divider,
               }}
             >
               <PayPalScriptProvider options={paypalOptions}>
@@ -138,15 +123,7 @@ const PaymentDialog = ({ open, onClose, creditPackage, paymentMethod, stripeProm
 
         {checkoutError && (
           <Box sx={{ mt: 2 }}>
-            <Alert
-              severity="error"
-              sx={{
-                borderRadius: "12px",
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 107, 107, 0.15)" : "rgba(255, 107, 107, 0.1)"),
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(255, 107, 107, 0.3)",
-              }}
-            >
+            <Alert severity="error" sx={{ borderRadius: "8px" }}>
               {checkoutError}
             </Alert>
           </Box>
@@ -156,14 +133,11 @@ const PaymentDialog = ({ open, onClose, creditPackage, paymentMethod, stripeProm
         <Button
           onClick={handleClose}
           sx={{
-            borderRadius: "12px",
+            borderRadius: "8px",
             px: 3,
-            py: 1,
-            textTransform: "none",
-            fontWeight: 600,
-            color: "text.secondary",
+            color: theme.palette.text.secondary,
             "&:hover": {
-              background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)"),
+              bgcolor: theme.palette.action.hover,
             },
           }}
         >

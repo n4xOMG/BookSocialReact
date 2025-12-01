@@ -69,11 +69,15 @@ const BookClubs = () => {
     setSubmissionError("");
 
     try {
-      const uploadedImageUrls = await Promise.all(selectedImages.map((image) => UploadToServer(image, user.username, "bookposts")));
+      const uploadResults = await Promise.all(selectedImages.map((image) => UploadToServer(image, user.username, "bookposts")));
+      const uploadedImageObjects = uploadResults.map((result) => ({
+        url: result.url,
+        isMild: result.safety?.level === "MILD"
+      }));
 
       const postData = {
         content: postContent,
-        images: uploadedImageUrls,
+        images: uploadedImageObjects,
         user: user,
       };
 
@@ -93,37 +97,33 @@ const BookClubs = () => {
   });
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100%" }}>
-      <Container maxWidth="md" sx={{ mt: 3, mb: 3 }}>
+    <Box sx={{ display: "flex", minHeight: "100%", bgcolor: theme.palette.background.default }}>
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Paper
           elevation={0}
           sx={{
             p: 3,
             mb: 4,
-            borderRadius: "24px",
-            background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
+            borderRadius: "16px",
+            bgcolor: theme.palette.background.paper,
             border: "1px solid",
-            borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
+            borderColor: theme.palette.divider,
+            boxShadow: theme.shadows[1],
           }}
         >
           <Typography
             variant="h5"
+            className="font-serif"
             sx={{
               mb: 2,
-              fontFamily: '"Playfair Display", serif',
               fontWeight: 700,
               fontSize: "1.75rem",
-              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              color: theme.palette.text.primary,
             }}
           >
             Share with the community
           </Typography>
-          <Divider sx={{ mb: 2, borderColor: "rgba(157, 80, 187, 0.2)" }} />
+          <Divider sx={{ mb: 3, borderColor: theme.palette.divider }} />
           <Stack direction="row" spacing={2} alignItems="flex-start">
             <Avatar alt={user?.username || "User"} src={user?.avatarUrl || ""} sx={{ width: 48, height: 48 }} />
             <Box sx={{ flexGrow: 1 }}>
@@ -140,9 +140,17 @@ const BookClubs = () => {
                 sx={{
                   mb: 2,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "16px",
-                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
-                    backdropFilter: "blur(8px)",
+                    borderRadius: "12px",
+                    bgcolor: theme.palette.background.default,
+                    "& fieldset": {
+                      borderColor: theme.palette.divider,
+                    },
+                    "&:hover fieldset": {
+                      borderColor: theme.palette.primary.main,
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: theme.palette.primary.main,
+                    },
                   },
                 }}
               />
@@ -155,10 +163,10 @@ const BookClubs = () => {
                     flexWrap: "wrap",
                     gap: 1,
                     p: 2,
-                    borderRadius: "16px",
-                    background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
+                    borderRadius: "12px",
+                    bgcolor: theme.palette.background.default,
                     border: "1px solid",
-                    borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+                    borderColor: theme.palette.divider,
                   }}
                 >
                   {selectedImages.map((image, index) => (
@@ -185,11 +193,13 @@ const BookClubs = () => {
                         onClick={() => handleRemoveImage(index)}
                         sx={{
                           position: "absolute",
-                          top: 0,
-                          right: 0,
-                          backgroundColor: "rgba(255, 255, 255, 0.8)",
+                          top: -8,
+                          right: -8,
+                          bgcolor: theme.palette.background.paper,
+                          border: "1px solid",
+                          borderColor: theme.palette.divider,
                           "&:hover": {
-                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            bgcolor: theme.palette.action.hover,
                           },
                           width: 24,
                           height: 24,
@@ -220,16 +230,15 @@ const BookClubs = () => {
                       component="span"
                       startIcon={<ImageIcon />}
                       sx={{
-                        borderRadius: "12px",
-                        borderColor: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.3)" : "rgba(0, 201, 167, 0.3)",
-                        color: theme.palette.mode === "dark" ? "#84fab0" : "#00c9a7",
+                        borderRadius: "8px",
+                        borderColor: theme.palette.divider,
+                        color: theme.palette.text.secondary,
                         fontWeight: 600,
                         textTransform: "none",
-                        background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.05)" : "rgba(0, 201, 167, 0.05)",
-                        backdropFilter: "blur(8px)",
                         "&:hover": {
-                          borderColor: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.5)" : "rgba(0, 201, 167, 0.5)",
-                          background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.1)" : "rgba(0, 201, 167, 0.1)",
+                          borderColor: theme.palette.primary.main,
+                          color: theme.palette.primary.main,
+                          bgcolor: theme.palette.action.hover,
                         },
                       }}
                     >
@@ -245,20 +254,20 @@ const BookClubs = () => {
                   size="large"
                   sx={{
                     textTransform: "none",
-                    px: 3,
+                    px: 4,
                     py: 1,
-                    borderRadius: "12px",
-                    background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-                    color: "#fff",
+                    borderRadius: "8px",
+                    bgcolor: theme.palette.primary.main,
+                    color: theme.palette.primary.contrastText,
                     fontWeight: 700,
-                    boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                    boxShadow: theme.shadows[2],
                     "&:hover": {
-                      background: "linear-gradient(135deg, #b968c7, #9d50bb)",
-                      boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
-                      transform: "translateY(-2px)",
+                      bgcolor: theme.palette.primary.dark,
+                      boxShadow: theme.shadows[4],
+                      transform: "translateY(-1px)",
                     },
                     "&:disabled": {
-                      background: "rgba(157, 80, 187, 0.3)",
+                      bgcolor: theme.palette.action.disabledBackground,
                     },
                   }}
                 >

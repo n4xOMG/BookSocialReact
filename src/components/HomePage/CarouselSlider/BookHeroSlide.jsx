@@ -1,5 +1,4 @@
-import { MenuBook } from "@mui/icons-material";
-import { Box, Typography, Chip, Button, Stack, Link, Paper, useMediaQuery } from "@mui/material";
+import { Box, Button, Chip, Link, Stack, Typography, useMediaQuery } from "@mui/material";
 
 export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
@@ -13,8 +12,8 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
         flexDirection: isMobile ? "column" : "row" ,
         alignItems: "center",
         justifyContent: "space-between",
-        color: "white",
         overflow: "hidden",
+        bgcolor: "background.paper", // Ensure opacity
       }}
     >
       {/* Content */}
@@ -36,6 +35,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
         {/* Title */}
         <Typography
           variant="h3"
+          className="font-serif"
           sx={{
             order: isMobile ? 1 : 'initial',
             fontWeight: 800,
@@ -46,6 +46,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             color: "primary.main",
+            letterSpacing: "-0.02em",
           }}
         >
           {book.title}
@@ -66,8 +67,8 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                       bgcolor: "primary.main",
                       color: "primary.contrastText", 
                       fontWeight: 600,
-                      opacity: 0.9,
-                      borderRadius: "10px", 
+                      borderRadius: "6px", 
+                      border: "1px solid rgba(255,255,255,0.1)",
                   }}
                 />
                 {book.editorChoice && (
@@ -75,11 +76,10 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                     label={"Editor Choice"}
                     size="small"
                     sx={{
-                        bgcolor: "primary.main",
-                        color: "primary.contrastText", 
+                        bgcolor: "secondary.main",
+                        color: "secondary.contrastText", 
                         fontWeight: 600,
-                        opacity: 0.9,
-                        borderRadius: "10px", 
+                        borderRadius: "6px", 
                     }}
                   />
                 )}
@@ -89,11 +89,12 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                     label={tag.name}
                     size="small"
                     sx={{
-                      bgcolor: "background.gradient",
-                      color: "secondary.contrastText", 
-                      fontWeight: 600,
-                      opacity: 0.9,
-                      borderRadius: "10px", 
+                      bgcolor: "background.paper",
+                      color: "text.primary", 
+                      fontWeight: 500,
+                      borderRadius: "6px", 
+                      border: "1px solid",
+                      borderColor: "divider",
                     }}
                   />
                 ))}
@@ -102,11 +103,12 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                     label={`+${bookTags.length - 5}`}
                     size="small"
                     sx={{
-                      bgcolor: "background.gradient",
-                      color: "secondary.contrastText", 
-                      fontWeight: 600,
-                      opacity: 0.9,
-                      borderRadius: "10px", 
+                      bgcolor: "background.paper",
+                      color: "text.secondary", 
+                      fontWeight: 500,
+                      borderRadius: "6px", 
+                      border: "1px solid",
+                      borderColor: "divider",
                     }}
                   />
                 )}
@@ -247,9 +249,20 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
             variant="contained"
             color="primary"
             onClick={() => onRead(book.id)}
-            sx={{ borderRadius: "30px", px: 3 }}
+            sx={{ 
+              borderRadius: "8px", 
+              px: 4,
+              py: 1,
+              textTransform: "none",
+              fontWeight: 600,
+              boxShadow: 2,
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: 4,
+              }
+            }}
           >
-            Read
+            Read Now
           </Button>
         </Stack>
       </Box>

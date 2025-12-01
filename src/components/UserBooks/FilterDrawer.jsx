@@ -1,54 +1,48 @@
-import React from "react";
+import CloseIcon from "@mui/icons-material/Close";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   Box,
   Button,
   Checkbox,
   Drawer,
-  FormControl,
   FormControlLabel,
   FormGroup,
   IconButton,
   List,
-  ListItem,
   ListSubheader,
   Typography,
+  Divider
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { useTheme } from "@mui/material/styles";
 
 const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilterChange }) => {
+  const theme = useTheme();
+
   const handleCategoryChange = (categoryId) => {
     const currentCategories = [...filterOptions.categories];
     const index = currentCategories.indexOf(categoryId);
-
     if (index === -1) {
       currentCategories.push(categoryId);
     } else {
       currentCategories.splice(index, 1);
     }
-
     onFilterChange({ categories: currentCategories });
   };
 
   const handleTagChange = (tagId) => {
     const currentTags = [...filterOptions.tags];
     const index = currentTags.indexOf(tagId);
-
     if (index === -1) {
       currentTags.push(tagId);
     } else {
       currentTags.splice(index, 1);
     }
-
     onFilterChange({ tags: currentTags });
   };
 
   const handleResetFilters = () => {
-    onFilterChange({
-      categories: [],
-      tags: [],
-    });
+    onFilterChange({ categories: [], tags: [] });
   };
 
   return (
@@ -58,51 +52,28 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
       onClose={onClose}
       sx={{
         "& .MuiDrawer-paper": {
-          width: {
-            xs: "100%",
-            sm: 320,
-          },
+          width: { xs: "100%", sm: 360 },
           maxWidth: "100%",
-          p: 2,
-          background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.85)" : "rgba(248, 247, 244, 0.85)"),
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderLeft: "1px solid",
-          borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)"),
+          bgcolor: theme.palette.background.default,
+          borderLeft: `1px solid ${theme.palette.divider}`,
         },
       }}
     >
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <FilterListIcon sx={{ mr: 1, color: "#9d50bb" }} />
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: '"Playfair Display", serif',
-              fontWeight: 700,
-              fontSize: "1.5rem",
-              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
+      <Box sx={{ p: 3, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <FilterListIcon sx={{ color: theme.palette.primary.main }} />
+          <Typography variant="h6" className="font-serif" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
             Filters
           </Typography>
         </Box>
-        <Box>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <IconButton
             size="small"
             onClick={handleResetFilters}
             sx={{
-              mr: 1,
-              background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 107, 107, 0.15)" : "rgba(255, 107, 107, 0.1)"),
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255, 107, 107, 0.3)",
-              color: "#ff6b6b",
-              "&:hover": {
-                background: "rgba(255, 107, 107, 0.25)",
-              },
+              border: `1px solid ${theme.palette.divider}`,
+              color: theme.palette.text.secondary,
+              "&:hover": { color: theme.palette.error.main, borderColor: theme.palette.error.main, bgcolor: theme.palette.error.light + "20" },
             }}
             title="Reset filters"
           >
@@ -112,11 +83,9 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
             size="small"
             onClick={onClose}
             sx={{
-              background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"),
-              backdropFilter: "blur(8px)",
-              "&:hover": {
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)"),
-              },
+              border: `1px solid ${theme.palette.divider}`,
+              color: theme.palette.text.secondary,
+              "&:hover": { bgcolor: theme.palette.action.hover, color: theme.palette.primary.main },
             }}
           >
             <CloseIcon fontSize="small" />
@@ -124,130 +93,75 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
         </Box>
       </Box>
 
-      <Box sx={{ overflow: "auto", flex: 1 }}>
+      <Box sx={{ overflow: "auto", flex: 1, p: 2 }}>
         {categories?.length > 0 && (
-          <List
-            dense
-            subheader={
-              <ListSubheader
-                sx={{
-                  bgcolor: "transparent",
-                  lineHeight: "2rem",
-                  fontWeight: 700,
-                  fontSize: "1rem",
-                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                Categories
-              </ListSubheader>
-            }
-          >
-            <Box
-              sx={{
-                maxHeight: 200,
-                overflow: "auto",
-                pl: 2,
-                "& .MuiCheckbox-root": {
-                  color: (theme) => (theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.5)" : "rgba(157, 80, 187, 0.6)"),
-                },
-                "& .Mui-checked": {
-                  color: "#9d50bb !important",
-                },
-              }}
-            >
-              <FormGroup>
-                {categories.map((category) => (
-                  <FormControlLabel
-                    key={category.id}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={filterOptions.categories.includes(category.id)}
-                        onChange={() => handleCategoryChange(category.id)}
-                      />
-                    }
-                    label={<Typography variant="body2">{category.name}</Typography>}
-                  />
-                ))}
-              </FormGroup>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: theme.palette.primary.main, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Categories
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+              {categories.map((category) => (
+                <FormControlLabel
+                  key={category.id}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={filterOptions.categories.includes(category.id)}
+                      onChange={() => handleCategoryChange(category.id)}
+                      sx={{ color: theme.palette.text.secondary, "&.Mui-checked": { color: theme.palette.primary.main } }}
+                    />
+                  }
+                  label={<Typography variant="body2" sx={{ color: theme.palette.text.primary }}>{category.name}</Typography>}
+                  sx={{ ml: 0, mr: 0, "&:hover": { bgcolor: theme.palette.action.hover, borderRadius: 1 } }}
+                />
+              ))}
             </Box>
-          </List>
+          </Box>
         )}
 
+        {categories?.length > 0 && tags?.length > 0 && <Divider sx={{ my: 2 }} />}
+
         {tags?.length > 0 && (
-          <List
-            dense
-            subheader={
-              <ListSubheader
-                sx={{
-                  bgcolor: "transparent",
-                  lineHeight: "2rem",
-                  fontWeight: 700,
-                  fontSize: "1rem",
-                  background: "linear-gradient(135deg, #00c9a7, #56efca)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                Tags
-              </ListSubheader>
-            }
-          >
-            <Box
-              sx={{
-                maxHeight: 300,
-                overflow: "auto",
-                pl: 2,
-                "& .MuiCheckbox-root": {
-                  color: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.5)" : "rgba(0, 201, 167, 0.6)"),
-                },
-                "& .Mui-checked": {
-                  color: "#00c9a7 !important",
-                },
-              }}
-            >
-              <FormGroup>
-                {tags.map((tag) => (
-                  <FormControlLabel
-                    key={tag.id}
-                    control={
-                      <Checkbox size="small" checked={filterOptions.tags.includes(tag.id)} onChange={() => handleTagChange(tag.id)} />
-                    }
-                    label={<Typography variant="body2">{tag.name}</Typography>}
-                  />
-                ))}
-              </FormGroup>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: theme.palette.secondary.main, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Tags
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+              {tags.map((tag) => (
+                <FormControlLabel
+                  key={tag.id}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={filterOptions.tags.includes(tag.id)}
+                      onChange={() => handleTagChange(tag.id)}
+                      sx={{ color: theme.palette.text.secondary, "&.Mui-checked": { color: theme.palette.secondary.main } }}
+                    />
+                  }
+                  label={<Typography variant="body2" sx={{ color: theme.palette.text.primary }}>{tag.name}</Typography>}
+                  sx={{ ml: 0, mr: 0, "&:hover": { bgcolor: theme.palette.action.hover, borderRadius: 1 } }}
+                />
+              ))}
             </Box>
-          </List>
+          </Box>
         )}
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 2 }}>
+      <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper }}>
         <Button
           fullWidth
           variant="contained"
           onClick={onClose}
           sx={{
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-            color: "#fff",
+            py: 1.5,
+            borderRadius: "8px",
             fontWeight: 700,
             textTransform: "none",
-            py: 1.25,
-            fontSize: "1rem",
-            boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
-            "&:hover": {
-              background: "linear-gradient(135deg, #b968c7, #9d50bb)",
-              boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
-              transform: "translateY(-2px)",
-            },
+            bgcolor: theme.palette.primary.main,
+            "&:hover": { bgcolor: theme.palette.primary.dark },
           }}
         >
-          Apply Filters
+          View Results
         </Button>
       </Box>
     </Drawer>

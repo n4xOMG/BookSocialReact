@@ -115,9 +115,9 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 sx={{
                   overflow: "hidden",
                   borderRadius: "20px",
-                  boxShadow: "0 16px 48px rgba(0, 0, 0, 0.25)",
+                  boxShadow: theme.shadows[4],
                   border: "1px solid",
-                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
+                  borderColor: theme.palette.divider,
                   mb: isMobile ? 2 : 4,
                 }}
               >
@@ -138,27 +138,28 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                 mb: 2,
                 mt: isMobile ? 2 : 3,
                 fontWeight: 800,
-                fontSize: { xs: "2rem", md: "3rem", lg: "3.5rem" },
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
+                fontSize: { xs: "2rem", md: "3.5rem", lg: "4rem" },
+                color: theme.palette.primary.main,
                 textAlign: "left",
                 letterSpacing: "-0.02em",
-                lineHeight: 1.15,
+                lineHeight: 1.1,
               }}
             >
-              Discover Your Next Favorite Story
+              Discover Your Next <br />
+              <Box component="span" sx={{ color: theme.palette.secondary.main, fontStyle: "italic" }}>
+                Favorite Story
+              </Box>
             </Typography>
             <Typography
               variant="body1"
               sx={{
                 color: "text.secondary",
-                fontSize: { xs: "1rem", md: "1.125rem" },
+                fontSize: { xs: "1rem", md: "1.25rem" },
                 maxWidth: "700px",
                 textAlign: "left",
                 fontWeight: 400,
                 lineHeight: 1.6,
+                fontFamily: "serif",
               }}
             >
               Explore our curated collection of stories, novels, and poetry across various genres.
@@ -171,40 +172,32 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
               <Box
                 sx={{
                   mb: 4,
-                  p: 2,
-                  background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)",
-                  backdropFilter: "blur(15px)",
+                  p: 3,
+                  background: theme.palette.background.paper,
                   border: "1px solid",
-                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
+                  borderColor: theme.palette.divider,
                   borderRadius: "16px",
                   display: "flex",
                   alignItems: "center",
-                  gap: 2,
+                  gap: 3,
+                  boxShadow: theme.shadows[1],
                 }}
               >
-                <Recommend
-                  sx={{
-                    fontSize: 32,
-                    color: "primary.main",
-                    filter: "drop-shadow(0 2px 8px rgba(157, 80, 187, 0.3))",
-                  }}
-                />
+                <Recommend sx={{ fontSize: 40, color: theme.palette.secondary.main }} />
                 <Box>
                   <Typography
-                    variant="h5"
+                    variant="h4"
                     className="font-serif"
                     sx={{
                       fontWeight: 700,
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
+                      color: theme.palette.text.primary,
                       mb: 0.5,
+                      letterSpacing: "-0.01em",
                     }}
                   >
                     Editor's Choices
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body1" color="text.secondary" sx={{ fontFamily: "serif", fontStyle: "italic" }}>
                     Handpicked stories from our curators
                   </Typography>
                 </Box>
@@ -222,26 +215,26 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
               scrollButtons={isMobile ? "auto" : false}
               allowScrollButtonsMobile
               sx={{
-                backgroundColor: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)",
-                backdropFilter: "blur(15px)",
-                border: "1px solid",
-                borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
-                borderRadius: "16px",
-                p: 1,
+                backgroundColor: "transparent",
+                borderBottom: "1px solid",
+                borderColor: theme.palette.divider,
                 "& .MuiTab-root": {
                   textTransform: "none",
                   fontWeight: 600,
-                  fontSize: "1rem",
-                  px: 3,
-                  borderRadius: "12px",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  fontSize: "1.1rem",
+                  px: 4,
+                  py: 2,
+                  color: "text.secondary",
+                  fontFamily: "serif",
+                  transition: "all 0.3s ease",
                   "&.Mui-selected": {
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                    color: "#fff",
+                    color: theme.palette.primary.main,
                   },
                 },
                 "& .MuiTabs-indicator": {
-                  display: "none",
+                  backgroundColor: theme.palette.secondary.main,
+                  height: "3px",
+                  borderRadius: "3px 3px 0 0",
                 },
               }}
             >
@@ -280,6 +273,12 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                       py: 1,
                       textTransform: "none",
                       fontWeight: 600,
+                      borderColor: theme.palette.divider,
+                      color: theme.palette.text.primary,
+                      "&:hover": {
+                        borderColor: theme.palette.primary.main,
+                        color: theme.palette.primary.main,
+                      }
                     }}
                   >
                     Load More
@@ -295,40 +294,32 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
               <Box
                 sx={{
                   mb: 4,
-                  p: 2,
-                  background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)",
-                  backdropFilter: "blur(15px)",
+                  p: 3,
+                  background: theme.palette.background.paper,
                   border: "1px solid",
-                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)",
+                  borderColor: theme.palette.divider,
                   borderRadius: "16px",
                   display: "flex",
                   alignItems: "center",
-                  gap: 2,
+                  gap: 3,
+                  boxShadow: theme.shadows[1],
                 }}
               >
-                <MenuBook
-                  sx={{
-                    fontSize: 32,
-                    color: "secondary.main",
-                    filter: "drop-shadow(0 2px 8px rgba(0, 201, 167, 0.3))",
-                  }}
-                />
+                <MenuBook sx={{ fontSize: 40, color: theme.palette.secondary.main }} />
                 <Box>
                   <Typography
-                    variant="h5"
+                    variant="h4"
                     className="font-serif"
                     sx={{
                       fontWeight: 700,
-                      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
+                      color: theme.palette.text.primary,
                       mb: 0.5,
+                      letterSpacing: "-0.01em",
                     }}
                   >
                     Explore All Stories
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body1" color="text.secondary" sx={{ fontFamily: "serif", fontStyle: "italic" }}>
                     Browse our complete collection
                   </Typography>
                 </Box>

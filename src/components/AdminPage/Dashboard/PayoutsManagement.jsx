@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
@@ -17,14 +17,19 @@ import {
   TableBody,
   TablePagination,
   Chip,
+  useTheme,
+  Paper,
+  TableContainer,
+  Alert,
 } from "@mui/material";
 import { adminListPayouts, adminProcessPayout } from "../../../redux/adminPayout/adminPayout.action";
 import { format } from "date-fns";
+import { Refresh } from "@mui/icons-material";
 
 const currency = (n) => (n == null ? "-$" : `$${Number(n).toFixed(2)}`);
 
 const statusOptions = [
-  { label: "All", value: "" },
+  { label: "All Statuses", value: "" },
   { label: "Requested", value: "REQUESTED" },
   { label: "Processing", value: "PROCESSING" },
   { label: "Completed", value: "COMPLETED" },
@@ -32,13 +37,14 @@ const statusOptions = [
 ];
 
 const sortOptions = [
-  { label: "Requested Date (newest)", value: "requestedDate,desc" },
-  { label: "Requested Date (oldest)", value: "requestedDate,asc" },
-  { label: "Amount (high)", value: "totalAmount,desc" },
-  { label: "Amount (low)", value: "totalAmount,asc" },
+  { label: "Newest First", value: "requestedDate,desc" },
+  { label: "Oldest First", value: "requestedDate,asc" },
+  { label: "Amount (High-Low)", value: "totalAmount,desc" },
+  { label: "Amount (Low-High)", value: "totalAmount,asc" },
 ];
 
 const PayoutsManagement = () => {
+  const theme = useTheme();
   const dispatch = useDispatch();
   const { payoutsPage, loading, error, processingMap } = useSelector((s) => s.adminPayout);
   const [status, setStatus] = useState("");
@@ -62,107 +68,163 @@ const PayoutsManagement = () => {
 
   const statusChip = (s) => {
     const color = s === "COMPLETED" ? "success" : s === "FAILED" ? "error" : s === "PROCESSING" ? "info" : "warning";
-    return <Chip size="small" color={color} label={s} />;
+    return <Chip size="small" color={color} label={s} sx={{ fontWeight: 600 }} />;
   };
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Author Payouts
-      </Typography>
+      <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box>
+          <Typography variant="h4" className="font-serif" fontWeight="700" sx={{ color: theme.palette.text.primary }}>
+            Payouts Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Process and track author payout requests.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<Refresh />}
+          onClick={() => load()}
+          sx={{ borderRadius: "8px" }}
+        >
+          Refresh
+        </Button>
+      </Box>
+
       {loading && !payoutsPage && (
         <Box sx={{ p: 2 }}>
           <LinearProgress />
         </Box>
       )}
+
       {error && (
-        <Card sx={{ mb: 2 }}>
-          <CardContent>
-            <Typography color="error">{String(error)}</Typography>
-          </CardContent>
-        </Card>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: "12px" }}>
+          {String(error)}
+        </Alert>
       )}
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
-        <TextField select label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 200 }}>
+
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
+        <TextField
+          select
+          label="Filter Status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          size="small"
+          sx={{
+            minWidth: 200,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              bgcolor: theme.palette.background.paper,
+            },
+          }}
+        >
           {statusOptions.map((o) => (
             <MenuItem key={o.value} value={o.value}>
               {o.label}
             </MenuItem>
           ))}
         </TextField>
-        <TextField select label="Sort" value={sort} onChange={(e) => setSort(e.target.value)} sx={{ minWidth: 240 }}>
+        <TextField
+          select
+          label="Sort By"
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          size="small"
+          sx={{
+            minWidth: 240,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              bgcolor: theme.palette.background.paper,
+            },
+          }}
+        >
           {sortOptions.map((o) => (
             <MenuItem key={o.value} value={o.value}>
               {o.label}
             </MenuItem>
           ))}
         </TextField>
-        <Button variant="outlined" onClick={() => load()}>
-          Refresh
-        </Button>
       </Stack>
-      <Card>
-        <CardContent>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Payout ID</TableCell>
-                <TableCell>Author</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Amount</TableCell>
-                <TableCell align="right">Platform Fees</TableCell>
-                <TableCell>Requested</TableCell>
-                <TableCell>Processed</TableCell>
-                <TableCell align="right">Action</TableCell>
+
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          borderRadius: "16px",
+          border: "1px solid",
+          borderColor: theme.palette.divider,
+          bgcolor: theme.palette.background.paper,
+        }}
+      >
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: theme.palette.action.hover }}>
+              <TableCell sx={{ fontWeight: 600 }}>Payout ID</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Author</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Amount</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Fees</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Requested</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Processed</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.map((p) => (
+              <TableRow key={p.id} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                <TableCell sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{p.id.substring(0, 8)}...</TableCell>
+                <TableCell sx={{ fontWeight: 500 }}>{p.authorName || p.author?.fullname || "Unknown"}</TableCell>
+                <TableCell>{statusChip(p.status)}</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
+                  {currency(p.totalAmount)}
+                </TableCell>
+                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>
+                  {currency(p.platformFeesDeducted)}
+                </TableCell>
+                <TableCell>{p.requestedDate ? format(new Date(p.requestedDate), "MMM d, yyyy") : "-"}</TableCell>
+                <TableCell>{p.processedDate ? format(new Date(p.processedDate), "MMM d, yyyy") : "-"}</TableCell>
+                <TableCell align="right">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    disabled={processingMap[p.id] || p.status === "COMPLETED"}
+                    onClick={() => handleProcess(p.id)}
+                    sx={{
+                      borderRadius: "8px",
+                      textTransform: "none",
+                      boxShadow: "none",
+                      "&:hover": { boxShadow: "none" },
+                    }}
+                  >
+                    {processingMap[p.id] ? "Processing..." : "Process"}
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((p) => (
-                <TableRow key={p.id} hover>
-                  <TableCell>{p.id}</TableCell>
-                  <TableCell>{p.authorName || p.author?.fullname || p.authorId}</TableCell>
-                  <TableCell>{statusChip(p.status)}</TableCell>
-                  <TableCell align="right">{currency(p.totalAmount)}</TableCell>
-                  <TableCell align="right">{currency(p.platformFeesDeducted)}</TableCell>
-                  <TableCell>{p.requestedDate ? format(new Date(p.requestedDate), "MMM d, yyyy") : "-"}</TableCell>
-                  <TableCell>{p.processedDate ? format(new Date(p.processedDate), "MMM d, yyyy") : "-"}</TableCell>
-                  <TableCell align="right">
-                    <Button
-                      size="small"
-                      variant="contained"
-                      disabled={processingMap[p.id] || p.status === "COMPLETED"}
-                      onClick={() => handleProcess(p.id)}
-                    >
-                      {processingMap[p.id] ? "Processing..." : "Process"}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8}>
-                    <Typography variant="body2" color="text.secondary">
-                      No payouts found
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            count={total}
-            page={page}
-            onPageChange={(e, newPage) => setPage(newPage)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-            rowsPerPageOptions={[10, 20, 50]}
-          />
-        </CardContent>
-      </Card>
+            ))}
+            {rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                  <Typography color="text.secondary">No payouts found matching your criteria.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        <TablePagination
+          component="div"
+          count={total}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+          rowsPerPageOptions={[10, 20, 50]}
+          sx={{ borderTop: `1px solid ${theme.palette.divider}` }}
+        />
+      </TableContainer>
     </Box>
   );
 };

@@ -130,7 +130,7 @@ export const deletePost = (postId) => async (dispatch) => {
   try {
     const response = await api.delete(`${API_BASE_URL}/api/posts/${postId}`);
     const { data, message, success } = extractResponsePayload(response);
-    const deletedId = (data && (data.id || data.postId)) || data || postId;
+    const deletedId = (data && typeof data === "object" && (data.id || data.postId)) ? (data.id || data.postId) : postId;
     dispatch({ type: DELETE_POST_SUCCESS, payload: deletedId });
     return { payload: deletedId, message, success };
   } catch (error) {

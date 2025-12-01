@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Thumbs, Autoplay } from "swiper/modules";
+import { Navigation, Thumbs, Autoplay, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/thumbs";
+import "swiper/css/effect-fade";
 import { Box, IconButton, Paper, useMediaQuery, useTheme } from "@mui/material";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -11,9 +12,10 @@ import { BookHeroSlide } from "./BookHeroSlide";
 export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const navigate = useNavigate();
+  const theme = useTheme();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
 
-  // refs cho navigation
+  // refs for navigation
   const prevRef = useRef(null);
   const nextRef = useRef(null);
   const swiperRef = useRef(null);
@@ -28,15 +30,15 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
         
         return {
           ...book,
-          optimizedCoverUrl: book.bookCover,
+          optimizedCoverUrl: book.bookCover.url,
           categoryName: category ? category.name : "Unknown",
-          bookTags: bookTags.slice(0, 5), // Lấy tối đa 5 tag
+          bookTags: bookTags.slice(0, 5), // Max 5 tags
         };
       }),
     [books, categories, tags]
   );
 
-  // Gắn navigation sau khi swiper và refs đã mount
+  // Attach navigation after swiper and refs are mounted
   useEffect(() => {
     if (
       swiperRef.current &&
@@ -58,16 +60,19 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
       sx={{
         position: "relative",
         width: "100%",
-        height: isMobile ? "77vh" : "75vh",
-        borderRadius: 2,
+        height: isMobile ? "70vh" : "75vh",
+        borderRadius: 4,
         overflow: "hidden",   
         "&:hover .nav-btn": { opacity: 1, visibility: "visible" },
-        elevation: 3,
-        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)', 
+        elevation: 0,
+        bgcolor: theme.palette.background.paper,
+        border: "none",
       }}
     >
       <Swiper
-        modules={[Navigation, Thumbs, Autoplay]}
+        modules={[Navigation, Thumbs, Autoplay, EffectFade]}
+        effect="fade"
+        fadeEffect={{ crossFade: true }}
         onSwiper={(swiper) => (swiperRef.current = swiper)}
         autoplay={{ delay: 7000, disableOnInteraction: false }}
         thumbs={{ swiper: thumbsSwiper }}
@@ -93,23 +98,24 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
         ref={prevRef}
         className="nav-btn"
         sx={{
-          display: isMobile ? 'none' : 'block',
+          display: isMobile ? 'none' : 'flex',
           position: "absolute",
-          top: "50%",
-          left: 8 ,
-          zIndex: 10,
-          transform: "translateY(-50%)",
-          bgcolor: 'rgba(255, 255, 255, 0.2)',
-          backdropFilter: 'blur(5px)',
-          WebkitBackdropFilter: 'blur(5px)',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
-          color: "text.primary", // Đổi màu icon thành màu chữ
-          opacity: 0,
-          visibility: "hidden",
-          transition: "all 0.3s ease",
-          '&:hover': {
-            bgcolor: 'rgba(255, 255, 255, 0.4)',
-          }
+          top: "50%",
+          left: 24,
+          zIndex: 10,
+          transform: "translateY(-50%)",
+          bgcolor: "rgba(0,0,0,0.3)",
+          backdropFilter: "blur(4px)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          color: "#fff",
+          opacity: 0,
+          visibility: "hidden",
+          transition: "all 0.3s ease",
+          '&:hover': {
+            bgcolor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
+            borderColor: theme.palette.primary.main,
+          }
         }}
       >
         <ArrowBackIosNew fontSize="small" />
@@ -119,23 +125,24 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
         ref={nextRef}
         className="nav-btn"
         sx={{
-          display: isMobile ? 'none' : 'block',
+          display: isMobile ? 'none' : 'flex',
           position: "absolute",
-          top: "50%",
-          right: 16 ,
-          zIndex: 10,
-          transform: "translateY(-50%)",
-          bgcolor: 'rgba(255, 255, 255, 0.2)',
-          backdropFilter: 'blur(5px)',
-          WebkitBackdropFilter: 'blur(5px)',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
-          color: "text.primary", 
-          opacity: 0,
-          visibility: "hidden",
-          transition: "all 0.3s ease",
-          '&:hover': {
-            bgcolor: 'rgba(255, 255, 255, 0.4)',
-          }
+          top: "50%",
+          right: 24,
+          zIndex: 10,
+          transform: "translateY(-50%)",
+          bgcolor: "rgba(0,0,0,0.3)",
+          backdropFilter: "blur(4px)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          color: "#fff",
+          opacity: 0,
+          visibility: "hidden",
+          transition: "all 0.3s ease",
+          '&:hover': {
+            bgcolor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
+            borderColor: theme.palette.primary.main,
+          }
         }}
       >
         <ArrowForwardIos fontSize="small" />
@@ -148,7 +155,7 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
           bottom:  isMobile ? 10 : 30 ,
           left:  isMobile ? 10 : 50 ,
           transform: "none", 
-          width:  isMobile ? "90%": "30%" ,
+          width:  isMobile ? "90%": "35%" ,
           zIndex: 3,
         }}
       >
@@ -169,15 +176,21 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
               <Box
                 sx={{
                   width: "100%",
-                  height:  isMobile ? 40 : 50,
+                  height:  isMobile ? 50 : 70,
                   borderRadius: 2,
                   overflow: "hidden",
                   cursor: "pointer",
-                  opacity: 0.8,
+                  opacity: 0.6,
+                  transition: "all 0.3s ease",
                   "&.swiper-slide-thumb-active": {
                     opacity: 1,
-                    border: "2px solid #fff",
+                    border: "2px solid",
+                    borderColor: theme.palette.secondary.main,
+                    transform: "scale(1.05)",
                   },
+                  "&:hover": {
+                    opacity: 1,
+                  }
                 }}
               >
                 <img

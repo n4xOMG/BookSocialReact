@@ -29,13 +29,27 @@ const StatisticsChart = ({ revenueData = [], userGrowthData = [] }) => {
       last12Months.forEach((month) => {
         labels.push(month);
 
-        // Find revenue for this month
-        const revenueItem = revenueData.find((item) => new Date(item.date).toLocaleDateString("en-US", { month: "short" }) === month);
-        revenueValues.push(revenueItem ? parseFloat(revenueItem.amount) / 1000 : 0);
+        // Calculate total revenue for this month
+        const monthlyRevenue = revenueData
+          .filter((item) => {
+            const itemDate = new Date(item.date);
+            return itemDate.toLocaleDateString("en-US", { month: "short" }) === month && 
+                   itemDate.getFullYear() === new Date().getFullYear();
+          })
+          .reduce((sum, item) => sum + (parseFloat(item.revenue) || 0), 0);
+        
+        revenueValues.push(monthlyRevenue / 1000);
 
-        // Find user growth for this month
-        const userItem = userGrowthData.find((item) => new Date(item.date).toLocaleDateString("en-US", { month: "short" }) === month);
-        userValues.push(userItem ? userItem.newUsers : 0);
+        // Calculate total new users for this month
+        const monthlyUsers = userGrowthData
+          .filter((item) => {
+            const itemDate = new Date(item.date);
+            return itemDate.toLocaleDateString("en-US", { month: "short" }) === month &&
+                   itemDate.getFullYear() === new Date().getFullYear();
+          })
+          .reduce((sum, item) => sum + (item.newUsers || 0), 0);
+
+        userValues.push(monthlyUsers);
       });
 
       return { labels, revenueValues, userValues };

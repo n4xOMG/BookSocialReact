@@ -64,6 +64,7 @@ export default function HomePage() {
         overflow: "hidden",
         width: "100%",
         minHeight: "100vh",
+        bgcolor: theme.palette.background.default,
       }}
     >
       <Box
@@ -75,6 +76,7 @@ export default function HomePage() {
           position: "relative",
           pb: isMobile ? 7 : 0,
           zIndex: 1,
+          scrollBehavior: "smooth",
         }}
       >
         {loading ? (
@@ -95,11 +97,15 @@ export default function HomePage() {
               severity="error"
               sx={{
                 mb: 2,
-                backgroundColor: "rgba(255, 107, 107, 0.15)",
+                backgroundColor: theme.palette.mode === "dark" ? "rgba(205, 92, 92, 0.15)" : "rgba(205, 92, 92, 0.1)",
                 backdropFilter: "blur(15px)",
-                border: "1px solid rgba(255, 107, 107, 0.3)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(205, 92, 92, 0.3)" : "rgba(205, 92, 92, 0.2)",
                 borderRadius: "12px",
-                color: "text.primary",
+                color: theme.palette.text.primary,
+                "& .MuiAlert-icon": {
+                  color: theme.palette.accent.coral,
+                },
               }}
               onClose={() => setErrorMessage(null)}
             >

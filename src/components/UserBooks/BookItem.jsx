@@ -5,338 +5,239 @@ import LabelIcon from "@mui/icons-material/Label";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import StarIcon from "@mui/icons-material/Star";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { Box, Card, CardContent, CardMedia, Chip, Divider, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
+import { Box, Button, Card, CardMedia, Chip, IconButton, Stack, Tooltip, Typography, useTheme } from "@mui/material";
 import React from "react";
+
+const BookCover = ({ book }) => {
+  const coverUrl = typeof book.bookCover === "object" ? book.bookCover.url : book.bookCover;
+  // Check for isMild or mild property directly on the bookCover object if it's an object
+  const isMild = typeof book.bookCover === "object" ? (book.bookCover.isMild || book.bookCover.mild) : false;
+  const [isBlurred, setIsBlurred] = React.useState(isMild);
+
+  return (
+    <>
+      <CardMedia
+        component="img"
+        sx={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          filter: isBlurred ? "blur(20px)" : "none",
+          cursor: isBlurred ? "default" : "pointer",
+        }}
+        image={coverUrl || "https://via.placeholder.com/120x180?text=No+Cover"}
+        alt={book.title}
+      />
+      {isBlurred && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            bgcolor: "rgba(0,0,0,0.3)",
+            zIndex: 2,
+          }}
+        >
+          <Typography variant="caption" sx={{ color: "white", mb: 0.5, fontWeight: "bold", fontSize: "0.6rem" }}>
+            Mild
+          </Typography>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsBlurred(false);
+            }}
+            sx={{
+              minWidth: "auto",
+              padding: "2px 6px",
+              fontSize: "0.6rem",
+              bgcolor: "rgba(0,0,0,0.6)",
+              "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+            }}
+          >
+            Show
+          </Button>
+        </Box>
+      )}
+    </>
+  );
+};
 
 export const BookItem = React.memo(({ book, isSelected, onSelect, onEdit, onDelete }) => {
   const theme = useTheme();
 
-  const chipLabelSx = {
-    height: "22px",
-    fontSize: "0.7rem",
-    fontWeight: 500,
-  };
-
-  const statChipSx = {
-    ...chipLabelSx,
-    "& .MuiChip-icon": { fontSize: "0.9rem" },
-  };
-
   return (
     <Card
       onClick={() => onSelect(book.id)}
-      elevation={0}
+      elevation={isSelected ? 4 : 1}
       sx={{
         display: "flex",
-        height: 170,
-        transition: "all 0.3s ease",
-        border: isSelected ? `2px solid ${theme.palette.primary.main}` : "1px solid",
-        borderColor: isSelected
-          ? theme.palette.primary.main
-          : theme.palette.mode === "dark"
-          ? "rgba(157, 80, 187, 0.2)"
-          : "rgba(157, 80, 187, 0.15)",
-        borderRadius: "16px",
+        height: 180,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        border: "1px solid",
+        borderColor: isSelected ? theme.palette.primary.main : "transparent",
+        borderRadius: "12px",
         position: "relative",
-        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        "&:hover": {
-          boxShadow: isSelected ? "0 8px 32px rgba(157, 80, 187, 0.4)" : "0 8px 24px rgba(0, 0, 0, 0.15)",
-          transform: "translateY(-3px)",
-          borderColor: theme.palette.primary.main,
-        },
+        bgcolor: isSelected ? theme.palette.action.selected : theme.palette.background.paper,
         cursor: "pointer",
         overflow: "hidden",
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: theme.shadows[4],
+          borderColor: theme.palette.primary.light,
+        },
       }}
     >
-      <CardMedia
-        component="img"
-        sx={{
-          width: 110,
-          height: 170,
-          flexShrink: 0,
-          objectFit: "cover",
-          boxShadow: 2,
-          borderRadius: "4px 0 0 4px",
-        }}
-        image={book.bookCover || "https://via.placeholder.com/110x160?text=No+Cover"}
-        alt={book.title}
-      />
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-          minWidth: 0,
-          p: 1.5, // Thêm padding cho toàn bộ nội dung
-          overflow: "auto", // Sử dụng 'auto' để nội dung cuộn khi tràn
-        }}
-      >
-        <Box
-          sx={{
-            flexGrow: 1, // Box này sẽ lấp đầy không gian thừa
-            display: "flex",
-            flexDirection: "column",
-            // loại bỏ justifyContent
-            overflow: "hidden",
-          }}
-        >
-          {/* Tiêu đề và nút action */}
+      {/* Cover Image */}
+      <Box sx={{ position: "relative", width: 120, height: "100%", flexShrink: 0 }}>
+        <BookCover book={book} />
+        {/* Status Overlay */}
+        {book.status && (
           <Box
             sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              mb: 1,
-              flexWrap: "wrap",
-              gap: 1,
+              position: "absolute",
+              top: 8,
+              left: 8,
+              zIndex: 1,
             }}
           >
-            <Box
+            <Chip
+              label={book.status}
+              size="small"
               sx={{
-                flex: 1,
-                minWidth: 0,
-                mr: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                height: 20,
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                bgcolor: book.status === "COMPLETED" ? theme.palette.success.main : theme.palette.info.main,
+                color: "#fff",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
               }}
-            >
-              <Tooltip title={book.title} placement="top" arrow>
-                <Typography
-                  variant="h6"
-                  component="div"
-                  sx={{
-                    fontFamily: '"Playfair Display", serif',
-                    fontWeight: 700,
-                    fontSize: "1.1rem",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                    textAlign: "left",
-                  }}
-                >
-                  {book.title}
-                </Typography>
-              </Tooltip>
+            />
+          </Box>
+        )}
+      </Box>
+
+      {/* Content */}
+      <Box sx={{ flex: 1, p: 2, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+            <Tooltip title={book.title}>
               <Typography
-                variant="body2"
-                color="text.secondary"
+                variant="h6"
+                className="font-serif"
                 sx={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2, // Chỉ hiển thị tối đa 2 dòng mô tả
-                  WebkitBoxOrient: "vertical",
+                  fontWeight: 700,
+                  fontSize: "1.1rem",
+                  lineHeight: 1.2,
+                  mb: 0.5,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  lineHeight: 1.4,
-                  mt: 0.5,
-                  textAlign: "left",
+                  whiteSpace: "nowrap",
+                  color: theme.palette.text.primary,
                 }}
               >
-                {book.description || "No description available"}
+                {book.title}
               </Typography>
-            </Box>
-            <Box
+            </Tooltip>
+            <Typography
+              variant="body2"
+              color="text.secondary"
               sx={{
-                display: "flex",
-                position: "absolute",
-                top: 8,
-                right: 8,
-                opacity: isSelected ? 1 : 0,
-                transition: "opacity 0.2s ease-in-out",
-                ".MuiCard-root:hover &": { opacity: 1 },
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                fontSize: "0.85rem",
+                lineHeight: 1.5,
               }}
             >
-              <Tooltip title="Edit book" placement="top">
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(book);
-                  }}
-                  sx={{
-                    color: "#00c9a7",
-                    p: 0.5,
-                    mr: 0.5,
-                    background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(0, 201, 167, 0.3)",
-                    "&:hover": {
-                      background: "linear-gradient(135deg, #00c9a7, #56efca)",
-                      color: "#fff",
-                      transform: "scale(1.05)",
-                    },
-                  }}
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete book" placement="top">
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(book);
-                  }}
-                  sx={{
-                    color: "#ff6b6b",
-                    p: 0.5,
-                    background: theme.palette.mode === "dark" ? "rgba(255, 107, 107, 0.2)" : "rgba(255, 107, 107, 0.15)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255, 107, 107, 0.3)",
-                    "&:hover": {
-                      background: "linear-gradient(135deg, #ff6b6b, #ee5a52)",
-                      color: "#fff",
-                      transform: "scale(1.05)",
-                    },
-                  }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
+              {book.description || "No description available"}
+            </Typography>
           </Box>
-        </Box>
-        {/* Divider và các tag, rating */}
-        <Box sx={{ mt: "auto", flexShrink: 0 }}>
-          <Divider sx={{ mb: 1.5 }} />
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 1,
+
+          {/* Actions - Always visible on hover or selection */}
+          <Stack 
+            direction="row" 
+            spacing={0.5} 
+            sx={{ 
+              opacity: { xs: 1, md: isSelected ? 1 : 0 }, 
+              transition: "opacity 0.2s",
+              ".MuiCard-root:hover &": { opacity: 1 } 
             }}
           >
-            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 0.5 }}>
-              {book.status && (
-                <Chip
-                  label={book.status.charAt(0).toUpperCase() + book.status.slice(1).toLowerCase()}
-                  size="small"
-                  sx={{
-                    ...chipLabelSx,
-                    borderRadius: "8px",
-                    fontWeight: 600,
-                    background:
-                      book.status === "COMPLETED"
-                        ? "linear-gradient(135deg, #00c9a7, #56efca)"
-                        : "linear-gradient(135deg, #667eea, #764ba2)",
-                    color: "#fff",
-                    border: "none",
-                  }}
-                />
-              )}
-              {book.chapterCount > 0 && (
-                <Tooltip title="Chapters">
-                  <Chip
-                    icon={<LibraryBooksIcon sx={{ color: "#9d50bb !important" }} />}
-                    label={`${book.chapterCount}`}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      ...statChipSx,
-                      borderRadius: "8px",
-                      borderColor: "rgba(157, 80, 187, 0.3)",
-                      background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.05)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  />
-                </Tooltip>
-              )}
-              {book.tagIds?.length > 0 && (
-                <Tooltip title={`${book.tagIds.length} ${book.tagIds.length === 1 ? "tag" : "tags"}`}>
-                  <Chip
-                    icon={<LabelIcon sx={{ color: "#00c9a7 !important" }} />}
-                    label={book.tagIds.length}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      ...statChipSx,
-                      borderRadius: "8px",
-                      borderColor: "rgba(0, 201, 167, 0.3)",
-                      background: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.1)" : "rgba(0, 201, 167, 0.05)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  />
-                </Tooltip>
-              )}
-            </Stack>
-
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              sx={{
-                flexWrap: "wrap",
-                justifyContent: { xs: "flex-start", sm: "flex-end" },
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onEdit(book); }}
+              sx={{ 
+                color: theme.palette.text.secondary,
+                "&:hover": { color: theme.palette.primary.main, bgcolor: theme.palette.action.hover }
               }}
             >
-              <Tooltip title={`${book.avgRating?.toFixed(1) || 0} avg rating (${book.ratingCount || 0} ratings)`} placement="top">
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    px: 0.8,
-                    py: 0.3,
-                    borderRadius: "8px",
-                    background: theme.palette.mode === "dark" ? "rgba(255, 193, 7, 0.15)" : "rgba(255, 193, 7, 0.1)",
-                    backdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255, 193, 7, 0.3)",
-                  }}
-                >
-                  <StarIcon sx={{ fontSize: "0.9rem", color: "#ffc107", mr: 0.5 }} />
-                  <Typography variant="caption" fontWeight={600} sx={{ color: "#ffc107" }}>
-                    {book.avgRating?.toFixed(1) || "0.0"}
-                  </Typography>
-                </Box>
-              </Tooltip>
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onDelete(book); }}
+              sx={{ 
+                color: theme.palette.text.secondary,
+                "&:hover": { color: theme.palette.error.main, bgcolor: theme.palette.error.light + "20" }
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        </Box>
 
-              <Tooltip title={`${book.viewCount || 0} views`} placement="top">
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    px: 0.8,
-                    py: 0.3,
-                    borderRadius: "8px",
-                    background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.15)" : "rgba(157, 80, 187, 0.1)",
-                    backdropFilter: "blur(8px)",
-                    border: "1px solid rgba(157, 80, 187, 0.3)",
-                  }}
-                >
-                  <VisibilityIcon sx={{ fontSize: "0.9rem", color: "#9d50bb", mr: 0.5 }} />
-                  <Typography variant="caption" fontWeight={600} sx={{ color: "#9d50bb" }}>
-                    {book.viewCount || 0}
-                  </Typography>
-                </Box>
-              </Tooltip>
+        {/* Stats & Tags */}
+        <Box sx={{ mt: "auto" }}>
+          <Stack direction="row" spacing={2} sx={{ mb: 1.5, color: theme.palette.text.secondary }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <StarIcon sx={{ fontSize: 16, color: theme.palette.warning.main }} />
+              <Typography variant="caption" fontWeight={600}>{book.avgRating?.toFixed(1) || "0.0"}</Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <VisibilityIcon sx={{ fontSize: 16 }} />
+              <Typography variant="caption" fontWeight={600}>{book.viewCount || 0}</Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <FavoriteIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+              <Typography variant="caption" fontWeight={600}>{book.favCount || 0}</Typography>
+            </Box>
+          </Stack>
 
-              <Tooltip title={`${book.favCount || 0} favorites`} placement="top">
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    px: 0.8,
-                    py: 0.3,
-                    borderRadius: "8px",
-                    background: theme.palette.mode === "dark" ? "rgba(255, 107, 107, 0.15)" : "rgba(255, 107, 107, 0.1)",
-                    backdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255, 107, 107, 0.3)",
-                  }}
-                >
-                  <FavoriteIcon sx={{ fontSize: "0.9rem", color: "#ff6b6b", mr: 0.5 }} />
-                  <Typography variant="caption" fontWeight={600} sx={{ color: "#ff6b6b" }}>
-                    {book.favCount || 0}
-                  </Typography>
-                </Box>
-              </Tooltip>
-            </Stack>
-          </Box>
+          <Stack direction="row" spacing={1} alignItems="center">
+             <Chip
+                icon={<LibraryBooksIcon sx={{ fontSize: "14px !important" }} />}
+                label={`${book.chapterCount || 0} Chapters`}
+                size="small"
+                variant="outlined"
+                sx={{ 
+                  height: 24, 
+                  fontSize: "0.75rem", 
+                  borderRadius: "6px",
+                  borderColor: theme.palette.divider 
+                }}
+             />
+             {book.tagIds?.length > 0 && (
+               <Chip
+                 icon={<LabelIcon sx={{ fontSize: "14px !important" }} />}
+                 label={`${book.tagIds.length} Tags`}
+                 size="small"
+                 variant="outlined"
+                 sx={{ 
+                   height: 24, 
+                   fontSize: "0.75rem", 
+                   borderRadius: "6px",
+                   borderColor: theme.palette.divider 
+                 }}
+               />
+             )}
+          </Stack>
         </Box>
       </Box>
     </Card>

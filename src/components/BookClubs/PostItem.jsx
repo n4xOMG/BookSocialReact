@@ -1,5 +1,5 @@
 import { Delete, Edit, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon } from "@mui/icons-material";
-import { Avatar, Box, Card, CardContent, CardHeader, Chip, Divider, Grid, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
+import { Avatar, Box, Button, Card, CardContent, CardHeader, Chip, Divider, Grid, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,6 +9,107 @@ import CommentSection from "./CommentSection";
 import ShareModal from "./ShareModal";
 import { Link, useNavigate } from "react-router-dom";
 import { formatExactTime } from "../../utils/formatDate";
+
+const PostImage = ({ item, index, count, handleImageClick, source }) => {
+  const theme = useTheme();
+  const imageUrl = typeof item === "object" ? item.url : item;
+  const isMild = typeof item === "object" ? (item.isMild || item.mild) : false;
+  const [isBlurred, setIsBlurred] = useState(isMild);
+
+  return (
+    <Grid
+      item
+      xs={count === 1 ? 12 : 6}
+      sx={{
+        position: "relative",
+        height: count === 1 ? 300 : 200,
+      }}
+    >
+      <Box
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          borderRadius: 2,
+        }}
+      >
+        <Box
+          component="img"
+          src={imageUrl}
+          onClick={() => !isBlurred && handleImageClick(index, source)}
+          sx={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            cursor: isBlurred ? "default" : "pointer",
+            border: "1px solid",
+            borderColor: theme.palette.divider,
+            transition: "transform 0.2s",
+            filter: isBlurred ? "blur(20px)" : "none",
+            "&:hover": {
+              transform: isBlurred ? "none" : "scale(1.02)",
+            },
+          }}
+        />
+        {isBlurred && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              bgcolor: "rgba(0,0,0,0.3)",
+              zIndex: 1,
+            }}
+          >
+            <Typography variant="body2" sx={{ color: "white", mb: 1, fontWeight: "bold" }}>
+              Mild Content
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsBlurred(false);
+              }}
+              sx={{
+                bgcolor: "rgba(0,0,0,0.6)",
+                "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+              }}
+            >
+              Show
+            </Button>
+          </Box>
+        )}
+      </Box>
+      {index === 3 && count > 4 && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            bgcolor: "rgba(0,0,0,0.6)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#fff",
+            fontSize: "1.5rem",
+            fontWeight: "bold",
+            borderRadius: 2,
+            cursor: "pointer",
+            backdropFilter: "blur(2px)",
+            zIndex: 2,
+          }}
+          onClick={() => handleImageClick(index, source)}
+        >
+          +{count - 4} more
+        </Box>
+      )}
+    </Grid>
+  );
+};
 
 const PostItem = ({ post, checkAuth }) => {
   const theme = useTheme();
@@ -39,49 +140,15 @@ const PostItem = ({ post, checkAuth }) => {
 
     return (
       <Grid container spacing={1} sx={{ mt: 2, mb: 1 }}>
-        {images.slice(0, 4).map((url, index) => (
-          <Grid
+        {images.slice(0, 4).map((item, index) => (
+          <PostImage
             key={index}
-            item
-            xs={count === 1 ? 12 : count === 2 ? 6 : count === 3 && index === 0 ? 12 : 6}
-            sx={{
-              position: "relative",
-              height: count === 1 ? "auto" : count === 2 ? 400 : count === 3 && index === 0 ? 250 : 200,
-            }}
-          >
-            <Box
-              component="img"
-              src={url}
-              onClick={() => handleImageClick(index, source)}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 2,
-                cursor: "pointer",
-              }}
-            />
-            {index === 3 && count > 4 && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  inset: 0,
-                  bgcolor: "rgab(0,0,0,0.5)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  color: "#fff",
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  borderRadius: 2,
-                  cursor: "pointer",
-                }}
-                onClick={() => handleImageClick(index, source)}
-              >
-                +{count - 4} more
-              </Box>
-            )}
-          </Grid>
+            item={item}
+            index={index}
+            count={count}
+            handleImageClick={handleImageClick}
+            source={source}
+          />
         ))}
       </Grid>
     );
@@ -151,18 +218,16 @@ const PostItem = ({ post, checkAuth }) => {
       sx={{
         mb: 3,
         textAlign: "left",
-        borderRadius: "24px",
+        borderRadius: "16px",
         overflow: "hidden",
-        transition: "all 0.3s ease",
-        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        bgcolor: theme.palette.background.paper,
         border: "1px solid",
-        borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
+        borderColor: theme.palette.divider,
+        transition: "all 0.3s ease",
         "&:hover": {
-          boxShadow: "0 8px 32px rgba(157, 80, 187, 0.3)",
-          transform: "translateY(-4px)",
-          borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",
+          boxShadow: theme.shadows[4],
+          borderColor: theme.palette.primary.light,
+          transform: "translateY(-2px)",
         },
       }}
     >
@@ -180,10 +245,10 @@ const PostItem = ({ post, checkAuth }) => {
               display: "block",
               mb: 0,
               textDecoration: "none",
-              color: "inherit",
+              color: theme.palette.text.primary,
               "&:hover": {
                 textDecoration: "underline",
-                color: "primary.main",
+                color: theme.palette.primary.main,
               },
             }}
           >
@@ -203,7 +268,7 @@ const PostItem = ({ post, checkAuth }) => {
                 textDecoration: "none",
                 "&:hover": {
                   textDecoration: "underline",
-                  color: "primary.main",
+                  color: theme.palette.primary.main,
                 },
               }}
             >
@@ -233,9 +298,10 @@ const PostItem = ({ post, checkAuth }) => {
             sx={{
               mb: 2,
               whiteSpace: "pre-line",
-              fontSize: post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length ? "1.5rem" : "1rem",
-              fontWeight: post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length ? "bold" : "normal",
-              textAlign: "justify",
+              fontSize: post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length ? "1.25rem" : "1rem",
+              fontWeight: post.content.length < 50 && !post.images?.length && !post.sharedPostImages?.length ? 500 : 400,
+              textAlign: "left",
+              color: theme.palette.text.primary,
             }}
           >
             {post.content}
@@ -247,12 +313,11 @@ const PostItem = ({ post, checkAuth }) => {
           <Card
             elevation={0}
             sx={{
-              borderRadius: "16px",
+              borderRadius: "12px",
               mb: 2,
-              background: theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.03)",
-              backdropFilter: "blur(12px)",
+              bgcolor: theme.palette.background.default,
               border: "1px solid",
-              borderColor: theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)",
+              borderColor: theme.palette.divider,
             }}
           >
             <CardHeader
@@ -260,7 +325,7 @@ const PostItem = ({ post, checkAuth }) => {
                 <Avatar
                   src={post.sharedPostUser?.avatarUrl || "/placeholder.svg"}
                   alt={post.sharedPostUser?.username || "User"}
-                  sx={{ width: 30, height: 30 }}
+                  sx={{ width: 32, height: 32 }}
                 />
               }
               title={
@@ -275,10 +340,10 @@ const PostItem = ({ post, checkAuth }) => {
                     display: "block",
                     mb: 0,
                     textDecoration: "none",
-                    color: "inherit",
+                    color: theme.palette.text.primary,
                     "&:hover": {
                       textDecoration: "underline",
-                      color: "primary.main",
+                      color: theme.palette.primary.main,
                     },
                   }}
                 >
@@ -298,7 +363,7 @@ const PostItem = ({ post, checkAuth }) => {
                       textDecoration: "none",
                       "&:hover": {
                         textDecoration: "underline",
-                        color: "primary.main",
+                        color: theme.palette.primary.main,
                       },
                     }}
                   >
@@ -313,8 +378,8 @@ const PostItem = ({ post, checkAuth }) => {
                   sx={{
                     mb: 2,
                     whiteSpace: "pre-line",
-                    fontSize: "1rem",
-                    fontWeight: "normal",
+                    fontSize: "0.95rem",
+                    color: theme.palette.text.primary,
                   }}
                 >
                   {post.sharedPostContent}
@@ -328,15 +393,14 @@ const PostItem = ({ post, checkAuth }) => {
         {post.images?.length > 0 && renderImages(post.images, "post")}
       </CardContent>
 
-      <Divider />
+      <Divider sx={{ borderColor: theme.palette.divider }} />
 
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          p: 2,
-          background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
-          backdropFilter: "blur(8px)",
+          p: 1.5,
+          bgcolor: theme.palette.background.default,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -351,18 +415,11 @@ const PostItem = ({ post, checkAuth }) => {
             sx={{
               height: 24,
               ml: 0.5,
-              borderRadius: "8px",
+              borderRadius: "6px",
               fontWeight: 600,
-              ...(isLiked
-                ? {
-                    background: "linear-gradient(135deg, #ff6b6b, #ee5a52)",
-                    color: "#fff",
-                    border: "none",
-                  }
-                : {
-                    variant: "outlined",
-                    borderColor: "transparent",
-                  }),
+              bgcolor: isLiked ? theme.palette.error.light : "transparent",
+              color: isLiked ? theme.palette.error.contrastText : theme.palette.text.secondary,
+              border: isLiked ? "none" : `1px solid ${theme.palette.divider}`,
             }}
           />
         </Box>
@@ -379,11 +436,11 @@ const PostItem = ({ post, checkAuth }) => {
             sx={{
               height: 24,
               ml: 0.5,
-              borderRadius: "8px",
+              borderRadius: "6px",
               fontWeight: 600,
-              borderColor: "rgba(157, 80, 187, 0.3)",
-              background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.05)",
-              backdropFilter: "blur(8px)",
+              bgcolor: "transparent",
+              color: theme.palette.text.secondary,
+              border: `1px solid ${theme.palette.divider}`,
             }}
           />
         </Box>

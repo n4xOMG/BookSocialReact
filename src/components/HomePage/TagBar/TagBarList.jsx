@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Box, Stack } from "@mui/material";
+import { Box, Stack, useTheme } from "@mui/material";
 import TagBarItem from "./TagBarItem";
 
 const TagBarList = ({ onTagSelect, tags = [] }) => {
   const [selectedTagId, setSelectedTagId] = useState(null);
+  const theme = useTheme();
 
   const handleTagClick = (tag) => {
     const newSelectedId = selectedTagId === tag.id ? null : tag.id;
@@ -15,22 +16,24 @@ const TagBarList = ({ onTagSelect, tags = [] }) => {
     <Box sx={{ mb: 3 }}>
       <Stack
         direction="row"
-        gap={1}
+        gap={1.5}
         flexWrap="nowrap"
         width="100%"
         sx={{
           overflowX: "auto",
-          pb: 1,
-          pt: 2,
+          pb: 1.5,
+          pt: 1,
+          px: 1,
           "&::-webkit-scrollbar": {
             height: "6px",
           },
           "&::-webkit-scrollbar-thumb": {
-            backgroundColor: (theme) => theme.palette.grey[400],
+            backgroundColor: theme.palette.secondary.main,
             borderRadius: "3px",
           },
           "&::-webkit-scrollbar-track": {
-            backgroundColor: "transparent",
+            backgroundColor: theme.palette.action.hover,
+            borderRadius: "3px",
           },
         }}
       >

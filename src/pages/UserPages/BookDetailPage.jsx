@@ -1,6 +1,6 @@
 import { FavoriteBorder, MenuBook, Report, StarRate } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useMediaQuery } from "@mui/material";
+import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useMediaQuery, useTheme } from "@mui/material";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -24,13 +24,17 @@ import {
 import { clearChapters, getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
 import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
+
 const BookCommentSection = React.lazy(() => import("../../components/BookDetailPageComponents/BookCommentSection"));
 const RelatedBooks = React.lazy(() => import("../../components/BookDetailPageComponents/RelatedBooks"));
+
 export const BookDetailPage = () => {
-  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
   const { bookId } = useParams();
   const dispatch = useDispatch();
+  
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [loading, setLoading] = useState(true);
@@ -81,9 +85,9 @@ export const BookDetailPage = () => {
         ]);
 
         dispatch(getRelatedBooksAction(bookId, bookRes.payload.categoryId, bookRes.payload.tagIds));
-
         dispatch(recordBookViewAction(bookId));
       } catch (e) {
+        console.error("Error fetching book details:", e);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -168,189 +172,91 @@ export const BookDetailPage = () => {
     );
   }
 
+  const paperStyle = {
+    p: { xs: 2, md: 4 },
+    borderRadius: "20px",
+    bgcolor: theme.palette.background.paper,
+    border: `1px solid ${theme.palette.divider}`,
+    boxShadow: theme.shadows[1],
+    transition: "all 0.3s ease",
+    "&:hover": {
+      boxShadow: theme.shadows[4],
+      borderColor: theme.palette.primary.main,
+    },
+  };
+
   return (
-    <Box sx={{ flex: 1, width: "100%", minHeight: "100vh" }}>
-      <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 5 }}>
-        <Grid
-          container
-          spacing={isMobile ? 1.5 : 3}
-          sx={{
-            // Không cần thay đổi ở đây, vì flex-direction chỉ cần 2 giá trị
-            flexDirection: isMobile ? "column" : "row",
-          }}
-        >
-          {/* Left Column (Cover/Actions/Sidebar Item) */}
-          <Grid
-            item
-            xs={12}
-            md={3}
-            sx={{
-              order: isMobile ? 1 : 1,
-              display: "flex",
-              flexDirection: "column",
-              gap: isMobile ? 1.5 : 3,
-            }}
-          >
-            {/* KHỐI 1: Cover/Actions/Rating */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: isMobile ? 2 : 3,
-                borderRadius: "20px",
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid",
-                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                "&:hover": {
-                  boxShadow: "0 12px 48px rgba(0, 0, 0, 0.15)",
-                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.25)"),
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  // Mobile: row, Desktop: column
-                  flexDirection: isMobile ? "row" : "column",
-                  gap: isMobile ? 1 : 0,
-                  alignItems: "flex-start",
-                }}
-              >
-                {/* Cover */}
-                <Box
-                  sx={{
-                    // Mobile: 40%, Desktop: 100%
-                    width: isMobile ? "40%" : "100%",
-                    flexShrink: 0,
-                  }}
-                >
+    <Box sx={{ flex: 1, width: "100%", minHeight: "100vh", bgcolor: theme.palette.background.default }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
+        <Grid container spacing={4}>
+          {/* Left Column (Cover/Actions/Rating) */}
+          <Grid item xs={12} md={3.5} lg={3}>
+            <Box sx={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: 3 }}>
+              <Paper elevation={0} sx={paperStyle}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+                  {/* Cover Image */}
                   <Box
                     component="img"
                     src={book.bookCover}
                     alt={`Cover of ${book.title}`}
                     sx={{
                       width: "100%",
-                      borderRadius: "16px",
-                      boxShadow: "0 16px 48px rgba(0, 0, 0, 0.2)",
-                      // Mobile: 0, Desktop: 1
-                      mb: isMobile ? 0 : 1,
-                      border: "2px solid",
-                      borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"),
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "scale(1.02)",
-                        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-                      },
+                      borderRadius: "12px",
+                      boxShadow: theme.shadows[6],
+                      aspectRatio: "2/3",
+                      objectFit: "cover",
                     }}
                   />
-                </Box>
 
-                {/* Actions */}
-                <Box
-                  sx={{
-                    // Mobile: 60%, Desktop: 100%
-                    width: isMobile ? "60%" : "100%",
-                    flexGrow: 1,
-                  }}
-                >
-                  <Box sx={{ mb: 1 }}>
-                    <Box
-                      sx={{
-                        display: "inline-flex",
-                        background: "rgba(255, 215, 0, 0.1)",
-                        backdropFilter: "blur(10px)",
-                        border: "1px solid",
-                        borderColor: "rgba(255, 215, 0, 0.3)",
-                        borderRadius: "12px",
-                        p: 1,
-                        alignItems: "center",
-                        mb: 1,
-                        boxShadow: "0 4px 12px rgba(255, 215, 0, 0.15)",
-                      }}
-                    >
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ml: 1,
-                          fontWeight: 600,
-                          color: "#fbc02d",
-                          // Desktop only
-                          display: isMobile ? "none" : "block",
-                        }}
-                      >
-                        Average rating: {book.avgRating ? book.avgRating.toFixed(1) : "0.0"} / 5.0
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          ml: 1,
-                          fontWeight: 600,
-                          color: "#fbc02d",
-                          // Mobile only
-                          display: isMobile ? "block" : "none",
-                        }}
-                      >
-                        Rating: {book.avgRating ? book.avgRating.toFixed(1) : "0.0"} / 5.0
-                      </Typography>
-                      <StarRate fontSize="small" sx={{ color: "#fbc02d", ml: 0.5 }} />
-                    </Box>
+                  {/* Rating Badge */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      bgcolor: theme.palette.warning.light + "20",
+                      color: theme.palette.warning.main,
+                      px: 2,
+                      py: 1,
+                      borderRadius: "12px",
+                      border: `1px solid ${theme.palette.warning.main}40`,
+                    }}
+                  >
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {book.avgRating ? book.avgRating.toFixed(1) : "0.0"}
+                    </Typography>
+                    <StarRate fontSize="small" />
                   </Box>
 
-                  {/* Rating */}
-                  <Box sx={{ mb: isMobile ? 2 : 3 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        // Mobile: column, Desktop: row
-                        flexDirection: isMobile ? "column" : "row",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Rating
-                        name="book-rating"
-                        precision={0.5}
-                        value={rating ? rating.rating : 0}
-                        onChange={(event, newValue) => handleRating(newValue)}
-                      />
-                      {rating?.rating && (
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            // Mobile: 0, Desktop: 1
-                            ml: isMobile ? 0 : 1,
-                            color: "text.secondary",
-                          }}
-                        >
-                          You rated {rating.rating?.toFixed(1)} !
-                        </Typography>
-                      )}
-                    </Box>
+                  {/* User Rating */}
+                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+                    <Rating
+                      name="book-rating"
+                      precision={0.5}
+                      value={rating ? rating.rating : 0}
+                      onChange={(event, newValue) => handleRating(newValue)}
+                      size="large"
+                    />
+                    {rating?.rating && (
+                      <Typography variant="caption" color="text.secondary" mt={0.5}>
+                        You rated: {rating.rating.toFixed(1)}
+                      </Typography>
+                    )}
                   </Box>
 
-                  {/* Follow + Report */}
-                  <Box sx={{ display: "flex", gap: isMobile ? 1 : 2, mb: isMobile ? 1.5 : 3 }}>
+                  {/* Actions */}
+                  <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
                     <Button
                       fullWidth
-                      variant="contained"
+                      variant={isFavorite ? "contained" : "outlined"}
                       onClick={handleFollowBook}
                       startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorder />}
+                      color="primary"
                       sx={{
-                        py: 1.5,
                         borderRadius: "12px",
-                        background: isFavorite ? "linear-gradient(135deg, #ff6b6b, #ee5a52)" : "linear-gradient(135deg, #9d50bb, #6e48aa)",
-                        color: "#fff",
+                        py: 1.2,
+                        textTransform: "none",
                         fontWeight: 600,
-                        boxShadow: isFavorite ? "0 4px 16px rgba(255, 107, 107, 0.3)" : "0 4px 16px rgba(157, 80, 187, 0.3)",
-                        "&:hover": {
-                          background: isFavorite
-                            ? "linear-gradient(135deg, #ff7b7b, #ff6b6b)"
-                            : "linear-gradient(135deg, #b968c7, #9d50bb)",
-                          transform: "translateY(-2px)",
-                          boxShadow: isFavorite ? "0 6px 24px rgba(255, 107, 107, 0.4)" : "0 6px 24px rgba(157, 80, 187, 0.5)",
-                        },
                       }}
                     >
                       {isFavorite ? "Following" : "Follow"}
@@ -359,16 +265,13 @@ export const BookDetailPage = () => {
                     <IconButton
                       onClick={handleOpenReportModal}
                       sx={{
-                        border: "1px solid",
-                        borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)"),
+                        border: `1px solid ${theme.palette.divider}`,
                         borderRadius: "12px",
-                        p: 1.5,
-                        background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)"),
-                        backdropFilter: "blur(10px)",
-                        transition: "all 0.3s ease",
+                        color: theme.palette.text.secondary,
                         "&:hover": {
-                          background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.06)"),
-                          transform: "scale(1.05)",
+                          color: theme.palette.error.main,
+                          borderColor: theme.palette.error.main,
+                          bgcolor: theme.palette.error.light + "10",
                         },
                       }}
                     >
@@ -376,183 +279,73 @@ export const BookDetailPage = () => {
                     </IconButton>
                   </Box>
 
-                  {/* Start Reading */}
+                  {/* Start Reading Button */}
                   {firstChapterId && (
                     <Button
                       fullWidth
                       variant="contained"
+                      color="secondary"
                       onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
+                      startIcon={<MenuBook />}
                       sx={{
-                        py: 1.8,
                         borderRadius: "12px",
-                        background: "linear-gradient(135deg, #00c9a7, #56efca)",
-                        color: "#fff",
+                        py: 1.5,
+                        textTransform: "none",
                         fontWeight: 700,
                         fontSize: "1rem",
-                        boxShadow: "0 4px 20px rgba(0, 201, 167, 0.3)",
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                        "&:hover": {
-                          background: "linear-gradient(135deg, #56efca, #84fab0)",
-                          boxShadow: "0 6px 28px rgba(0, 201, 167, 0.5)",
-                          transform: "translateY(-2px) scale(1.02)",
-                        },
+                        boxShadow: theme.shadows[4],
                       }}
-                      startIcon={<MenuBook />}
                     >
                       Start Reading
                     </Button>
                   )}
                 </Box>
-              </Box>
-            </Paper>
-
-            {/* KHỐI 7: Box Tab (Top Book of Day/Week/Month) */}
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: "lightcoral",
-                // Ẩn trên mobile
-                display: isMobile ? "none" : "block",
-                order: isMobile ? 8 : 2,
-              }}
-            >
-              <Typography>Box Tab (Top Book of Day/Week/Month)</Typography>
+              </Paper>
             </Box>
           </Grid>
 
-          {/* Right Column - Book Details + Content */}
-          <Grid
-            item
-            xs={12}
-            md={9}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: isMobile ? 1.5 : 3,
-              order: isMobile ? 2 : 2,
-            }}
-          >
-            {/* Book Details */}
-            <Paper
-              elevation={0}
-              sx={{
-                order: isMobile ? 2 : "initial",
-                p: isMobile ? 2 : 4,
-                borderRadius: "20px",
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid",
-                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              <BookDetails book={book} categories={categories} tags={tags} />
-            </Paper>
-
-            {/* Author */}
-            <Paper
-              elevation={0}
-              sx={{
-                order: isMobile ? 3 : "initial",
-                p: isMobile ? 2 : 4,
-                borderRadius: "20px",
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid",
-                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              <AuthorCard author={book.author} checkAuth={checkAuth} />
-            </Paper>
-
-            {/* Progress */}
-            <Box sx={{ order: isMobile ? 4 : "initial" }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: isMobile ? 2 : 4,
-                  borderRadius: "20px",
-                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid",
-                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                <ProgressBar progress={overallProgress} />
+          {/* Right Column (Details, Author, Chapters, Comments) */}
+          <Grid item xs={12} md={8.5} lg={9}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              {/* Book Details */}
+              <Paper elevation={0} sx={paperStyle}>
+                <BookDetails book={book} categories={categories} tags={tags} />
               </Paper>
+
+              {/* Author */}
+              <Paper elevation={0} sx={paperStyle}>
+                <AuthorCard author={book.author} checkAuth={checkAuth} />
+              </Paper>
+
+              {/* Progress */}
+              {user && (
+                <Paper elevation={0} sx={paperStyle}>
+                  <ProgressBar progress={overallProgress} />
+                </Paper>
+              )}
+
+              {/* Chapter List */}
+              <Paper elevation={0} sx={paperStyle}>
+                <ChapterList
+                  chapters={chapters}
+                  progresses={progresses}
+                  onNavigate={navigate}
+                  bookId={bookId}
+                  user={user || null}
+                  onFirstChapterId={setFirstChapterId}
+                />
+              </Paper>
+
+              {/* Comments & Related Books */}
+              <Suspense fallback={<LoadingSpinner />}>
+                <Paper elevation={0} sx={paperStyle}>
+                  <BookCommentSection bookId={book.id} user={user} />
+                </Paper>
+                <Paper elevation={0} sx={paperStyle}>
+                  <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
+                </Paper>
+              </Suspense>
             </Box>
-
-            {/* Chapter List */}
-            <Paper
-              elevation={0}
-              sx={{
-                order: isMobile ? 5 : "initial",
-                p: isMobile ? 2 : 4,
-                borderRadius: "20px",
-                background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid",
-                borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              <ChapterList
-                chapters={chapters}
-                progresses={progresses}
-                onNavigate={navigate}
-                bookId={bookId}
-                user={user || null}
-                onFirstChapterId={setFirstChapterId}
-              />
-            </Paper>
-
-            {/* Comments + Related */}
-            <Suspense fallback={<LoadingSpinner />}>
-              <Paper
-                elevation={0}
-                sx={{
-                  order: isMobile ? 6 : "initial",
-                  p: isMobile ? 2 : 4,
-                  borderRadius: "20px",
-                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid",
-                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                <BookCommentSection bookId={book.id} user={user} />
-              </Paper>
-              <Paper
-                elevation={0}
-                sx={{
-                  order: isMobile ? 7 : "initial",
-                  p: isMobile ? 2 : 4,
-                  borderRadius: "20px",
-                  background: (theme) => (theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.45)" : "rgba(255, 255, 255, 0.22)"),
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid",
-                  borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.35)"),
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
-              </Paper>
-            </Suspense>
           </Grid>
         </Grid>
       </Container>

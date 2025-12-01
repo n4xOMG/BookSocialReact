@@ -29,14 +29,16 @@ export async function UploadToServer(file, username, folderName, { useAuth = tru
       throw new Error(message);
     }
     logger.debug("Payload: ", payload);
-    const imagePath = payload?.data.url;
+    const imagePath = payload?.data?.url;
+    const safety = payload?.data?.safety;
+
     if (!imagePath) {
       logger.warn("Upload succeeded but no image path was returned", payload);
       throw new Error("Upload succeeded but no image path was returned.");
     }
 
-    logger.debug("Upload succeeded", { imagePath });
-    return imagePath;
+    logger.debug("Upload succeeded", { imagePath, safety });
+    return { url: imagePath, safety };
   } catch (error) {
     const message = error?.response?.data?.message || error.message || "Failed to upload image.";
     logger.error("Upload failed", { message, status: error?.response?.status });

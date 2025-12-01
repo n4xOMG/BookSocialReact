@@ -1,15 +1,21 @@
-import { CircularProgress, Box, CssBaseline } from "@mui/material";
+import { Box, CircularProgress, CssBaseline } from "@mui/material";
+import { ThemeProvider } from "@mui/material/styles";
 import { shallowEqual, useSelector } from "react-redux";
 import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
+import Layout from "./Layout";
 import { CollaborativeEditorWrapper } from "./components/AdminPage/Dashboard/BooksTab/ChapterModal/CollaborativeEditorWrapper";
 import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
 import RateLimitAlert from "./components/common/RateLimitAlert";
+import { useAuthInitialization, useRateLimitAlert, useTheme, useWebSocketConnection } from "./hooks";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
+import OtpVerification from "./pages/Authentication/OtpVerification";
 import ResetPassword from "./pages/Authentication/ResetPassword";
 import SignIn from "./pages/Authentication/SignIn";
 import SignUp from "./pages/Authentication/SignUp";
+import AuthorDashboard from "./pages/UserPages/AuthorDashboard";
+import AuthorPayoutSettings from "./pages/UserPages/AuthorPayoutSettings";
 import BookClubs from "./pages/UserPages/BookClubs";
 import { BookDetailPage } from "./pages/UserPages/BookDetailPage";
 import BookSearchResults from "./pages/UserPages/BookSearchResults";
@@ -17,19 +23,12 @@ import CreditPackages from "./pages/UserPages/CreditPackages";
 import HomePage from "./pages/UserPages/HomePage";
 import MessagesPage from "./pages/UserPages/MessagesPage";
 import OtherUserProfile from "./pages/UserPages/OtherUserProfile";
+import PostDetail from "./pages/UserPages/PostDetails";
 import ProfilePage from "./pages/UserPages/ProfilePage";
 import UserBooks from "./pages/UserPages/UserBooks";
 import UserBookshelf from "./pages/UserPages/UserBookshelf";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
-import AuthorDashboard from "./pages/UserPages/AuthorDashboard";
-import AuthorPayoutSettings from "./pages/UserPages/AuthorPayoutSettings";
 import { useAuthCheck } from "./utils/useAuthCheck";
-import PostDetail from "./pages/UserPages/PostDetails";
-import OtpVerification from "./pages/Authentication/OtpVerification";
-import { ThemeProvider } from "@mui/material/styles";
-import Layout from "./Layout";
-import AdminLayout from "./components/AdminPage/Layout/AdminLayout";
-import { useTheme, useRateLimitAlert, useWebSocketConnection, useAuthInitialization } from "./hooks";
 
 function App() {
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -87,9 +86,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword toggleTheme={toggleTheme} />} />
           <Route path="/reset-password" element={<ResetPassword toggleTheme={toggleTheme} />} />
 
-          <Route element={<AdminLayout toggleTheme={toggleTheme} />}>
-            <Route path="/admin/*" element={<AdminDashboard />} />
-          </Route>
+          <Route path="/admin/*" element={<AdminDashboard />} />
 
           <Route path="/upload-book" element={<UserUploadBook />} />
           <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />

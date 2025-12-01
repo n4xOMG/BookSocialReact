@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Alert, Skeleton, Card, CardHeader, CardContent } from "@mui/material";
+import { Box, Typography, Alert, Skeleton, Card, CardHeader, CardContent, useTheme } from "@mui/material";
 import PostItem from "./PostItem";
 
 const PostSkeleton = () => (
@@ -22,6 +22,8 @@ const PostSkeleton = () => (
 );
 
 const PostList = ({ posts, loading, error, checkAuth }) => {
+  const theme = useTheme();
+
   if (loading) {
     // Show skeletons while loading
     return (
@@ -46,30 +48,26 @@ const PostList = ({ posts, loading, error, checkAuth }) => {
       <Box
         sx={{
           textAlign: "center",
-          py: 5,
-          borderRadius: "24px",
-          background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.6)"),
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          py: 8,
+          borderRadius: "16px",
+          bgcolor: theme.palette.background.paper,
           border: "1px solid",
-          borderColor: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 201, 167, 0.2)" : "rgba(0, 201, 167, 0.15)"),
+          borderColor: theme.palette.divider,
         }}
       >
         <Typography
           variant="h6"
+          className="font-serif"
           sx={{
-            fontFamily: '"Playfair Display", serif',
             fontWeight: 700,
             fontSize: "1.5rem",
-            background: "linear-gradient(135deg, #00c9a7, #56efca)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
+            color: theme.palette.text.primary,
+            mb: 1,
           }}
         >
           No posts yet
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.6 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
           Be the first to share something with the community!
         </Typography>
       </Box>

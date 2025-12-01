@@ -1,6 +1,72 @@
-import { Box, Fade, Paper, Tooltip, Typography, useTheme } from "@mui/material";
+import { Box, Fade, Paper, Tooltip, Typography, useTheme, Button } from "@mui/material";
 import { useSelector } from "react-redux";
 import { formatRelativeTime, formatExactTime } from "../../utils/formatDate";
+import { useState } from "react";
+
+const ImageAttachment = ({ image }) => {
+  const theme = useTheme();
+  const imageUrl = typeof image === "object" ? image.url : image;
+  const isMild = typeof image === "object" ? (image.isMild || image.mild) : false;
+  const [isBlurred, setIsBlurred] = useState(isMild);
+
+  return (
+    <Box sx={{ position: "relative", mb: 1 }}>
+      <Box
+        component="img"
+        sx={{
+          width: "100%",
+          maxHeight: "200px",
+          objectFit: "cover",
+          borderRadius: "12px",
+          cursor: isBlurred ? "default" : "pointer",
+          border: "2px solid",
+          borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)",
+          transition: "transform 0.2s ease",
+          filter: isBlurred ? "blur(20px)" : "none",
+          "&:hover": {
+            transform: isBlurred ? "none" : "scale(1.02)",
+          },
+        }}
+        src={imageUrl}
+        alt="Message attachment"
+        onClick={() => !isBlurred && window.open(imageUrl, "_blank")}
+      />
+      {isBlurred && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            bgcolor: "rgba(0,0,0,0.3)",
+            zIndex: 1,
+            borderRadius: "12px",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "white", mb: 1, fontWeight: "bold" }}>
+            Mild Content
+          </Typography>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsBlurred(false);
+            }}
+            sx={{
+              bgcolor: "rgba(0,0,0,0.6)",
+              "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+            }}
+          >
+            Show
+          </Button>
+        </Box>
+      )}
+    </Box>
+  );
+};
 
 export default function ChatMessage({ message }) {
   const { user } = useSelector((state) => state.auth);
@@ -41,26 +107,9 @@ export default function ChatMessage({ message }) {
             borderTopRightRadius: isReqUserMessages ? 0 : "16px",
           }}
         >
-          {message.imageUrl && (
-            <Box
-              component="img"
-              sx={{
-                width: "100%",
-                maxHeight: "200px",
-                objectFit: "cover",
-                borderRadius: "12px",
-                mb: 1,
-                cursor: "pointer",
-                border: "2px solid",
-                borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.2s ease",
-                "&:hover": {
-                  transform: "scale(1.02)",
-                },
-              }}
-              src={message.imageUrl}
-              alt="Message attachment"
-              onClick={() => window.open(message.imageUrl, "_blank")}
+          {message.image && (
+            <ImageAttachment
+              image={message.image}
             />
           )}
 

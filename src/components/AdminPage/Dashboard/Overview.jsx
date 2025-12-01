@@ -1,15 +1,15 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Box, Grid, Paper, Typography, Card, CardContent, Divider, useTheme, CircularProgress, Alert } from "@mui/material";
+import { Box, Grid, Paper, Typography, Card, CardContent, Divider, useTheme, CircularProgress, Alert, Container } from "@mui/material";
 import {
   Book as BookIcon,
   MonetizationOn as MonetizationOnIcon,
   Group as GroupIcon,
   LocalLibrary as LocalLibraryIcon,
   BarChart as BarChartIcon,
-  TrendingUp as TrendingUpIcon,
-  Assessment as AssessmentIcon,
   Block as BlockIcon,
+  Assessment as AssessmentIcon,
+  TrendingUp as TrendingUpIcon,
 } from "@mui/icons-material";
 import {
   fetchUserAnalytics,
@@ -18,6 +18,52 @@ import {
   fetchPlatformAnalytics,
 } from "../../../redux/admin/admin.action";
 import StatisticsChart from "./StatisticsChart";
+
+const StatCard = ({ title, value, icon, change, color, theme }) => (
+  <Card
+    elevation={0}
+    sx={{
+      height: "100%",
+      borderRadius: "16px",
+      bgcolor: theme.palette.background.paper,
+      border: "1px solid",
+      borderColor: theme.palette.divider,
+      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      "&:hover": {
+        transform: "translateY(-4px)",
+        boxShadow: theme.shadows[4],
+        borderColor: color,
+      },
+    }}
+  >
+    <CardContent sx={{ p: 3 }}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: "12px",
+            bgcolor: `${color}15`,
+            color: color,
+          }}
+        >
+          {icon}
+        </Box>
+        {change && (
+          <Typography variant="caption" sx={{ color: theme.palette.success.main, fontWeight: 600, display: "flex", alignItems: "center" }}>
+            <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
+            {change}
+          </Typography>
+        )}
+      </Box>
+      <Typography variant="h4" fontWeight="700" sx={{ mb: 0.5, color: theme.palette.text.primary }}>
+        {value}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" fontWeight="500">
+        {title}
+      </Typography>
+    </CardContent>
+  </Card>
+);
 
 const Overview = () => {
   const dispatch = useDispatch();
@@ -39,7 +85,6 @@ const Overview = () => {
   } = useSelector((state) => state.admin);
 
   useEffect(() => {
-    // Fetch all admin analytics on component mount
     dispatch(fetchUserAnalytics());
     dispatch(fetchRevenueAnalytics());
     dispatch(fetchContentAnalytics());
@@ -49,178 +94,172 @@ const Overview = () => {
   const isLoading = userAnalyticsLoading || revenueAnalyticsLoading || contentAnalyticsLoading || platformAnalyticsLoading;
   const hasError = userAnalyticsError || revenueAnalyticsError || contentAnalyticsError || platformAnalyticsError;
 
-  // Calculate metrics from analytics data
   const getMetrics = () => {
-    if (!userAnalytics || !revenueAnalytics || !contentAnalytics) {
-      return [];
-    }
+    if (!userAnalytics || !revenueAnalytics || !contentAnalytics) return [];
 
     return [
       {
         title: "Total Users",
-        icon: <GroupIcon sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
+        icon: <GroupIcon />,
         value: userAnalytics.totalUsers?.toLocaleString() || "0",
-        change: `${userAnalytics.newUsersThisMonth || 0} new this month`,
-        positive: true,
-      },
-      {
-        title: "Total Books",
-        icon: <LocalLibraryIcon sx={{ fontSize: 40, color: theme.palette.secondary.main }} />,
-        value: contentAnalytics.totalBooks?.toLocaleString() || "0",
-        change: `${contentAnalytics.totalChapters || 0} chapters`,
-        positive: true,
-      },
-      {
-        title: "Active Users",
-        icon: <BookIcon sx={{ fontSize: 40, color: theme.palette.success.main }} />,
-        value: userAnalytics.activeUsers?.toLocaleString() || "0",
-        change: "Last 30 days",
-        positive: true,
-      },
-      {
-        title: "Total Unlocks",
-        icon: <BarChartIcon sx={{ fontSize: 40, color: theme.palette.info.main }} />,
-        value: contentAnalytics.totalUnlocks?.toLocaleString() || "0",
-        change: "Chapter unlocks",
-        positive: true,
+        change: userAnalytics.newUsersThisMonth ? `+${userAnalytics.newUsersThisMonth} this month` : null,
+        color: theme.palette.primary.main,
       },
       {
         title: "Total Revenue",
-        icon: <MonetizationOnIcon sx={{ fontSize: 40, color: theme.palette.warning.main }} />,
+        icon: <MonetizationOnIcon />,
         value: `$${revenueAnalytics.totalRevenue?.toLocaleString() || "0"}`,
-        change: `$${revenueAnalytics.monthlyRevenue?.toLocaleString() || "0"} this month`,
-        positive: true,
+        change: revenueAnalytics.monthlyRevenue ? `+$${revenueAnalytics.monthlyRevenue} this month` : null,
+        color: theme.palette.success.main,
+      },
+      {
+        title: "Total Books",
+        icon: <LocalLibraryIcon />,
+        value: contentAnalytics.totalBooks?.toLocaleString() || "0",
+        change: contentAnalytics.totalChapters ? `${contentAnalytics.totalChapters} chapters` : null,
+        color: theme.palette.secondary.main,
+      },
+      {
+        title: "Chapter Unlocks",
+        icon: <BarChartIcon />,
+        value: contentAnalytics.totalUnlocks?.toLocaleString() || "0",
+        change: null,
+        color: theme.palette.info.main,
       },
     ];
   };
 
   const getSecondaryMetrics = () => {
-    if (!userAnalytics || !revenueAnalytics || !platformAnalytics) {
-      return [];
-    }
+    if (!userAnalytics || !platformAnalytics) return [];
 
     return [
       {
-        title: "Banned Users",
-        icon: <BlockIcon sx={{ fontSize: 30, color: theme.palette.error.main }} />,
-        value: userAnalytics.bannedUsers || 0,
-        description: "Users currently banned",
+        title: "Active Users (30d)",
+        icon: <BookIcon />,
+        value: userAnalytics.activeUsers?.toLocaleString() || "0",
+        description: "Users active in last 30 days",
+        color: theme.palette.primary.main,
       },
       {
         title: "Platform Earnings",
-        icon: <MonetizationOnIcon sx={{ fontSize: 30, color: theme.palette.success.main }} />,
+        icon: <MonetizationOnIcon />,
         value: `$${platformAnalytics.platformFeeEarnings?.toLocaleString() || "0"}`,
-        description: "Platform fee earnings",
+        description: "Total platform fees collected",
+        color: theme.palette.success.main,
       },
       {
-        title: "Reports",
-        icon: <AssessmentIcon sx={{ fontSize: 30, color: theme.palette.warning.main }} />,
-        value: platformAnalytics.totalReports || 0,
-        description: `${platformAnalytics.pendingReports || 0} pending`,
+        title: "Pending Reports",
+        icon: <AssessmentIcon />,
+        value: platformAnalytics.pendingReports?.toLocaleString() || "0",
+        description: `${platformAnalytics.totalReports || 0} total reports`,
+        color: theme.palette.warning.main,
+      },
+      {
+        title: "Banned Users",
+        icon: <BlockIcon />,
+        value: userAnalytics.bannedUsers?.toLocaleString() || "0",
+        description: `${userAnalytics.suspendedUsers || 0} suspended`,
+        color: theme.palette.error.main,
       },
     ];
   };
 
   if (hasError) {
     return (
-      <Box>
-        <Typography variant="h4" gutterBottom fontWeight="500" sx={{ mb: 4 }}>
-          Dashboard Overview
-        </Typography>
-        <Alert severity="error">Failed to load analytics data. Please try refreshing the page.</Alert>
+      <Box sx={{ p: 2 }}>
+        <Alert severity="error" sx={{ borderRadius: "12px" }}>
+          Failed to load analytics data. Please try refreshing the page.
+        </Alert>
       </Box>
     );
   }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom fontWeight="500" sx={{ mb: 4 }}>
-        Dashboard Overview
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" className="font-serif" fontWeight="700" sx={{ color: theme.palette.text.primary }}>
+          Dashboard Overview
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Welcome back, Admin. Here's what's happening today.
+        </Typography>
+      </Box>
 
       {isLoading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
+          <CircularProgress size={40} thickness={4} />
         </Box>
       ) : (
         <>
-          {/* Main metrics */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {getMetrics().map((metric) => (
-              <Grid item xs={12} sm={6} md={4} key={metric.title}>
-                <Card
-                  elevation={1}
-                  sx={{
-                    height: "100%",
-                    borderRadius: 2,
-                    transition: "transform 0.3s, box-shadow 0.3s",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: 6,
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-                      <Box>{metric.icon}</Box>
-                      <Typography variant="h4" fontWeight="bold">
-                        {metric.value}
-                      </Typography>
-                    </Box>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      {metric.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-                      {metric.change}
-                    </Typography>
-                  </CardContent>
-                </Card>
+              <Grid item xs={12} sm={6} md={3} key={metric.title}>
+                <StatCard {...metric} theme={theme} />
               </Grid>
             ))}
           </Grid>
 
-          {/* Chart Section */}
           <Paper
-            elevation={1}
+            elevation={0}
             sx={{
               p: 3,
               mb: 4,
-              borderRadius: 2,
-              height: 400,
+              borderRadius: "16px",
+              bgcolor: theme.palette.background.paper,
+              border: "1px solid",
+              borderColor: theme.palette.divider,
+              height: 450,
             }}
           >
-            <Typography variant="h6" gutterBottom>
-              Monthly Revenue & Growth
-            </Typography>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" fontWeight="700">
+                Revenue & Growth
+              </Typography>
+            </Box>
             <StatisticsChart
               revenueData={revenueAnalytics?.dailyRevenueHistory || []}
               userGrowthData={userAnalytics?.userGrowthHistory || []}
             />
           </Paper>
 
-          {/* Additional metrics row */}
-          <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-            Additional Insights
+          <Typography variant="h5" className="font-serif" fontWeight="700" sx={{ mb: 3, color: theme.palette.text.primary }}>
+            Platform Insights
           </Typography>
           <Grid container spacing={3}>
             {getSecondaryMetrics().map((metric) => (
-              <Grid item xs={12} sm={4} key={metric.title}>
+              <Grid item xs={12} sm={6} md={3} key={metric.title}>
                 <Paper
-                  elevation={1}
+                  elevation={0}
                   sx={{
-                    p: 2.5,
-                    borderRadius: 2,
+                    p: 3,
                     height: "100%",
+                    borderRadius: "16px",
+                    bgcolor: theme.palette.background.paper,
+                    border: "1px solid",
+                    borderColor: theme.palette.divider,
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      borderColor: metric.color,
+                    },
                   }}
                 >
-                  <Box display="flex" alignItems="center" sx={{ mb: 1.5 }}>
-                    {metric.icon}
-                    <Typography variant="h6" sx={{ ml: 1 }}>
+                  <Box display="flex" alignItems="center" sx={{ mb: 2 }}>
+                    <Box
+                      sx={{
+                        p: 1,
+                        borderRadius: "8px",
+                        bgcolor: `${metric.color}15`,
+                        color: metric.color,
+                        mr: 2,
+                      }}
+                    >
+                      {metric.icon}
+                    </Box>
+                    <Typography variant="subtitle1" fontWeight="600">
                       {metric.title}
                     </Typography>
                   </Box>
-                  <Divider sx={{ my: 1.5 }} />
-                  <Typography variant="h5" fontWeight="medium" sx={{ mb: 1 }}>
+                  <Typography variant="h4" fontWeight="700" sx={{ mb: 1 }}>
                     {metric.value}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">

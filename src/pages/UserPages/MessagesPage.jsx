@@ -11,7 +11,7 @@ import SearchUser from "../../components/MessagePage/SearchUser";
 import UserChatCard from "../../components/MessagePage/UserChatCard";
 import { createMessage, fetchChatMessages, fetchUserChats } from "../../redux/chat/chat.action";
 import { RECEIVE_MESSAGE } from "../../redux/chat/chat.actionType";
-import UploadToCloudinary from "../../utils/uploadToCloudinary";
+import { UploadToServer } from "../../utils/uploadToServer";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
@@ -57,9 +57,13 @@ export default function MessagesPage() {
 
     setIsSending(true);
     try {
-      let imgUrl = null;
+      let imageObj = null;
       if (selectedImage) {
-        imgUrl = await UploadToCloudinary(selectedImage, `chat/chat_images/${currentChat.id}`);
+        const uploadResult = await UploadToServer(selectedImage, user.username, `chat/chat_images/${currentChat.id}`);
+        imageObj = {
+          url: uploadResult.url,
+          isMild: uploadResult.safety?.level === "MILD"
+        };
       }
       const message = {
         chat: { id: currentChat.id },
@@ -69,7 +73,7 @@ export default function MessagesPage() {
           id: currentChat.userOne.id === user.id ? currentChat.userTwo.id : currentChat.userOne.id,
         },
         content: trimmedValue,
-        imageUrl: imgUrl,
+        image: imageObj,
       };
       await dispatch(createMessage({ message, sendMessageToServer }));
       setSelectedImage(null);

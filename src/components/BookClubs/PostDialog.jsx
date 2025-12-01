@@ -40,13 +40,22 @@ const PostDialog = ({ open, onClose, onSubmit, editingPost, user }) => {
 
     try {
 
-      const uploadedImageUrls = await Promise.all(
-        selectedImages.map((image) => (typeof image === "string" ? image : UploadToServer(image, user?.username, `post_${Date.now()}`)))
+      const uploadedImageObjects = await Promise.all(
+        selectedImages.map(async (image) => {
+          if (typeof image === "string") {
+            return { url: image, isMild: false }; 
+          } else if (typeof image === "object" && image.url) {
+             return { url: image.url, isMild: image.mild || false };
+          } else {
+            const result = await UploadToServer(image, user?.username, `post_${Date.now()}`);
+            return { url: result.url, isMild: result.safety?.level === "MILD" };
+          }
+        })
       );
 
       const postData = {
-        content: userCaption,
-        images: uploadedImageUrls,
+        content: content,
+        images: uploadedImageObjects,
         user: user,
       };
 
@@ -56,7 +65,6 @@ const PostDialog = ({ open, onClose, onSubmit, editingPost, user }) => {
 
       await onSubmit(postData);
 
-      // Reset form fields after submission
       if (!editingPost) {
         setContent("");
         setSelectedImages([]);

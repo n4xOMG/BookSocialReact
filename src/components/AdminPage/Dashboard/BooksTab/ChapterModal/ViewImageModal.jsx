@@ -57,7 +57,7 @@ export default function ViewImageModal({ open, onClose, image, onNext, onPrev })
 
         {/* Image */}
         <img
-          src={image}
+          src={image.url}
           alt="Selected"
           style={{
             objectFit: "contain",

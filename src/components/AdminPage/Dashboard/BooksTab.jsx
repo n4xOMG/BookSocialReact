@@ -1,7 +1,32 @@
-import { Alert, Box, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Divider,
+  Grid,
+  IconButton,
+  Paper,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import Button from "@mui/material/Button";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteBookAction, editBookAction, getAllBookAction, setEditorChoice } from "../../../redux/book/book.action";
+import {
+  deleteBookAction,
+  editBookAction,
+  getAllBookAction,
+  getBookCountAction,
+  getFeaturedBooks,
+  getTrendingBooks,
+  setEditorChoice,
+} from "../../../redux/book/book.action";
 import { getCategories } from "../../../redux/category/category.action";
 import { getTags } from "../../../redux/tag/tag.action";
 import UploadToCloudinary from "../../../utils/uploadToCloudinary";
@@ -10,16 +35,23 @@ import BooksFilter from "./BooksTab/BooksFilter";
 import BooksTable from "./BooksTab/BooksTable";
 import EditBookDialog from "./BooksTab/EditBookDialog";
 import ManageChaptersDialog from "./BooksTab/ManageChaptersDialog";
+import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
+import StarIcon from "@mui/icons-material/Star";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import LanguageIcon from "@mui/icons-material/Language";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 const BooksTab = () => {
   const dispatch = useDispatch();
-  const { books, loading: booksLoading, error: booksError } = useSelector((state) => state.book);
+  const { books, bookCount, featuredBooks, trendingBooks, loading: booksLoading, error: booksError } = useSelector((state) => state.book);
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.category);
   const { tags, loading: tagsLoading, error: tagsError } = useSelector((state) => state.tag);
+
   const [filters, setFilters] = useState({
     category: "",
     tag: "",
     status: "",
+    title: "",
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -27,43 +59,103 @@ const BooksTab = () => {
   const [openEdit, setOpenEdit] = useState(false);
   const [currentBook, setCurrentBook] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // New state for managing chapters
+  // Manage chapters dialog state
   const [manageChaptersOpen, setManageChaptersOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState(null);
+
+  // Language distribution calculation
+  const [languageStats, setLanguageStats] = useState({});
 
   useEffect(() => {
     const fetchBooksData = async () => {
       try {
-        await dispatch(getAllBookAction());
-        await dispatch(getCategories());
-        await dispatch(getTags());
+        setRefreshing(true);
+        await Promise.all([
+          dispatch(getAllBookAction()),
+          dispatch(getBookCountAction()),
+          dispatch(getCategories()),
+          dispatch(getTags()),
+          dispatch(getFeaturedBooks()),
+          dispatch(getTrendingBooks()),
+        ]);
+        setRefreshing(false);
       } catch (e) {
         console.log(e);
+        setRefreshing(false);
       }
     };
     fetchBooksData();
   }, [dispatch]);
+
+  // Calculate language distribution when books change
+  useEffect(() => {
+    if (books && books.length > 0) {
+      const langCount = books.reduce((acc, book) => {
+        const lang = book.language || "Unknown";
+        acc[lang] = (acc[lang] || 0) + 1;
+        return acc;
+      }, {});
+      setLanguageStats(langCount);
+    }
+  }, [books]);
 
   // Update totalBooks whenever books or filters change
   useEffect(() => {
     setTotalBooks(filteredBooks.length);
   }, [books, filters]);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this book?")) {
+  const handleRefreshData = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        dispatch(getAllBookAction()),
+        dispatch(getBookCountAction()),
+        dispatch(getFeaturedBooks()),
+        dispatch(getTrendingBooks()),
+      ]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const openDeleteDialog = (id) => {
+    setBookToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (bookToDelete) {
       try {
-        await dispatch(deleteBookAction(id));
+        await dispatch(deleteBookAction(bookToDelete));
         await dispatch(getAllBookAction());
+        await dispatch(getBookCountAction());
+        setDeleteDialogOpen(false);
+        setBookToDelete(null);
       } catch (error) {
         console.error("Error deleting book:", error);
       }
     }
   };
 
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setBookToDelete(null);
+  };
+
   const handleToggleIsSuggested = async (id, book) => {
     try {
       await dispatch(setEditorChoice(id, book));
+      // Refresh the books data to show the updated state
+      await dispatch(getAllBookAction());
+      await dispatch(getFeaturedBooks());
     } catch (error) {
       console.error("Error toggling isSuggested status:", error);
     }
@@ -95,6 +187,8 @@ const BooksTab = () => {
       };
 
       await dispatch(editBookAction(currentBook.id, updatedBookData));
+      // Refresh books data
+      await dispatch(getAllBookAction());
 
       handleEditClose();
     } catch (error) {
@@ -120,9 +214,10 @@ const BooksTab = () => {
 
   const filteredBooks = books.filter((book) => {
     const matchesCategory = filters.category ? book.categoryId === parseInt(filters.category) : true;
-    const matchesTag = filters.tag ? book.tagIds.includes(parseInt(filters.tag)) : true;
+    const matchesTag = filters.tag ? book.tagIds?.includes(parseInt(filters.tag)) : true;
     const matchesStatus = filters.status ? book.status === filters.status : true;
-    return matchesCategory && matchesTag && matchesStatus;
+    const matchesTitle = filters.title ? book.title?.toLowerCase().includes(filters.title.toLowerCase()) : true;
+    return matchesCategory && matchesTag && matchesStatus && matchesTitle;
   });
 
   const paginatedBooks = filteredBooks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -134,7 +229,7 @@ const BooksTab = () => {
   };
 
   const getTagsByIds = (tagIds) => {
-    return tags.filter((tag) => tagIds.includes(tag.id));
+    return tags.filter((tag) => tagIds?.includes(tag.id));
   };
 
   // Handler to open Manage Chapters Dialog
@@ -148,45 +243,133 @@ const BooksTab = () => {
     setManageChaptersOpen(false);
   };
 
+  // Stats cards data
+  const statsCards = [
+    {
+      title: "Total Books",
+      value: bookCount || books.length,
+      icon: <LibraryBooksIcon fontSize="large" color="primary" />,
+      color: "#e3f2fd",
+    },
+    {
+      title: "Featured Books",
+      value: featuredBooks?.length || 0,
+      icon: <StarIcon fontSize="large" color="warning" />,
+      color: "#fff8e1",
+    },
+    {
+      title: "Trending Books",
+      value: trendingBooks?.length || 0,
+      icon: <TrendingUpIcon fontSize="large" color="success" />,
+      color: "#e8f5e9",
+    },
+    {
+      title: "Languages",
+      value: Object.keys(languageStats).length,
+      icon: <LanguageIcon fontSize="large" color="info" />,
+      color: "#e0f7fa",
+    },
+  ];
+
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
-        Books Overview
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5" fontWeight="bold">
+          Books Management
+        </Typography>
+        <Tooltip title="Refresh Data">
+          <IconButton onClick={handleRefreshData} disabled={refreshing}>
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      {/* Stats Cards */}
+      <Grid container spacing={3} mb={3}>
+        {statsCards.map((stat, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Paper
+              elevation={2}
+              sx={{
+                bgcolor: stat.color,
+                p: 2,
+                height: "100%",
+                transition: "transform 0.3s",
+                "&:hover": { transform: "translateY(-4px)", boxShadow: 3 },
+              }}
+            >
+              <Box display="flex" justifyContent="space-between">
+                <Box>
+                  <Typography variant="subtitle2" color="textSecondary">
+                    {stat.title}
+                  </Typography>
+                  <Typography variant="h4" fontWeight="medium">
+                    {stat.value}
+                  </Typography>
+                </Box>
+                {stat.icon}
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
 
       {/* Error Alerts */}
-      {booksError && <Alert severity="error">Error loading books.</Alert>}
-      {categoriesError && <Alert severity="error">Error loading categories.</Alert>}
-      {tagsError && <Alert severity="error">Error loading tags.</Alert>}
+      {booksError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error loading books: {booksError}
+        </Alert>
+      )}
+      {categoriesError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error loading categories: {categoriesError}
+        </Alert>
+      )}
+      {tagsError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error loading tags: {tagsError}
+        </Alert>
+      )}
 
       {/* Filters */}
-      <BooksFilter filters={filters} categories={categories} tags={tags} handleFilterChange={handleFilterChange} isDisabled={isLoading} />
+      <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Filters
+        </Typography>
+        <BooksFilter filters={filters} categories={categories} tags={tags} handleFilterChange={handleFilterChange} isDisabled={isLoading} />
+      </Paper>
 
       {/* Loading Indicator */}
       {isLoading && <LoadingSpinner />}
 
       {/* Books Table or No Books Message */}
-      {!isLoading && filteredBooks.length === 0 ? (
-        <Alert severity="info">No books available.</Alert>
-      ) : (
-        <BooksTable
-          books={paginatedBooks.map((book) => ({
-            ...book,
-            category: getCategoryById(book.categoryId),
-            tags: getTagsByIds(book.tagIds),
-          }))}
-          loading={isLoading}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          totalBooks={filteredBooks.length}
-          handleChangePage={handleChangePage}
-          handleChangeRowsPerPage={handleChangeRowsPerPage}
-          handleEditOpen={handleEditOpen}
-          handleDelete={handleDelete}
-          handleToggleIsSuggested={handleToggleIsSuggested}
-          handleManageChapters={handleManageChapters} // Pass the handler
-        />
-      )}
+      <Paper elevation={2} sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Books List
+        </Typography>
+
+        {!isLoading && filteredBooks.length === 0 ? (
+          <Alert severity="info">No books match your filters.</Alert>
+        ) : (
+          <BooksTable
+            books={paginatedBooks.map((book) => ({
+              ...book,
+              category: getCategoryById(book.categoryId),
+              tags: getTagsByIds(book.tagIds),
+            }))}
+            loading={isLoading}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            totalBooks={filteredBooks.length}
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+            handleEditOpen={handleEditOpen}
+            handleDelete={openDeleteDialog}
+            handleToggleIsSuggested={handleToggleIsSuggested}
+            handleManageChapters={handleManageChapters}
+          />
+        )}
+      </Paper>
 
       {/* Edit Book Dialog */}
       {currentBook && (
@@ -204,6 +387,22 @@ const BooksTab = () => {
 
       {/* Manage Chapters Dialog */}
       {selectedBook && <ManageChaptersDialog open={manageChaptersOpen} handleClose={handleManageChaptersClose} book={selectedBook} />}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Are you sure you want to delete this book? This action cannot be undone.</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

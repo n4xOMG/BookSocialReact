@@ -1,35 +1,40 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
-import WestIcon from "@mui/icons-material/West";
-import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography, useTheme } from "@mui/material";
+import { Stomp } from "@stomp/stompjs";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import SockJS from "sockjs-client";
+import { API_BASE_URL } from "../../api/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import ChatMessage from "../../components/MessagePage/ChatMessage";
 import SearchUser from "../../components/MessagePage/SearchUser";
 import UserChatCard from "../../components/MessagePage/UserChatCard";
 import { createMessage, fetchChatMessages, fetchUserChats } from "../../redux/chat/chat.action";
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
-import UploadToCloudinary from "../../utils/uploadToCloudinary";
-import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../api/api";
-import LoadingSpinner from "../../components/LoadingSpinner"; // Import LoadingSpinner
 import { RECEIVE_MESSAGE } from "../../redux/chat/chat.actionType";
+import { UploadToServer } from "../../utils/uploadToServer";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const theme = useTheme();
   const { chats } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
   const [currentChat, setCurrentChat] = useState();
-  const messages = useSelector((state) => (currentChat ? state.chat.messages[currentChat.id] || [] : []));
+  const rawMessages = useSelector((state) => (currentChat ? state.chat.messages[currentChat.id] || [] : []));
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [stompClient, setStompClient] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [messageText, setMessageText] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(true); // State for WebSocket connection
-  const [isFetchingChats, setIsFetchingChats] = useState(true); // State for fetching chats
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isFetchingChats, setIsFetchingChats] = useState(true);
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
+  const stompClientRef = useRef(null);
+  const subscriptionRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const reconnectAttemptsRef = useRef(0);
+  const RECONNECT_INTERVAL = 3000;
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -46,73 +51,189 @@ export default function MessagesPage() {
   };
 
   const handleCreateMessage = async (value) => {
-    if (isSending) return;
+    if (!currentChat || isSending) return;
+    const trimmedValue = value.trim();
+    if (!trimmedValue && !selectedImage) return;
+
     setIsSending(true);
-    setLoading(true);
-    let imgUrl = null;
-    if (selectedImage) {
-      imgUrl = await UploadToCloudinary(selectedImage, `chat/chat_images/${currentChat.id}`);
+    try {
+      let imageObj = null;
+      if (selectedImage) {
+        const uploadResult = await UploadToServer(selectedImage, user.username, `chat/chat_images/${currentChat.id}`);
+        imageObj = {
+          url: uploadResult.url,
+          isMild: uploadResult.safety?.level === "MILD"
+        };
+      }
+      const message = {
+        chat: { id: currentChat.id },
+        chatId: currentChat.id,
+        sender: { id: user.id },
+        receiver: {
+          id: currentChat.userOne.id === user.id ? currentChat.userTwo.id : currentChat.userOne.id,
+        },
+        content: trimmedValue,
+        image: imageObj,
+      };
+      await dispatch(createMessage({ message, sendMessageToServer }));
+      setSelectedImage(null);
+      setImagePreview(null);
+      setMessageText("");
+    } finally {
+      setIsSending(false);
     }
-    const message = {
-      chat: { id: currentChat.id },
-      chatId: currentChat.id,
-      sender: { id: user.id },
-      receiver: { id: currentChat.userOne.id === user.id ? user.id : currentChat.userTwo.id },
-      content: value,
-      imageUrl: imgUrl,
-    };
-    dispatch(createMessage({ message, sendMessageToServer }));
-    setSelectedImage(null);
-    setImagePreview(null);
-    setLoading(false);
-    setIsSending(false);
+  };
+
+  // Setup WebSocket connection
+  const setupStompClient = () => {
+    try {
+      setIsConnecting(true);
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+
+      const socket = new SockJS(`${API_BASE_URL}/ws`);
+      socketRef.current = socket;
+      const stomp = Stomp.over(socket);
+      stompClientRef.current = stomp;
+      stomp.connect({}, onConnect, onErr);
+
+      return () => {
+        if (reconnectTimerRef.current) {
+          clearTimeout(reconnectTimerRef.current);
+        }
+        if (subscriptionRef.current) {
+          subscriptionRef.current.unsubscribe();
+        }
+        if (stompClientRef.current) {
+          stompClientRef.current.disconnect();
+        }
+        setIsConnected(false);
+      };
+    } catch (error) {
+      console.error("Error setting up STOMP client:", error);
+      attemptReconnect();
+    }
   };
 
   useEffect(() => {
-    const socket = new SockJS(`${API_BASE_URL}/ws`);
-    const stomp = Stomp.over(socket);
-    setStompClient(stomp);
-    stomp.connect({}, onConnect, onErr);
+    return setupStompClient();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Handle visibility change to reconnect when tab becomes active again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && !isConnected) {
+        console.log("Page became visible, checking connection...");
+        if (stompClientRef.current && !stompClientRef.current.connected) {
+          setupStompClient();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected]);
+
+  const attemptReconnect = () => {
+    if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+      reconnectAttemptsRef.current += 1;
+      console.log(`Attempting reconnect ${reconnectAttemptsRef.current} of ${MAX_RECONNECT_ATTEMPTS} in ${RECONNECT_INTERVAL}ms`);
+
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
+
+      reconnectTimerRef.current = setTimeout(() => {
+        setupStompClient();
+      }, RECONNECT_INTERVAL);
+    } else {
+      console.error("Max reconnect attempts reached");
+      setIsConnecting(false);
+    }
+  };
 
   const onConnect = () => {
     console.log("Connected to WebSocket");
-    setIsConnecting(false); // Update connection state
-    if (stompClient && user && currentChat) {
-      console.log(`Subscribing to group: /group/${currentChat.id}/private`);
-      stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
-    }
+    setIsConnecting(false);
+    setIsConnected(true);
+    reconnectAttemptsRef.current = 0;
+    subscribeToChat();
   };
 
   const onErr = (err) => {
     console.log("Websocket error: ", err);
-    setIsConnecting(false); // Ensure loading stops on error
+    setIsConnecting(false);
+    setIsConnected(false);
+    attemptReconnect();
+  };
+
+  const subscribeToChat = () => {
+    if (subscriptionRef.current) {
+      subscriptionRef.current.unsubscribe();
+      subscriptionRef.current = null;
+    }
+
+    if (stompClientRef.current && stompClientRef.current.connected && user && currentChat) {
+      try {
+        console.log(`Subscribing to group: /group/${currentChat.id}/private`);
+        subscriptionRef.current = stompClientRef.current.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
+      } catch (error) {
+        console.error("Error subscribing to chat:", error);
+        // If this fails, we might need to reconnect
+        if (error.message.includes("no underlying")) {
+          attemptReconnect();
+        }
+      }
+    }
   };
 
   const sendMessageToServer = (newMessage) => {
-    if (stompClient && newMessage) {
-      stompClient.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
+    if (!stompClientRef.current || !newMessage || !currentChat) return;
+
+    try {
+      if (stompClientRef.current.connected) {
+        stompClientRef.current.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
+      } else {
+        console.error("STOMP client not connected, attempting to reconnect");
+        setupStompClient();
+        // Could queue message to be sent after reconnection if needed
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      if (error.message.includes("no underlying")) {
+        attemptReconnect();
+      }
     }
   };
 
   const onMessageReceived = (payload) => {
     console.log("Message received from WebSocket:", payload.body);
     const receivedMessage = JSON.parse(payload.body);
-    dispatch({ type: "RECEIVE_MESSAGE", payload: receivedMessage });
+    dispatch({ type: RECEIVE_MESSAGE, payload: receivedMessage });
   };
 
   useEffect(() => {
-    if (stompClient && user && currentChat) {
-      const subscription = stompClient.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
-      return () => subscription.unsubscribe();
+    if (stompClientRef.current && user && currentChat && isConnected) {
+      subscribeToChat();
     }
-  }, [stompClient, user, currentChat]);
+  }, [user, currentChat, isConnected]);
 
   useEffect(() => {
     if (currentChat) {
       dispatch(fetchChatMessages(currentChat.id));
     }
   }, [currentChat, dispatch]);
+
+  const messages = useMemo(() => {
+    if (!rawMessages) return [];
+    return [...rawMessages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  }, [rawMessages]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -126,90 +247,229 @@ export default function MessagesPage() {
   }
 
   return (
-    <Grid container sx={{ height: "100vh", overflow: "hidden" }}>
-      <Grid item xs={3} sx={{ px: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #ddd" }}>
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          <Box sx={{ display: "flex", alignItems: "center", py: 2 }} onClick={() => navigate("/")}>
-            <IconButton>
-              <WestIcon />
-            </IconButton>
-            <Typography sx={{ fontSize: 20, fontWeight: "bold", ml: 1 }}>Home</Typography>
-          </Box>
-          <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
-            <SearchUser />
-            <Box sx={{ mt: 2 }}>
-              {chats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => {
-                    setCurrentChat(chat);
-                  }}
-                >
-                  <UserChatCard chat={chat} />
-                </div>
-              ))}
-            </Box>
-          </Box>
-        </Box>
-      </Grid>
-      <Grid item xs={9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        {currentChat ? (
+    <Box
+      sx={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+        background:
+          theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, #0f0f1c 0%, #1a1a2e 100%)"
+            : "linear-gradient(135deg, #f8f7f4 0%, #e8e6e3 100%)",
+        p: 3,
+      }}
+    >
+      <Grid
+        container
+        sx={{
+          height: "100%",
+          overflow: "hidden",
+          borderRadius: "24px",
+          background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.6)" : "rgba(255, 255, 255, 0.6)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        <Grid
+          item
+          xs={3}
+          sx={{
+            px: 3,
+            borderRight: "1px solid",
+            borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+          }}
+        >
           <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <Box sx={{ display: "flex", alignItems: "center", p: 2, borderBottom: "1px solid #ddd" }}>
-              <Avatar src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl} />
-              <Typography sx={{ ml: 2 }}>{currentChat.name}</Typography>
-            </Box>
-            <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
-              {messages?.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-              <div ref={messagesEndRef} />
-            </Box>
-            <Box sx={{ p: 2, borderTop: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
-              {imagePreview && (
-                <Box sx={{ mb: 2 }}>
-                  <img src={imagePreview} alt="Preview" style={{ maxWidth: "100px", borderRadius: 8 }} />
-                </Box>
-              )}
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <TextField
-                  placeholder="Type a message"
-                  sx={{ flexGrow: 1, mr: 2 }}
-                  variant="outlined"
-                  onKeyPress={async (e) => {
-                    if (e.key === "Enter" && e.target.value) {
-                      await handleCreateMessage(e.target.value);
-                      e.target.value = "";
-                    }
-                  }}
-                />
-                <input type="file" accept="image/*" onChange={handleSelectImage} hidden id="image-input" />
-                <label htmlFor="image-input">
-                  <IconButton component="span">
-                    <AddPhotoAlternateIcon />
-                  </IconButton>
-                </label>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  disabled={loading}
-                  onClick={async () => {
-                    const input = document.querySelector('input[placeholder="Type a message"]');
-                    if (input.value) {
-                      await handleCreateMessage(input.value);
-                      input.value = "";
-                    }
-                  }}
-                >
-                  {loading ? <CircularProgress size={24} /> : "Send"}
-                </Button>
+            <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
+              <SearchUser />
+              <Box sx={{ mt: 2 }}>
+                {chats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    onClick={() => {
+                      setCurrentChat(chat);
+                    }}
+                  >
+                    <UserChatCard chat={chat} />
+                  </div>
+                ))}
               </Box>
             </Box>
           </Box>
-        ) : (
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: 1 }}>No chat selected</Box>
-        )}
+        </Grid>
+        <Grid item xs={9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          {currentChat ? (
+            <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  p: 2,
+                  borderBottom: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+                  background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.1)" : "rgba(157, 80, 187, 0.05)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                <Avatar
+                  src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl}
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    border: "2px solid",
+                    borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",
+                    boxShadow: "0 4px 12px rgba(157, 80, 187, 0.3)",
+                  }}
+                />
+                <Typography
+                  sx={{
+                    ml: 2,
+                    fontWeight: 600,
+                    fontSize: "1.1rem",
+                    color: theme.palette.mode === "dark" ? "#fff" : "#1a1a2e",
+                  }}
+                >
+                  {currentChat.name}
+                </Typography>
+              </Box>
+              <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
+                {messages?.map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
+                <div ref={messagesEndRef} />
+              </Box>
+              <Box
+                sx={{
+                  p: 2,
+                  borderTop: "1px solid",
+                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  flexDirection: "column",
+                  background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.4)" : "rgba(255, 255, 255, 0.4)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                {imagePreview && (
+                  <Box
+                    sx={{
+                      mb: 2,
+                      p: 1,
+                      borderRadius: "12px",
+                      background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+                      border: "1px solid",
+                      borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                    }}
+                  >
+                    <img src={imagePreview} alt="Preview" style={{ maxWidth: "100px", borderRadius: 8 }} />
+                  </Box>
+                )}
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <TextField
+                    placeholder="Type a message"
+                    sx={{
+                      flexGrow: 1,
+                      mr: 2,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "16px",
+                        background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.8)",
+                        backdropFilter: "blur(8px)",
+                      },
+                    }}
+                    variant="outlined"
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        await handleCreateMessage(messageText);
+                      }
+                    }}
+                  />
+                  <input type="file" accept="image/*" onChange={handleSelectImage} hidden id="image-input" />
+                  <label htmlFor="image-input">
+                    <IconButton
+                      component="span"
+                      sx={{
+                        background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.1)",
+                        backdropFilter: "blur(8px)",
+                        mr: 1,
+                        "&:hover": {
+                          background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                        },
+                      }}
+                    >
+                      <AddPhotoAlternateIcon sx={{ color: "#9d50bb" }} />
+                    </IconButton>
+                  </label>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={isSending}
+                    onClick={async () => {
+                      await handleCreateMessage(messageText);
+                    }}
+                    sx={{
+                      borderRadius: "12px",
+                      background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                      color: "#fff",
+                      fontWeight: 700,
+                      px: 3,
+                      textTransform: "none",
+                      boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                        boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                        transform: "translateY(-2px)",
+                      },
+                      "&:disabled": {
+                        background: "rgba(157, 80, 187, 0.3)",
+                      },
+                    }}
+                  >
+                    {isSending ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Send"}
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexGrow: 1,
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              <Typography
+                variant="h5"
+                sx={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 700,
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                No chat selected
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
+                Select a conversation to start messaging
+              </Typography>
+            </Box>
+          )}
+        </Grid>
       </Grid>
-    </Grid>
+    </Box>
   );
 }

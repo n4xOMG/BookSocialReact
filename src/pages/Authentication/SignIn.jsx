@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -12,72 +12,161 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUserByJwt, loginUserAction } from "../../redux/auth/auth.action";
-import { Alert } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Alert, IconButton, Paper } from "@mui/material"; // Thêm Paper component
+import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import background from "../../assets/images/signin_background.png";
+import { useTheme } from "@emotion/react";
+import { Brightness7, Brightness4 } from "@mui/icons-material";
 
 function Copyright(props) {
   return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      BookSocial {new Date().getFullYear()}
+    <Typography variant="body2" color="white" align="center" {...props}>
+      ©️ CopyRight {new Date().getFullYear()} TailVerse | All rights reserved.
     </Typography>
   );
 }
 
-const defaultTheme = createTheme();
-
-export default function SignIn() {
+export default function SignIn({ toggleTheme }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const error = useSelector((store) => store.auth.error);
+  const location = useLocation();
+  const authError = useSelector((store) => store.auth.error);
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const theme = useTheme();
+
+  // Check for redirect state
+  useEffect(() => {
+    if (location.state?.message) {
+      setLoginError(location.state.message);
+    }
+  }, [location]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    try {
-      localStorage.removeItem("jwt");
+    setLoginError("");
 
+    try {
       const data = new FormData(event.currentTarget);
-      const json = Object.fromEntries(data.entries());
-      const rememberMe = data.get("remember");
+      const json = {
+        email: data.get("email"),
+        password: data.get("password"),
+      };
+
+      const rememberMe = data.get("remember") === "remember";
+
       const result = await dispatch(loginUserAction({ data: json, rememberMe }));
-      if (result) {
-        await dispatch(getCurrentUserByJwt(result.payload.token));
-        navigate("/");
+      if (result?.error) {
+        setLoginError(result.error);
+        return;
+      }
+
+      if (result?.payload?.token) {
+        const userResult = await dispatch(getCurrentUserByJwt(result.payload.token));
+        if (userResult?.payload) {
+          // Redirect to the intended page or home
+          const redirectTo = location.state?.from || "/";
+          navigate(redirectTo);
+        } else if (userResult?.error === "UNAUTHORIZED") {
+          setLoginError("Session expired. Please try logging in again.");
+        }
+      } else {
+        const message = result?.payload?.message || "Authentication failed.";
+        setLoginError(message);
       }
     } catch (e) {
-      console.log("Error signing in: ", e);
+      console.error("Error signing in: ", e);
+      setLoginError("An unexpected error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
+
+  const isDarkMode = theme.palette.mode === "dark";
+
+  useEffect(() => {
+    if (authError) {
+      setLoginError(authError);
+    }
+  }, [authError]);
 
   return (
     <>
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <ThemeProvider theme={defaultTheme}>
+        <Box
+          sx={{
+            backgroundImage: `url(${background})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          <CssBaseline />
+          <Box sx={{ position: "absolute", top: 16, right: 16 }}>
+            <IconButton onClick={toggleTheme} color="inherit">
+              {isDarkMode ? <Brightness7 sx={{ color: "text.primary" }} /> : <Brightness4 sx={{ color: "text.primary" }} />}
+            </IconButton>
+          </Box>
+
           <Container component="main" maxWidth="xs">
-            <CssBaseline />
-            <Box
+            <Paper
+              elevation={0}
               sx={{
-                marginTop: 8,
+                p: 4,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                borderRadius: "24px",
+                background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.85)" : "rgba(255, 255, 255, 0.85)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
               }}
             >
-              <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-                <LockOutlinedIcon />
-              </Avatar>
-              <Typography component="h1" variant="h5">
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "16px",
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mb: 2,
+                  mt: 1,
+                  boxShadow: "0 8px 24px rgba(157, 80, 187, 0.4)",
+                }}
+              >
+                <LockOutlinedIcon sx={{ color: "#fff", fontSize: 32 }} />
+              </Box>
+              <Typography
+                component="h1"
+                variant="h5"
+                sx={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 700,
+                  fontSize: "2rem",
+                  background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
                 Sign in
               </Typography>
-              <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+              <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: "100%" }}>
                 <TextField
                   margin="normal"
                   required
@@ -87,6 +176,13 @@ export default function SignIn() {
                   name="email"
                   autoComplete="email"
                   autoFocus
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                      backdropFilter: "blur(8px)",
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -97,9 +193,23 @@ export default function SignIn() {
                   type="password"
                   id="password"
                   autoComplete="current-password"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                      backdropFilter: "blur(8px)",
+                    },
+                  }}
                 />
-                {error && <Alert severity="error">{error}</Alert>}
-                <FormControlLabel control={<Checkbox value="remember" color="primary" />} label="Remember me" />
+                {loginError && (
+                  <Alert severity="error" sx={{ mt: 2 }}>
+                    {loginError}
+                  </Alert>
+                )}
+                <FormControlLabel
+                  control={<Checkbox value="remember" name="remember" sx={{ color: "text.primary" }} />}
+                  label={<Typography sx={{ color: "text.primary" }}>Remember me</Typography>}
+                />
                 <Button
                   type="submit"
                   fullWidth
@@ -107,13 +217,18 @@ export default function SignIn() {
                   sx={{
                     mt: 3,
                     mb: 3,
-                    backgroundColor: "black",
-                    color: "white",
-                    borderRadius: 2,
-                    alignSelf: "flex-start",
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "1rem",
+                    py: 1.5,
+                    textTransform: "none",
+                    boxShadow: "0 4px 16px rgba(157, 80, 187, 0.3)",
                     "&:hover": {
-                      backgroundColor: "#fdf6e3",
-                      color: "black",
+                      background: "linear-gradient(135deg, #b968c7, #9d50bb)",
+                      boxShadow: "0 6px 24px rgba(157, 80, 187, 0.5)",
+                      transform: "translateY(-2px)",
                     },
                   }}
                 >
@@ -121,21 +236,21 @@ export default function SignIn() {
                 </Button>
                 <Grid container>
                   <Grid item xs>
-                    <Link href="/forgot-password" variant="body2">
+                    <Link href="/forgot-password" variant="body2" sx={{ color: "text.primary", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
                       Forgot password?
                     </Link>
                   </Grid>
                   <Grid item>
-                    <Link href="/sign-up" variant="body2">
-                      Don't have an account? Sign Up
+                    <Link href="/sign-up" variant="body2" sx={{ color: "text.primary", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>
+                      {"Don't have an account? Sign Up"}
                     </Link>
                   </Grid>
                 </Grid>
               </Box>
-            </Box>
-            <Copyright sx={{ mt: 8, mb: 4 }} />
+            </Paper>
           </Container>
-        </ThemeProvider>
+          <Copyright sx={{ mt: 8, mb: 4 }} />
+        </Box>
       )}
     </>
   );

@@ -1,15 +1,15 @@
-import { FavoriteBorder, MenuBook, Report } from "@mui/icons-material";
+import { FavoriteBorder, MenuBook, Report, StarRate } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { Box, Button, Grid, IconButton, Rating, Typography } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useTheme } from "@mui/material";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import BookCommentSection from "../../components/BookDetailPageComponents/BookCommentSection";
-import { BookDetails } from "../../components/BookDetailPageComponents/BookDetails";
+
+import ReportModal from "../../components/BookClubs/ReportModal";
 import AuthorCard from "../../components/BookDetailPageComponents/AuthorCard";
+import { BookDetails } from "../../components/BookDetailPageComponents/BookDetails";
 import { ChapterList } from "../../components/BookDetailPageComponents/ChapterList";
 import { ProgressBar } from "../../components/BookDetailPageComponents/ProgressBar";
-import Sidebar from "../../components/HomePage/Sidebar";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import {
   followBookAction,
@@ -19,94 +19,102 @@ import {
   getBookRatingByUserAction,
   getRelatedBooksAction,
   ratingBookAction,
+  recordBookViewAction,
 } from "../../redux/book/book.action";
-import { isFavouredByReqUser } from "../../utils/isFavouredByReqUser";
-import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
-import { clearChapters } from "../../redux/chapter/chapter.action";
-import RelatedBooks from "../../components/BookDetailPageComponents/RelatedBooks";
+import { clearChapters, getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
-import ReportModal from "../../components/BookClubs/ReportModal";
-import { getOptimizedImageUrl } from "../../utils/optimizeImages";
+import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
+
+const BookCommentSection = React.lazy(() => import("../../components/BookDetailPageComponents/BookCommentSection"));
+const RelatedBooks = React.lazy(() => import("../../components/BookDetailPageComponents/RelatedBooks"));
 
 export const BookDetailPage = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const { bookId } = useParams();
   const dispatch = useDispatch();
+  
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
-  const {
-    book,
-    relatedBooks,
-    rating,
-    progresses = [],
-    chapterCounts,
-    categories,
-    tags,
-  } = useSelector((store) => ({
-    book: store.book.book,
-    relatedBooks: store.book.relatedBooks,
-    rating: store.book.rating,
-    progresses: store.book.progresses,
-    categories: store.category.categories,
-    tags: store.tag.tags,
-  }));
-  const { user } = useSelector((store) => store.auth);
+  const [loading, setLoading] = useState(true);
+
+  // Optimized Selectors
+  const book = useSelector((store) => store.book.book);
+  const relatedBooks = useSelector((store) => store.book.relatedBooks);
+  const rating = useSelector((store) => store.book.rating);
+  const progresses = useSelector((store) => store.book.progresses);
+  const categories = useSelector((store) => store.category.categories);
+  const tags = useSelector((store) => store.tag.tags);
+  const user = useSelector((store) => store.auth.user);
+  const chapters = useSelector((store) => store.chapter.chapters);
+  
   const jwt = localStorage.getItem("jwt");
   const { checkAuth, AuthDialog } = useAuthCheck();
-  const [loading, setLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [overallProgress, setOverallProgress] = useState(0);
-  const [firstChapterId, setFirstChapterId] = useState(null);
 
-  const fetchBookAndChapterDetails = useCallback(async () => {
+  useEffect(() => {
+    let isMounted = true;
     setLoading(true);
-    await dispatch(getBookByIdAction(bookId));
-    await dispatch(getAvgBookRating(bookId));
-    if (user && !isTokenExpired(jwt)) {
-      await dispatch(getAllReadingProgressesByBook(bookId));
-      await dispatch(getBookRatingByUserAction(bookId));
-    }
-    if (book) {
-      dispatch(getRelatedBooksAction(bookId, book.categoryId, book.tagIds));
-    }
-    setLoading(false);
-  }, [user, bookId, jwt, dispatch]);
 
-  const calculateOverallProgress = useCallback(() => {
-    if (!book || book.chapterCount === 0) {
-      setOverallProgress(0);
-      return;
-    }
+    const fetchAll = async () => {
+      try {
+        const bookRes = await dispatch(getBookByIdAction(bookId));
+        if (!bookRes?.payload) return;
 
+        // Fetch chapters
+        await dispatch(getAllChaptersByBookIdAction(bookId));
+        
+        // Parallel fetches
+        const promises = [
+          dispatch(getAvgBookRating(bookId)),
+        ];
+
+        if (user && !isTokenExpired(jwt)) {
+           promises.push(dispatch(getAllReadingProgressesByBook(bookId)));
+           promises.push(dispatch(getBookRatingByUserAction(bookId)));
+        }
+
+        await Promise.all(promises);
+
+        dispatch(getRelatedBooksAction(bookId, bookRes.payload.categoryId, bookRes.payload.tagIds));
+        dispatch(recordBookViewAction(bookId));
+      } catch (e) {
+        console.error("Error fetching book details:", e);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchAll();
+
+    return () => {
+      isMounted = false;
+      dispatch({ type: "RESET_BOOK_DETAIL" });
+      dispatch(clearChapters());
+    };
+  }, [bookId, dispatch, jwt, user]);
+
+  // Memoized overall progress calculation
+  const overallProgress = useMemo(() => {
+    if (!book || !book.chapterCount || !progresses?.length) return 0;
     const totalChapters = book.chapterCount;
-
-    // Sum the progress from all progresses
     const sumProgress = progresses.reduce((acc, progress) => {
-      return acc + (progress.progress || 0);
+      const raw = progress?.progress;
+      const numeric = typeof raw === "number" ? raw : parseFloat(raw);
+      return acc + (Number.isFinite(numeric) ? numeric : 0);
     }, 0);
-
-    // Calculate average progress
-    const averageProgress = Math.floor(sumProgress / totalChapters);
-
-    // Ensure progress does not exceed 100%
-    setOverallProgress(averageProgress > 100 ? 100 : averageProgress);
+    const avg = Math.floor(sumProgress / totalChapters);
+    return avg > 100 ? 100 : avg;
   }, [book, progresses]);
 
   const handleFollowBook = checkAuth(async () => {
     try {
-      setLoading(true);
       await dispatch(followBookAction(bookId));
-      setIsFavorite(!isFavorite);
     } catch (error) {
-      console.error("Error following book:", error);
-    } finally {
-      setLoading(false);
+      // ignore
     }
   });
-  const handleOpenReportModal = () => {
-    setIsReportModalOpen(true);
-  };
 
+  const handleOpenReportModal = () => setIsReportModalOpen(true);
   const handleCloseReportModal = () => {
     setIsReportModalOpen(false);
     setReportReason("");
@@ -117,183 +125,215 @@ export const BookDetailPage = () => {
       alert("Please enter a reason for reporting.");
       return;
     }
-
-    const reportData = {
-      reason: reportReason,
-      book: { id: bookId },
-    };
-
+    const reportData = { reason: reportReason, book: { id: bookId } };
     try {
-      console.log("Report data:", reportData);
       await dispatch(createReportAction(reportData));
       alert("Report submitted successfully.");
       handleCloseReportModal();
-    } catch (error) {
+    } catch {
       alert("Failed to submit report.");
     }
   });
+
   const handleRating = checkAuth(async (value) => {
     try {
-      setLoading(true);
       await dispatch(ratingBookAction(bookId, value));
-    } catch (error) {
-      console.error("Error rating book:", error);
-    } finally {
-      setLoading(false);
+    } catch {
+      // ignore
     }
   });
 
-  useEffect(() => {
-    fetchBookAndChapterDetails();
-    console.log("Book detail rerendered");
-  }, [fetchBookAndChapterDetails]);
-
-  useEffect(() => {
-    if (book && user) {
-      setIsFavorite(isFavouredByReqUser(user, book));
-    }
-  }, [book, user]);
-
-  useEffect(() => {
-    calculateOverallProgress();
-  }, [calculateOverallProgress]);
-
-  useEffect(() => {
-    return () => {
-      dispatch(clearChapters());
-    };
-  }, [dispatch]);
+  // Memoized styles
+  const paperStyle = useMemo(() => ({
+    p: { xs: 2, md: 4 },
+    borderRadius: "20px",
+    bgcolor: theme.palette.background.paper,
+    border: `1px solid ${theme.palette.divider}`,
+    boxShadow: theme.shadows[1],
+    transition: "all 0.3s ease",
+    "&:hover": {
+      boxShadow: theme.shadows[4],
+      borderColor: theme.palette.primary.main,
+    },
+  }), [theme]);
 
   if (loading || !book) {
     return (
-      <Box sx={{ display: "flex", height: "100vh" }}>
-        <Sidebar />
-        <Box sx={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <LoadingSpinner />
-        </Box>
+      <Box sx={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>
+        <LoadingSpinner />
         <AuthDialog />
       </Box>
     );
   }
 
+  const isFavorite = book.followedByCurrentUser;
+  const firstChapterId = chapters && chapters.length > 0 ? chapters[0].id : null;
+
   return (
-    <Box sx={{ display: "flex", height: "100vh", overscrollBehavior: "contain" }}>
-      <Sidebar />
-      <Box
-        container="true"
-        sx={{
-          width: "100%",
-          mx: "auto",
-          px: { xs: 2, md: 4 },
-          py: 3,
-          backgroundColor: "#f9fafb",
-          overflowY: "auto",
-        }}
-      >
-        <Grid container spacing={5} sx={{ backgroundColor: "#f9fafb" }}>
-          <Grid item md={3}>
-            <Box
-              component="img"
-              src={getOptimizedImageUrl(book.bookCover)}
-              alt={`Cover of ${book.title}`}
-              sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}
-            />
-            <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Rating
-                  name="simple-controlled"
-                  value={rating ? rating.rating : 0}
-                  onChange={(event, newValue) => handleRating(newValue)}
-                />
-                <Typography sx={{ ml: 2, color: "gray.600" }}>{rating ? rating.rating : 0}</Typography>
-              </Box>
-              <IconButton
-                onClick={handleOpenReportModal}
-                sx={{
-                  backgroundColor: "white",
-                  border: "1px solid",
-                  borderColor: "grey.300",
-                  height: 40,
-                  width: 40,
-                  "&:hover": {
-                    backgroundColor: "grey.100",
-                  },
-                }}
-              >
-                <Report />
-              </IconButton>
-              <IconButton
-                onClick={handleFollowBook}
-                sx={{
-                  backgroundColor: "white",
-                  border: "1px solid",
-                  borderColor: "grey.300",
-                  height: 40,
-                  width: 40,
-                  "&:hover": {
-                    backgroundColor: "grey.100",
-                  },
-                }}
-              >
-                {isFavorite ? (
-                  <FavoriteIcon
+    <Box sx={{ flex: 1, width: "100%", minHeight: "100vh", bgcolor: theme.palette.background.default }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
+        <Grid container spacing={4}>
+          {/* Left Column (Cover/Actions/Rating) */}
+          <Grid item xs={12} md={3.5} lg={3}>
+            <Box sx={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: 3 }}>
+              <Paper elevation={0} sx={paperStyle}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+                  {/* Cover Image */}
+                  <Box
+                    component="img"
+                    src={book.bookCover.url}
+                    alt={`Cover of ${book.title}`}
                     sx={{
-                      width: 24,
-                      height: 24,
-                      color: "red",
+                      width: "100%",
+                      borderRadius: "12px",
+                      boxShadow: theme.shadows[6],
+                      aspectRatio: "2/3",
+                      objectFit: "cover",
                     }}
                   />
-                ) : (
-                  <FavoriteBorder
+
+                  {/* Rating Badge */}
+                  <Box
                     sx={{
-                      width: 24,
-                      height: 24,
-                      color: "black",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      bgcolor: theme.palette.warning.light + "20",
+                      color: theme.palette.warning.main,
+                      px: 2,
+                      py: 1,
+                      borderRadius: "12px",
+                      border: `1px solid ${theme.palette.warning.main}40`,
                     }}
-                  />
-                )}
-              </IconButton>
+                  >
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {book.avgRating ? book.avgRating.toFixed(1) : "0.0"}
+                    </Typography>
+                    <StarRate fontSize="small" />
+                  </Box>
+
+                  {/* User Rating */}
+                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+                    <Rating
+                      name="book-rating"
+                      precision={0.5}
+                      value={rating ? rating.rating : 0}
+                      onChange={(event, newValue) => handleRating(newValue)}
+                      size="large"
+                    />
+                    {rating?.rating && (
+                      <Typography variant="caption" color="text.secondary" mt={0.5}>
+                        You rated: {rating.rating.toFixed(1)}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Actions */}
+                  <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
+                    <Button
+                      fullWidth
+                      variant={isFavorite ? "contained" : "outlined"}
+                      onClick={handleFollowBook}
+                      startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorder />}
+                      color="primary"
+                      sx={{
+                        borderRadius: "12px",
+                        py: 1.2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {isFavorite ? "Following" : "Follow"}
+                    </Button>
+
+                    <IconButton
+                      onClick={handleOpenReportModal}
+                      sx={{
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: "12px",
+                        color: theme.palette.text.secondary,
+                        "&:hover": {
+                          color: theme.palette.error.main,
+                          borderColor: theme.palette.error.main,
+                          bgcolor: theme.palette.error.light + "10",
+                        },
+                      }}
+                    >
+                      <Report />
+                    </IconButton>
+                  </Box>
+
+                  {/* Start Reading Button */}
+                  {firstChapterId && (
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
+                      startIcon={<MenuBook />}
+                      sx={{
+                        borderRadius: "12px",
+                        py: 1.5,
+                        textTransform: "none",
+                        fontWeight: 700,
+                        fontSize: "1rem",
+                        boxShadow: theme.shadows[4],
+                      }}
+                    >
+                      Start Reading
+                    </Button>
+                  )}
+                </Box>
+              </Paper>
             </Box>
-            {firstChapterId && (
-              <Button
-                fullWidth
-                onClick={() => navigate(`/books/${bookId}/chapters/${firstChapterId}`)}
-                sx={{
-                  mt: 4,
-                  backgroundColor: "black",
-                  color: "white",
-                  height: 50,
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  "&:hover": {
-                    backgroundColor: "darkgray",
-                  },
-                }}
-              >
-                <MenuBook sx={{ mr: 2, width: 20, height: 20 }} /> Start Reading
-              </Button>
-            )}
           </Grid>
-          <Grid item md={8}>
-            <BookDetails book={book} categories={categories} tags={tags} />
-            <AuthorCard author={book.author} checkAuth={checkAuth} />
-            <ProgressBar progress={overallProgress} />
-            <ChapterList
-              chapterCounts={chapterCounts}
-              progresses={progresses}
-              onCalculateProgress={calculateOverallProgress}
-              onNavigate={navigate}
-              bookId={bookId}
-              user={user ? user : null}
-              onFirstChapterId={setFirstChapterId}
-            />
-            <BookCommentSection bookId={book.id} user={user} />
-            <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
+
+          {/* Right Column (Details, Author, Chapters, Comments) */}
+          <Grid item xs={12} md={8.5} lg={9}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              {/* Book Details */}
+              <Paper elevation={0} sx={paperStyle}>
+                <BookDetails book={book} categories={categories} tags={tags} />
+              </Paper>
+
+              {/* Author */}
+              <Paper elevation={0} sx={paperStyle}>
+                <AuthorCard author={book.author} checkAuth={checkAuth} />
+              </Paper>
+
+              {/* Progress */}
+              {user && (
+                <Paper elevation={0} sx={paperStyle}>
+                  <ProgressBar progress={overallProgress} />
+                </Paper>
+              )}
+
+              {/* Chapter List */}
+              <Paper elevation={0} sx={paperStyle}>
+                <ChapterList
+                  chapters={chapters}
+                  progresses={progresses}
+                  onNavigate={navigate}
+                  bookId={bookId}
+                  user={user || null}
+                />
+              </Paper>
+
+              {/* Comments & Related Books */}
+              <Suspense fallback={<LoadingSpinner />}>
+                <Paper elevation={0} sx={paperStyle}>
+                  <BookCommentSection bookId={book.id} user={user} />
+                </Paper>
+                <Paper elevation={0} sx={paperStyle}>
+                  <RelatedBooks relatedBooks={relatedBooks} loading={loading} categories={categories} tags={tags} />
+                </Paper>
+              </Suspense>
+            </Box>
           </Grid>
         </Grid>
-      </Box>
+      </Container>
+
+      {/* Modals */}
       <ReportModal
         open={isReportModalOpen}
         onClose={handleCloseReportModal}

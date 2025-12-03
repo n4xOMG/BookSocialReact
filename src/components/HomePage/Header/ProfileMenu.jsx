@@ -1,10 +1,9 @@
 import { AccountBalanceWallet, AdminPanelSettings, Logout } from "@mui/icons-material";
 import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logoutAction } from "../../../redux/auth/auth.action";
-import { getOptimizedImageUrl } from "../../../utils/optimizeImages";
 
 export default function ProfileMenu() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -31,6 +30,13 @@ export default function ProfileMenu() {
     navigate("/admin/overview");
   };
 
+  const isAdmin = (() => {
+    const roleName = user?.role?.name;
+    if (!roleName) return false;
+    const normalized = roleName.trim().toUpperCase();
+    return normalized === "ADMIN" || normalized === "ROLE_ADMIN";
+  })();
+
   return (
     <>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
@@ -44,9 +50,9 @@ export default function ProfileMenu() {
             aria-expanded={open ? "true" : undefined}
           >
             {user && user?.avatarUrl ? (
-              <Avatar src={getOptimizedImageUrl(user?.avatarUrl)} sx={{ width: 32, height: 32, mr: 2 }} />
+              <Avatar src={user?.avatarUrl} sx={{ width: 32, height: 32, mr: 2 }} />
             ) : (
-              <Avatar>{user?.username[0]}</Avatar>
+              <Avatar>{user?.username?.[0] || user?.email?.[0] || "U"}</Avatar>
             )}
           </IconButton>
         </Tooltip>
@@ -96,16 +102,16 @@ export default function ProfileMenu() {
                 </ListItemIcon>
                 <Box>
                   <Typography variant="body1" fontWeight="bold">
-                    Credits: {user.credits}
+                    Credits: {user?.credits || 0}
                   </Typography>
                 </Box>
               </MenuItem>,
               <Divider key="divider-credits" />,
               <MenuItem divider onClick={() => navigate("/profile")} key="profile">
-                <Avatar src={user.avatarUrl} /> Profile
+                <Avatar src={user?.avatarUrl} /> Profile
               </MenuItem>,
 
-              user.role && user.role.name === "ADMIN" && (
+              isAdmin && (
                 <MenuItem onClick={navigateToAdmin} key="admin-dashboard">
                   <ListItemIcon>
                     <AdminPanelSettings fontSize="small" />

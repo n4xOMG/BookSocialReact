@@ -22,7 +22,7 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import HeightIcon from "@mui/icons-material/Height";
 import ChatIcon from "@mui/icons-material/Chat";
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 const viewModeIcon = {
   single: <Layers />,
   double: <MenuBook />,
@@ -55,6 +55,14 @@ export default function FloatingMenu({
   const [targetChapter, setTargetChapter] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Load theme from localStorage on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("readerThemeMode");
+    if (savedTheme && savedTheme !== themeMode && onThemeModeChange) {
+      onThemeModeChange(savedTheme);
+    }
+  }, [themeMode, onThemeModeChange]);
+
   const handleFullScreen = () => {
     if (document.fullscreenElement) {
       document.exitFullscreen();
@@ -77,10 +85,18 @@ export default function FloatingMenu({
 
   const handleThemeModeChange = () => {
     const modes = ["light", "dark"];
-    handleModeChange(modes, themeMode, onThemeModeChange);
+    const currentIndex = modes.indexOf(themeMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const newTheme = modes[nextIndex];
+
+    // Save to localStorage
+    localStorage.setItem("readerThemeMode", newTheme);
+
+    // Call the parent's onChange handler
+    onThemeModeChange(newTheme);
   };
 
-  const currentChapterIndex = chapters.findIndex((chapter) => chapter.id === currentChapterId);
+  const currentChapterIndex = useMemo(() => chapters.findIndex((chapter) => chapter.id === currentChapterId), [chapters, currentChapterId]);
 
   const renderIconButton = (tooltipText, ariaLabel, onClick, icon, disabled = false) => (
     <Tooltip title={<p>{tooltipText}</p>} disableHoverListener={disabled}>
@@ -90,6 +106,7 @@ export default function FloatingMenu({
           onClick={onClick}
           disabled={disabled}
           sx={{ color: "white", "&.Mui-disabled": { color: "grey" } }}
+          tabIndex={disabled ? -1 : 0}
         >
           {icon}
         </IconButton>
@@ -142,9 +159,9 @@ export default function FloatingMenu({
           {renderIconButton(
             "Previous chapter",
             "Previous chapter",
-            () => handleChapterNavigation(chapters[currentChapterIndex - 1]),
+            () => chapters.length > 0 && handleChapterNavigation(chapters[currentChapterIndex - 1]),
             <ChevronLeft />,
-            currentChapterIndex === 0
+            currentChapterIndex <= 0 || chapters.length === 0
           )}
 
           {renderIconButton("Chapter List", "Chapters list", onChapterListOpen, <ListIcon />)}
@@ -187,9 +204,9 @@ export default function FloatingMenu({
           {renderIconButton(
             "Next chapter",
             "Next chapter",
-            () => handleChapterNavigation(chapters[currentChapterIndex + 1]),
+            () => chapters.length > 0 && handleChapterNavigation(chapters[currentChapterIndex + 1]),
             <ChevronRight />,
-            currentChapterIndex === chapters.length - 1
+            currentChapterIndex === chapters.length - 1 || chapters.length === 0
           )}
         </Box>
       </Fade>

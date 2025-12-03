@@ -15,6 +15,7 @@ import {
   Box,
   Typography,
   IconButton,
+  useTheme,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import UploadToCloudinary from "../../../../utils/uploadToCloudinary";
@@ -34,6 +35,8 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
   const [coverFile, setCoverFile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const theme = useTheme();
+
   useEffect(() => {
     if (currentBook) {
       setTitle(currentBook.title || "");
@@ -132,7 +135,8 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>Edit Book</DialogTitle>
+      <DialogTitle sx={{ fontWeight: "bold", color: theme.palette.primary.main }}
+      >Edit Book</DialogTitle>
       <DialogContent dividers>
         <Box
           component="form"
@@ -231,36 +235,19 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
           </FormControl>
 
           {/* Book Cover Upload */}
-          <Box>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
             <Typography variant="subtitle1" gutterBottom>
               Book Cover
             </Typography>
-            <Button variant="contained" component="label">
-              Upload Cover
-              <input type="file" accept="image/*" hidden onChange={handleCoverChange} />
-            </Button>
             {bookCoverPreview && (
-              <Box mt={2} sx={{ position: "relative", display: "inline-block" }}>
+              <Box mt={2} sx={{ position: "relative", display: "flex", justifyContent: "center" }}>
                 <img src={bookCoverPreview} alt="Book Cover Preview" style={{ width: "100%", maxWidth: "200px", borderRadius: "4px" }} />
-                {coverFile && (
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      setCoverFile(null);
-                      setBookCoverPreview(currentBook.bookCover || "");
-                    }}
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      right: 0,
-                      backgroundColor: "rgba(255, 255, 255, 0.7)",
-                    }}
-                  >
-                    ✕
-                  </IconButton>
-                )}
               </Box>
             )}
+            <Button variant="contained" component="label">
+              Upload New Cover
+              <input type="file" accept="image/*" hidden onChange={handleCoverChange} />
+            </Button>
           </Box>
 
           {/* Display Error Message */}
@@ -275,7 +262,7 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
         <Button onClick={handleClose} color="secondary" disabled={loading}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>
+        <Button onClick={handleSubmit} variant="contained" disabled={loading} sx={{ fontWeight: "bold", color: "white", "&:hover": { color: theme.palette.primary.dark } }}>
           {loading ? "Saving..." : "Save Changes"}
         </Button>
       </DialogActions>

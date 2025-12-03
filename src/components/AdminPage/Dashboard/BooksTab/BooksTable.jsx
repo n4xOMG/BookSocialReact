@@ -1,22 +1,30 @@
 import React from "react";
 import {
+  Chip,
+  IconButton,
   Paper,
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
-  TableRow,
-  IconButton,
-  Tooltip,
   TablePagination,
-  Typography,
-  Box,
-  CircularProgress,
-  Alert,
+  TableRow,
+  Tooltip,
   Avatar,
+  Box,
+  Typography,
+  Stack,
 } from "@mui/material";
-import { Delete, Edit, Image, Star, StarBorder, Book } from "@mui/icons-material";
-import { getOptimizedImageUrl } from "../../../../utils/optimizeImages";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import RateReviewIcon from "@mui/icons-material/RateReview";
+import { formatExactTime } from "../../../../utils/formatDate";
 
 const BooksTable = ({
   books,
@@ -31,99 +39,160 @@ const BooksTable = ({
   handleToggleIsSuggested,
   handleManageChapters,
 }) => {
+  // Helper function to get status color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "ONGOING":
+        return "primary";
+      case "COMPLETED":
+        return "success";
+      case "HIATUS":
+        return "warning";
+      case "CANCELLED":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
+
+
+  // Truncate description
+  const truncateText = (text, maxLength = 100) => {
+    if (!text) return "No description";
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
+
   return (
-    <Paper>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Cover Image</TableCell>
-            <TableCell>Title</TableCell>
-            <TableCell>Author</TableCell>
-            <TableCell>Category</TableCell>
-            <TableCell>Tags</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {loading && (
+    <>
+      <TableContainer component={Paper} sx={{ maxHeight: 600, overflow: "auto" }}>
+        <Table stickyHeader aria-label="books table">
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={7} align="center">
-                <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                  <CircularProgress size={24} />
-                  <Typography>Loading...</Typography>
-                </Box>
-              </TableCell>
+              <TableCell>Book</TableCell>
+              <TableCell>Author</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Tags</TableCell>
+              <TableCell>Stats</TableCell>
+              <TableCell align="center">Featured</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
-          )}
-          {!loading && books.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={7} align="center">
-                <Alert severity="info">No books found.</Alert>
-              </TableCell>
-            </TableRow>
-          )}
-          {!loading &&
-            books.map((book) => (
-              <TableRow key={book.id}>
-                {/* Cover Image */}
+          </TableHead>
+          <TableBody>
+            {books.map((book) => (
+              <TableRow key={book.id} hover>
                 <TableCell>
-                  {book.bookCover ? (
-                    <Avatar
-                      variant="square"
-                      src={getOptimizedImageUrl(book.bookCover)}
-                      alt={`${book.title} cover`}
-                      sx={{ width: 56, height: 84 }}
-                    />
-                  ) : (
-                    <Avatar variant="square" sx={{ width: 56, height: 84, bgcolor: "grey.300" }}>
-                      <Image />
-                    </Avatar>
-                  )}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Avatar alt={book.title} src={book.bookCover} variant="rounded" sx={{ width: 60, height: 80, objectFit: "cover" }} />
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight="medium">
+                        {book.title}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {truncateText(book.description, 50)}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        Added: {formatExactTime(book.uploadDate)}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </TableCell>
-                <TableCell>{book.title}</TableCell>
-                <TableCell>{book.authorName}</TableCell>
-                <TableCell>{book.category.name}</TableCell>
-                <TableCell>{book.tags?.map((tag) => tag?.name).join(", ")}</TableCell>
-                <TableCell>{book.status}</TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <IconButton onClick={() => handleEditOpen(book)}>
-                      <Edit />
+                <TableCell>
+                  <Typography variant="body2">{book.author?.username || book.authorName || "Unknown"}</Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip label={book.status || "N/A"} color={getStatusColor(book.status)} size="small" variant="outlined" />
+                </TableCell>
+                <TableCell>{book.category?.name || book.categoryName || "Uncategorized"}</TableCell>
+                <TableCell>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxWidth: 200 }}>
+                    {book.tags && book.tags.length > 0
+                      ? book.tags.map((tag) => <Chip key={tag.id} label={tag.name} size="small" />)
+                      : book.tagNames && book.tagNames.length > 0
+                      ? book.tagNames.map((tagName, idx) => <Chip key={idx} label={tagName} size="small" />)
+                      : "No tags"}
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={2}>
+                    <Tooltip title="Views">
+                      <Box display="flex" alignItems="center">
+                        <VisibilityIcon fontSize="small" color="action" />
+                        <Typography variant="body2" ml={0.5}>
+                          {book.viewCount || 0}
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                    <Tooltip title="Likes">
+                      <Box display="flex" alignItems="center">
+                        <FavoriteIcon fontSize="small" color="action" />
+                        <Typography variant="body2" ml={0.5}>
+                          {book.favCount || 0}
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                    <Tooltip title={`Rating: ${book.avgRating?.toFixed(1) || "No ratings"}`}>
+                      <Box display="flex" alignItems="center">
+                        <RateReviewIcon fontSize="small" color="action" />
+                        <Typography variant="body2" ml={0.5}>
+                          {book.avgRating ? book.avgRating.toFixed(1) : "-"}({book.ratingCount || 0})
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                  </Stack>
+                </TableCell>
+                <TableCell align="center">
+                  <Tooltip title={book.isSuggested ? "Remove from featured" : "Add to featured"}>
+                    <IconButton
+                      onClick={() => handleToggleIsSuggested(book.id, { ...book, isSuggested: !book.isSuggested })}
+                      color={book.isSuggested ? "warning" : "default"}
+                    >
+                      {book.isSuggested ? <StarIcon /> : <StarBorderIcon />}
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton color="error" onClick={() => handleDelete(book.id)}>
-                      <Delete />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title={book.isSuggested ? "Remove from Editor's Choices" : "Add to Editor's Choices"}>
-                    <IconButton color={book.suggested ? "warning" : "success"} onClick={() => handleToggleIsSuggested(book.id, book)}>
-                      {book.suggested ? <Star /> : <StarBorder />}
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Manage Chapters">
-                    <IconButton onClick={() => handleManageChapters(book)}>
-                      <Book />
-                    </IconButton>
-                  </Tooltip>
+                </TableCell>
+                <TableCell align="center">
+                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <Tooltip title="Edit Book">
+                      <IconButton color="primary" onClick={() => handleEditOpen(book)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Manage Chapters">
+                      <IconButton color="info" onClick={() => handleManageChapters(book)}>
+                        <MenuBookIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Book">
+                      <IconButton color="error" onClick={() => handleDelete(book.id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
-        </TableBody>
-      </Table>
-
-      {/* Pagination */}
+            {books.length === 0 && !loading && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No books found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <TablePagination
+        rowsPerPageOptions={[5, 10, 25, 50]}
         component="div"
         count={totalBooks}
+        rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 25, 50]}
       />
-    </Paper>
+    </>
   );
 };
 

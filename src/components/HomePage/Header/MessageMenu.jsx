@@ -70,7 +70,7 @@ export default function MessageMenu() {
                   key={chat?.id}
                   onClick={() => navigate(`/chats/${chat?.id}`)}
                   sx={{
-                    backgroundColor: "white",
+                    backgroundColor: "background.paper",
                     color: "black",
                     cursor: "pointer",
                     px: 1,
@@ -78,7 +78,7 @@ export default function MessageMenu() {
                     display: "flex",
                     alignItems: "center",
                     "&:hover": {
-                      backgroundColor: "#f2f2f2",
+                      backgroundColor: "action.hover",
                       color: "black",
                     },
                   }}

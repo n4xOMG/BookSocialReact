@@ -19,25 +19,34 @@ import {
   GET_TAGS_BY_BOOK_FAILED,
 } from "./tag.actionType";
 import { API_BASE_URL, api } from "../../api/api";
-import axios from "axios";
+import httpClient from "../../api/api";
 
 export const getTags = () => async (dispatch) => {
   dispatch({ type: GET_TAGS_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/tags`);
-    dispatch({ type: GET_TAGS_SUCCESS, payload: data });
+    const { data } = await httpClient.get(`${API_BASE_URL}/books/tags`);
+    dispatch({
+      type: GET_TAGS_SUCCESS,
+      payload: Array.isArray(data?.data) ? data.data : [],
+    });
   } catch (error) {
-    dispatch({ type: GET_TAGS_FAILED, payload: error.message });
+    dispatch({
+      type: GET_TAGS_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 
 export const getTagById = (tagId) => async (dispatch) => {
   dispatch({ type: GET_TAG_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/tags/${tagId}`);
-    dispatch({ type: GET_TAG_SUCCESS, payload: data });
+    const { data } = await httpClient.get(`${API_BASE_URL}/books/tags/${tagId}`);
+    dispatch({ type: GET_TAG_SUCCESS, payload: data?.data || null });
   } catch (error) {
-    dispatch({ type: GET_TAG_FAILED, payload: error.message });
+    dispatch({
+      type: GET_TAG_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 
@@ -45,9 +54,12 @@ export const addTag = (tag) => async (dispatch) => {
   dispatch({ type: ADD_TAG_REQUEST });
   try {
     const { data } = await api.post(`${API_BASE_URL}/admin/books/tags`, tag);
-    dispatch({ type: ADD_TAG_SUCCESS, payload: data });
+    dispatch({ type: ADD_TAG_SUCCESS, payload: data?.data || null });
   } catch (error) {
-    dispatch({ type: ADD_TAG_FAILED, payload: error.message });
+    dispatch({
+      type: ADD_TAG_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 
@@ -55,9 +67,12 @@ export const editTag = (tagId, tag) => async (dispatch) => {
   dispatch({ type: EDIT_TAG_REQUEST });
   try {
     const { data } = await api.put(`${API_BASE_URL}/admin/books/tags/${tagId}`, tag);
-    dispatch({ type: EDIT_TAG_SUCCESS, payload: data });
+    dispatch({ type: EDIT_TAG_SUCCESS, payload: data?.data || null });
   } catch (error) {
-    dispatch({ type: EDIT_TAG_FAILED, payload: error.message });
+    dispatch({
+      type: EDIT_TAG_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 
@@ -67,16 +82,25 @@ export const deleteTag = (tagId) => async (dispatch) => {
     await api.delete(`${API_BASE_URL}/admin/books/tags/${tagId}`);
     dispatch({ type: DELETE_TAG_SUCCESS, payload: tagId });
   } catch (error) {
-    dispatch({ type: DELETE_TAG_FAILED, payload: error.message });
+    dispatch({
+      type: DELETE_TAG_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };
 
 export const getTagsByBook = (bookId) => async (dispatch) => {
   dispatch({ type: GET_TAGS_BY_BOOK_REQUEST });
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/books/${bookId}/tags`);
-    dispatch({ type: GET_TAGS_BY_BOOK_SUCCESS, payload: data });
+    const { data } = await httpClient.get(`${API_BASE_URL}/books/${bookId}/tags`);
+    dispatch({
+      type: GET_TAGS_BY_BOOK_SUCCESS,
+      payload: Array.isArray(data?.data) ? data.data : [],
+    });
   } catch (error) {
-    dispatch({ type: GET_TAGS_BY_BOOK_FAILED, payload: error.message });
+    dispatch({
+      type: GET_TAGS_BY_BOOK_FAILED,
+      payload: error.response?.data?.message || error.message,
+    });
   }
 };

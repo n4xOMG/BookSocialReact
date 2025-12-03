@@ -13,10 +13,33 @@ import {
   FETCH_TOTAL_SALES_SUCCESS,
 } from "./purchase.actionType";
 
+const ensureArray = (value) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (Array.isArray(value?.content)) {
+    return value.content;
+  }
+  if (Array.isArray(value?.purchases)) {
+    return value.purchases;
+  }
+  return [];
+};
+
+const ensureNumber = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 const initialState = {
   loading: false,
+  error: null,
   purchases: [],
-  error: "",
+  metricsLoading: false,
+  metricsError: null,
   totalSales: null,
   totalPurchases: null,
   salesPerUser: [],
@@ -28,86 +51,72 @@ const purchaseReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: true,
+        error: null,
       };
     case FETCH_PURCHASE_HISTORY_SUCCESS:
       return {
         ...state,
         loading: false,
-        purchases: action.payload,
-        error: "",
+        purchases: ensureArray(action.payload),
+        error: null,
       };
     case FETCH_PURCHASE_HISTORY_FAILURE:
       return {
         ...state,
         loading: false,
         purchases: [],
-        error: action.payload,
+        error: action.payload || "Failed to load purchase history.",
       };
 
-    // New Admin: Fetch Total Sales
     case FETCH_TOTAL_SALES_REQUEST:
+    case FETCH_TOTAL_PURCHASES_REQUEST:
+    case FETCH_SALES_PER_USER_REQUEST:
       return {
         ...state,
-        loading: true,
-        error: "",
+        metricsLoading: true,
+        metricsError: null,
       };
     case FETCH_TOTAL_SALES_SUCCESS:
       return {
         ...state,
-        loading: false,
-        totalSales: action.payload,
-        error: "",
+        metricsLoading: false,
+        totalSales: ensureNumber(action.payload),
+        metricsError: null,
       };
     case FETCH_TOTAL_SALES_FAILURE:
       return {
         ...state,
-        loading: false,
+        metricsLoading: false,
         totalSales: null,
-        error: action.payload,
-      };
-
-    // New Admin: Fetch Total Number of Purchases
-    case FETCH_TOTAL_PURCHASES_REQUEST:
-      return {
-        ...state,
-        loading: true,
-        error: "",
+        metricsError: action.payload || "Failed to load total sales.",
       };
     case FETCH_TOTAL_PURCHASES_SUCCESS:
       return {
         ...state,
-        loading: false,
-        totalPurchases: action.payload,
-        error: "",
+        metricsLoading: false,
+        totalPurchases: ensureNumber(action.payload),
+        metricsError: null,
       };
     case FETCH_TOTAL_PURCHASES_FAILURE:
       return {
         ...state,
-        loading: false,
+        metricsLoading: false,
         totalPurchases: null,
-        error: action.payload,
-      };
-
-    // New Admin: Fetch Sales Statistics Per User
-    case FETCH_SALES_PER_USER_REQUEST:
-      return {
-        ...state,
-        loading: true,
-        error: "",
+        metricsError: action.payload || "Failed to load total purchases.",
       };
     case FETCH_SALES_PER_USER_SUCCESS:
       return {
         ...state,
-        loading: false,
-        salesPerUser: action.payload,
-        error: "",
+        metricsLoading: false,
+        salesPerUser: ensureArray(action.payload),
+        metricsError: null,
       };
     case FETCH_SALES_PER_USER_FAILURE:
       return {
         ...state,
-        loading: false,
+        metricsLoading: false,
         salesPerUser: [],
-        error: action.payload,
+        metricsError: action.payload || "Failed to load sales per user.",
       };
 
     default:

@@ -1,9 +1,9 @@
 import { ArrowBack, Favorite, FavoriteBorder } from "@mui/icons-material";
-import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
-import React, { useState } from "react";
-import { likeChapterAction, unlikeChapterAction } from "../../redux/chapter/chapter.action";
-import { useDispatch } from "react-redux";
 import ReportIcon from "@mui/icons-material/Report";
+import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
+import { useCallback, useState } from "react";
+import { useDispatch } from "react-redux";
+import { likeChapterAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
 import ReportModal from "../BookClubs/ReportModal";
 
@@ -11,14 +11,19 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
   const dispatch = useDispatch();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
-  const handleLikeChapter = checkAuth(() => {
-    if (chapter?.likedByCurrentUser) {
-      dispatch(unlikeChapterAction(chapter.id));
-    } else {
-      dispatch(likeChapterAction(chapter.id));
-    }
-  });
+  const handleLikeChapter = checkAuth(
+    useCallback(async () => {
+      setLikeLoading(true);
+      try {
+        await dispatch(likeChapterAction(chapter.id));
+      } finally {
+        setLikeLoading(false);
+      }
+    }, [dispatch, chapter])
+  );
 
   const handleOpenReportModal = () => {
     setIsReportModalOpen(true);
@@ -34,7 +39,7 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
       alert("Please enter a reason for reporting.");
       return;
     }
-
+    setReportLoading(true);
     const reportData = {
       reason: reportReason,
       chapter: { id: chapter.id }, // Ensure 'id' is lowercase
@@ -48,6 +53,8 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
     } catch (error) {
       console.error("Failed to submit report:", error);
       alert("Failed to submit report.");
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -69,7 +76,7 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
           Ch.{chapter.chapterNum}: {chapter.title}
         </Typography>
         <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2, alignItems: "center" }}>
-          <Button onClick={handleLikeChapter} sx={{ color: "white" }}>
+          <Button onClick={handleLikeChapter} sx={{ color: "white" }} disabled={likeLoading}>
             {chapter?.likedByCurrentUser ? <Favorite /> : <FavoriteBorder />}
           </Button>
           <Button
@@ -88,6 +95,7 @@ export default function Headbar({ chapter, onNavigate, checkAuth }) {
         reportReason={reportReason}
         setReportReason={setReportReason}
         handleSubmitReport={handleSubmitReport}
+        loading={reportLoading}
       />
     </AppBar>
   );

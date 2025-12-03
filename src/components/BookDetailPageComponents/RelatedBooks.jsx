@@ -1,30 +1,11 @@
-import React, { useEffect } from "react";
-import { Box, Grid, Typography, Card, CardMedia, CardContent, CardActions, Button, Stack, Chip } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import { getCategories } from "../../redux/category/category.action";
-import { getTags } from "../../redux/tag/tag.action";
-import { useDispatch } from "react-redux";
+import { useRef } from "react";
+import { Box, Typography, IconButton } from "@mui/material";
+import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { BookCard } from "../HomePage/BookCard";
 
 const RelatedBooks = ({ relatedBooks, loading, categories, tags }) => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const categoryMap = categories?.reduce((acc, category) => {
-    acc[category.id] = category.name;
-    return acc;
-  }, {});
+  const scrollRef = useRef(null);
 
-  const tagMap = tags?.reduce((acc, tag) => {
-    acc[tag.id] = tag.name;
-    return acc;
-  }, {});
-  useEffect(() => {
-    if (categories.length === 0) {
-      dispatch(getCategories());
-    }
-    if (tags.length === 0) {
-      dispatch(getTags());
-    }
-  }, [dispatch, categories.length, tags.length]);
   if (loading) {
     return (
       <Box sx={{ mt: 4, textAlign: "center" }}>
@@ -37,43 +18,80 @@ const RelatedBooks = ({ relatedBooks, loading, categories, tags }) => {
     return null;
   }
 
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -220 : 220, // số px để cuộn
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <Box sx={{ mt: 6 }}>
-      <Typography variant="h5" gutterBottom>
-        Related Books
+    <Box sx={{ position: "relative" }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+        Related Books You Might Enjoy
       </Typography>
-      <Grid container spacing={3}>
+
+      {/* Nút trái */}
+      <IconButton
+        onClick={() => scroll("left")}
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: -10,
+          transform: "translateY(-50%)",
+          zIndex: 2,
+          bgcolor: "action.notselect",
+          "&:hover": { bgcolor: "action.hover" },
+        }}
+      >
+        <ArrowBackIos />
+      </IconButton>
+
+      {/* List sách */}
+      <Box
+        ref={scrollRef}
+        sx={{
+          display: "flex",
+          gap: 2,
+          overflowX: "auto",
+          scrollBehavior: "smooth",
+          pb: 1,
+          "&::-webkit-scrollbar": { display: "none" },
+        }}
+      >
         {relatedBooks.map((book) => (
-          <Grid item xs={12} sm={6} md={4} key={book.id}>
-            <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-              <CardMedia component="img" image={book.bookCover} alt={`Cover of ${book.title}`} sx={{ height: 200 }} />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="div">
-                  {book.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  by {book.authorName}
-                </Typography>
-                {/* Display Category */}
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Category: {categoryMap[book.categoryId] || "N/A"}
-                </Typography>
-                {/* Display Tags */}
-                <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
-                  {book.tagIds.map((tagId) => (
-                    <Chip key={tagId} label={tagMap[tagId] || "Unknown"} size="small" />
-                  ))}
-                </Stack>
-              </CardContent>
-              <CardActions>
-                <Button size="small" onClick={() => navigate(`/books/${book.id}`)}>
-                  Read
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
+          <Box
+            key={book.id}
+            sx={{ flex: "0 0 180px", maxWidth: 180 }}
+          >
+            <BookCard
+              book={book}
+              categories={categories}
+              tags={tags}
+              showRating={false}
+              showActions={false}
+            />
+          </Box>
         ))}
-      </Grid>
+      </Box>
+
+      {/* Nút phải */}
+      <IconButton
+        onClick={() => scroll("right")}
+        sx={{
+          position: "absolute",
+          top: "50%",
+          right: -10,
+          transform: "translateY(-50%)",
+          zIndex: 2,
+          bgcolor: "action.notselect",
+          "&:hover": { bgcolor: "action.hover" },
+        }}
+      >
+        <ArrowForwardIos />
+      </IconButton>
     </Box>
   );
 };

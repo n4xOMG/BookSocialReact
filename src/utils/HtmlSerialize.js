@@ -83,7 +83,7 @@ const serialize = (node) => {
   }
 
   const children = node.children.map((n) => serialize(n)).join("");
-  const alignmentStyle = node.align ? ` style="text-align: ${node.align};"` : "";
+  const alignmentStyle = node.align ? ` style="text-align: ${node.align};"` : ` style="text-align: left;"`;
   switch (node.type) {
     case "quote":
       return `<blockquote${alignmentStyle}><p>${children}</p></blockquote>`;

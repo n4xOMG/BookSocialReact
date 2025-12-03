@@ -1,11 +1,5 @@
-import { ClientSideSuspense, LiveblocksProvider, RoomProvider, useOthers, useRoom, useUpdateMyPresence } from "@liveblocks/react";
-import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
-import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
-import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
-import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
-import FormatBoldIcon from "@mui/icons-material/FormatBold";
-import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
+import React, { useEffect, useMemo, useState } from "react";
+import { ClientSideSuspense, LiveblocksProvider, RoomProvider } from "@liveblocks/react";
 import {
   Alert,
   Box,
@@ -15,109 +9,198 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  IconButton,
+  Paper,
   Snackbar,
-  Toolbar,
+  Typography,
 } from "@mui/material";
-import { withCursors, withYjs, YjsEditor } from "@slate-yjs/core";
-import isHotkey from "is-hotkey";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { createEditor, Editor, Transforms } from "slate";
-import { Editable, Slate, withReact } from "slate-react";
-import * as Y from "yjs";
-import { BlockButton } from "./TextEditorUtils/BlockButton";
-import { Element, Leaf } from "./TextEditorUtils/Element";
-import { InsertImageButton } from "./TextEditorUtils/InsertImageHandler";
-import { MarkButton, toggleMark } from "./TextEditorUtils/MarkButton";
-import { HOTKEYS } from "./TextEditorUtils/ToolbarFunctions";
-import { LiveblocksYjsProvider } from "@liveblocks/yjs";
-import { Cursors } from "./Cursors";
+
 import { editChapterAction, getChapterByRoomId, publishChapterAction } from "../../../../../redux/chapter/chapter.action";
-import { deserializeContent, serializeContent } from "../../../../../utils/HtmlSerialize";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DOMPurify from "dompurify";
+import { useYjs } from "../../../../../hooks/useYjs";
+import { processChapterContent, prepareContentForSaving } from "./contentProcessing";
+import { buildPresenceUser } from "../../../../../utils/presenceUtils";
+import { EditorHeader } from "./EditorHeader";
+import { CollaborativeSlateEditor } from "./CollaborativeSlateEditor";
+
+/**
+ * Wrapper component that sets up Liveblocks provider and room
+ */
 export const CollaborativeEditorWrapper = () => {
   const { roomId } = useParams();
-  const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(getChapterByRoomId(roomId));
-  }, [roomId]);
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const presenceUser = useMemo(() => buildPresenceUser(currentUser), [currentUser]);
+
   if (!roomId) {
-    return <div>Room ID is missing!</div>;
+    return (
+      <Paper elevation={3} sx={{ p: 4, m: 2, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          Room ID is missing!
+        </Typography>
+      </Paper>
+    );
   }
 
   return (
     <LiveblocksProvider publicApiKey={process.env.REACT_APP_LIVEBLOCK_PUBLIC_KEY}>
-      <RoomProvider id={roomId}>
-        <ClientSideSuspense fallback={<div>Loading…</div>}>
-          <CollaborativeEditor />
+      <RoomProvider
+        id={roomId}
+        initialPresence={{
+          cursor: null,
+          selection: null,
+          user: presenceUser,
+        }}
+      >
+        <ClientSideSuspense fallback={<LoadingEditor />}>
+          {() => <CollaborativeEditor presenceUser={presenceUser} roomId={roomId} />}
         </ClientSideSuspense>
       </RoomProvider>
     </LiveblocksProvider>
   );
 };
 
-export const CollaborativeEditor = () => {
-  const room = useRoom();
-  const [connected, setConnected] = useState(false);
-  const [sharedType, setSharedType] = useState(null);
-  const [provider, setProvider] = useState(null);
-  const { chapter } = useSelector((store) => store.chapter);
-  const [content, setContent] = useState("");
+/**
+ * Loading component for the editor
+ */
+const LoadingEditor = () => (
+  <Paper elevation={3} sx={{ p: 4, m: 2, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "300px" }}>
+    <Typography variant="h5">Loading editor...</Typography>
+  </Paper>
+);
+
+/**
+ * Main collaborative editor component
+ */
+export const CollaborativeEditor = ({ presenceUser, roomId }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { chapter } = useSelector((store) => store.chapter);
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const [content, setContent] = useState("");
+  const [isLoadingChapter, setIsLoadingChapter] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
-  // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Confirmation Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const processedContent = useMemo(() => {
+    if (!chapter) return null;
+    return processChapterContent(chapter);
+  }, [chapter]);
+
+  const { provider, sharedType, connected } = useYjs(processedContent);
+
+  useEffect(() => {
+    if (!roomId) {
+      setLoadError("Room ID is missing.");
+      setIsLoadingChapter(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingChapter(true);
+    setLoadError(null);
+
+    dispatch(getChapterByRoomId(roomId))
+      .then((result) => {
+        if (!isMounted) return;
+        if (result?.error) {
+          setLoadError(result.error);
+        }
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setLoadError(error?.message || "Failed to load chapter.");
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsLoadingChapter(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, roomId]);
 
   useEffect(() => {
     if (chapter) {
-      // Initialize the Yjs document and provider
-      const yDoc = new Y.Doc();
-      const parsedContent = chapter.content ? new DOMParser().parseFromString(chapter.content, "text/html") : null;
-      const deserialized = parsedContent ? deserializeContent(parsedContent.body) : [{ text: "" }];
-      console.log("Deserialized Content:", deserialized);
-      setContent(deserialized);
-      Y.applyUpdate(yDoc, Y.encodeStateAsUpdate(yDoc));
-      const yProvider = new LiveblocksYjsProvider(room, yDoc);
-      const sharedDoc = yDoc.get("slate", Y.XmlText);
-
-      // Sync connection status
-      yProvider.on("sync", setConnected);
-
-      // Set up shared type and provider
-      setSharedType(sharedDoc);
-      setProvider(yProvider);
-
-      // Cleanup function
-      return () => {
-        yProvider.off("sync", setConnected); // Remove sync listener
-        yProvider.destroy(); // Destroy provider
-        yDoc.destroy(); // Destroy Yjs document
-      };
+      setContent(processedContent);
+      setIsLoadingChapter(false);
     }
-  }, [chapter, room]);
+  }, [chapter, processedContent]);
 
-  if (!connected || !sharedType || !provider) {
-    return <div>Loading…</div>;
-  }
+  const chapterAuthorId = useMemo(() => {
+    if (!chapter) return null;
+    const candidates = [
+      chapter.authorId,
+      chapter.author?.id,
+      chapter.ownerId,
+      chapter.owner?.id,
+      chapter.createdById,
+      chapter.createdBy?.id,
+      chapter.userId,
+      chapter.user?.id,
+      chapter.book?.authorId,
+      chapter.book?.author?.id,
+      chapter.book?.createdById,
+      chapter.book?.createdBy?.id,
+    ].filter((value) => value !== undefined && value !== null);
+
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    return String(candidates[0]);
+  }, [chapter]);
+
+  const isAdmin = useMemo(() => {
+    const roleName = currentUser?.role?.name;
+    if (!roleName) return false;
+    return roleName.toString().toUpperCase().includes("ADMIN");
+  }, [currentUser?.role?.name]);
+
+  const canManageChapter = useMemo(() => {
+    if (isAdmin) return true;
+    if (!currentUser?.id || !chapterAuthorId) return false;
+    return String(currentUser.id) === chapterAuthorId;
+  }, [isAdmin, currentUser?.id, chapterAuthorId]);
+
+  const shareUrl = useMemo(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return `${window.location.origin}/edit-chapter/${roomId}`;
+  }, [roomId]);
+
   const handleSaveDraft = async () => {
     if (content && provider) {
-      const serializedContent = serializeContent(content);
-      console.log("Content:", content);
-      console.log("Serialized Content:", serializedContent);
+      if (!canManageChapter) {
+        setSnackbarMessage("Only the chapter author can save drafts.");
+        setSnackbarSeverity("warning");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      if (!chapter?.id) {
+        setSnackbarMessage("Chapter data is not available yet.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      setIsSaving(true);
+      const jsonContent = prepareContentForSaving(content);
+
       try {
         await dispatch(
-          editChapterAction(chapter.bookId, {
+          editChapterAction({
             ...chapter,
-            content: DOMPurify.sanitize(serializedContent),
+            content: jsonContent,
             draft: true,
           })
         );
@@ -129,10 +212,11 @@ export const CollaborativeEditor = () => {
           navigate(-1);
         }, 1500);
       } catch (error) {
-        console.error("Error saving draft:", error);
         setSnackbarMessage("Failed to save draft.");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+      } finally {
+        setIsSaving(false);
       }
     }
   };
@@ -140,55 +224,151 @@ export const CollaborativeEditor = () => {
   const handlePublish = () => {
     setDialogOpen(true);
   };
+
   const cancelPublish = () => {
     setDialogOpen(false);
   };
+
   const confirmPublish = async () => {
     setDialogOpen(false);
     if (content && provider) {
-      const serializedContent = serializeContent(content);
-      console.log("Content:", content);
-      console.log("Serialized Content:", serializedContent);
+      if (!canManageChapter) {
+        setSnackbarMessage("Only the chapter author can publish chapters.");
+        setSnackbarSeverity("warning");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      if (!chapter?.id) {
+        setSnackbarMessage("Chapter data is not available yet.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      setIsPublishing(true);
+      const jsonContent = prepareContentForSaving(content);
+
       try {
+        const bookId = chapter.bookId || chapter.book?.id;
+
+        if (!bookId) {
+          throw new Error("Missing book identifier for chapter.");
+        }
+
         await dispatch(
-          publishChapterAction(chapter.bookId, {
+          publishChapterAction(bookId, {
             ...chapter,
-            content: serializedContent,
+            content: jsonContent,
           })
         );
         setSnackbarMessage("Chapter published successfully!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
+
         setTimeout(() => {
           navigate(-1);
         }, 1500);
       } catch (error) {
-        console.error("Error publishing chapter:", error);
         setSnackbarMessage("Failed to publish chapter.");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+      } finally {
+        setIsPublishing(false);
       }
     }
   };
+
+  const handleShare = async () => {
+    if (!shareUrl) return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: chapter?.title || "Chapter",
+          url: shareUrl,
+        });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setSnackbarMessage("Link copied to clipboard.");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } else {
+        throw new Error("Share not supported");
+      }
+    } catch (error) {
+      setSnackbarMessage("Unable to share link automatically.");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
+    }
+  };
+
   const onNavigateBack = () => {
     navigate(-1);
   };
+
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
       return;
     }
     setSnackbarOpen(false);
   };
+
+  if (isLoadingChapter) {
+    return <LoadingEditor />;
+  }
+
+  if (loadError) {
+    return (
+      <Paper elevation={3} sx={{ p: 4, m: 2, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          {loadError}
+        </Typography>
+      </Paper>
+    );
+  }
+
+  if (!chapter) {
+    return (
+      <Paper elevation={3} sx={{ p: 4, m: 2, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          Error: Chapter data not loaded
+        </Typography>
+      </Paper>
+    );
+  }
+
+  if (!connected || !sharedType || !provider) {
+    return <LoadingEditor />;
+  }
+
   return (
-    <Box>
-      <Headbar onSaveDraft={handleSaveDraft} onPublish={handlePublish} onNavigateBack={onNavigateBack} />
-      <SlateEditor
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <EditorHeader
+        onSaveDraft={handleSaveDraft}
+        onPublish={handlePublish}
+        onNavigateBack={onNavigateBack}
+        onShare={handleShare}
+        chapterTitle={chapter.title}
+        canManageChapter={canManageChapter}
+        isSaving={isSaving}
+        isPublishing={isPublishing}
+      />
+
+      {!canManageChapter && (
+        <Alert severity="info" sx={{ mx: 2, mb: 2 }}>
+          You can participate in editing, but only the chapter author can save drafts or publish changes.
+        </Alert>
+      )}
+
+      <CollaborativeSlateEditor
         sharedType={sharedType}
         provider={provider}
         initialContent={content}
         onContentChange={(newContent) => setContent(newContent)}
+        presenceUser={presenceUser}
       />
-      ;
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -199,7 +379,7 @@ export const CollaborativeEditor = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-      {/* Confirmation Dialog for Publish */}
+
       <Dialog open={dialogOpen} onClose={cancelPublish}>
         <DialogTitle>Confirm Publish</DialogTitle>
         <DialogContent>
@@ -217,117 +397,3 @@ export const CollaborativeEditor = () => {
     </Box>
   );
 };
-const Headbar = ({ onSaveDraft, onPublish, onNavigateBack }) => (
-  <Toolbar
-    sx={{
-      display: "flex",
-      justifyContent: "flex-start",
-      gap: 2,
-      backgroundColor: "background.paper",
-      boxShadow: 1,
-      padding: 2,
-    }}
-  >
-    <IconButton edge="start" color="inherit" aria-label="back" onClick={onNavigateBack} sx={{ mr: 2 }}>
-      <ArrowBackIcon />
-    </IconButton>
-    <Button variant="contained" color="secondary" onClick={onSaveDraft} sx={{ textTransform: "none" }}>
-      Save Draft
-    </Button>
-    <Button variant="contained" color="primary" onClick={onPublish} sx={{ textTransform: "none" }}>
-      Publish
-    </Button>
-  </Toolbar>
-);
-const emptyNode = {
-  children: [{ text: "" }],
-};
-function SlateEditor({ sharedType, provider, initialContent, onContentChange }) {
-  useEffect(() => {
-    console.log("SlateEditor Props:", { sharedType, provider, initialContent });
-  }, []);
-  const editor = useMemo(() => {
-    // Create the editor with React and Yjs plugins
-    const e = withReact(withCursors(withYjs(createEditor(), sharedType), provider.awareness));
-
-    // Ensure the editor always has at least one valid child
-    const { normalizeNode } = e;
-    e.normalizeNode = (entry) => {
-      const [node] = entry;
-
-      if (!Editor.isEditor(node) || node.children.length > 0) {
-        return normalizeNode(entry);
-      }
-      if (initialContent.length > 0) {
-        Transforms.insertNodes(e, initialContent, { at: [0] });
-      }
-      Transforms.insertNodes(e, emptyNode, { at: [0] });
-    };
-
-    return e;
-  }, [sharedType]);
-
-  useEffect(() => {
-    // Connect to Yjs editor
-    YjsEditor.connect(editor);
-    return () => {
-      // Disconnect when the component unmounts
-      YjsEditor.disconnect(editor);
-    };
-  }, [editor]);
-
-  const renderElement = useCallback((props) => <Element {...props} />, []);
-  const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        borderRadius: "12px",
-        backgroundColor: "#fff",
-        width: "100%",
-        height: "100%",
-        color: "#111827",
-      }}
-    >
-      <Box
-        sx={{
-          position: "relative",
-          padding: "1em",
-          height: "100%",
-        }}
-      >
-        <Slate editor={editor} initialValue={initialContent.length > 0 ? initialContent : [emptyNode]} onChange={onContentChange}>
-          <Cursors>
-            <Toolbar>
-              <MarkButton format={"bold"} icon={<FormatBoldIcon />} />
-              <MarkButton format={"italic"} icon={<FormatItalicIcon />} />
-              <MarkButton format={"underline"} icon={<FormatUnderlinedIcon />} />
-              <BlockButton format={"left"} icon={<FormatAlignLeftIcon />} />
-              <BlockButton format={"center"} icon={<FormatAlignCenterIcon />} />
-              <BlockButton format={"right"} icon={<FormatAlignRightIcon />} />
-              <BlockButton format={"justify"} icon={<FormatAlignJustifyIcon />} />
-              <InsertImageButton />
-            </Toolbar>
-            <Editable
-              renderElement={renderElement}
-              renderLeaf={renderLeaf}
-              placeholder="Enter some text..."
-              onKeyDown={(event) => {
-                for (const hotkey in HOTKEYS) {
-                  if (isHotkey(hotkey, event)) {
-                    event.preventDefault();
-                    const mark = HOTKEYS[hotkey];
-                    toggleMark(editor, mark);
-                  }
-                }
-              }}
-            />
-          </Cursors>
-        </Slate>
-      </Box>
-    </Box>
-  );
-}

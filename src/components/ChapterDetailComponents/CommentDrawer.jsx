@@ -9,7 +9,7 @@ import {
 import { Alert, Box, Button, CircularProgress, Drawer, List, ListItem, Snackbar, TextField, Typography } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import CommentItem from "../BookClubs/CommentItem";
-export default function CommentDrawer({ open, user, bookId, chapterId, onToggleDrawer }) {
+export default function CommentDrawer({ open, user, chapterId, onToggleDrawer }) {
   const { chapterComments, error } = useSelector((store) => store.comment);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -21,14 +21,17 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
   const fetchComments = useCallback(async () => {
     try {
       setLoading(true);
-      await dispatch(getAllCommentByChapterAction(bookId, chapterId));
+      const response = await dispatch(getAllCommentByChapterAction(chapterId));
+      if (response && response.error) {
+        setSnackBarOpen(true);
+      }
     } catch (e) {
       console.error("Error fetching comments: ", e);
       setSnackBarOpen(true);
     } finally {
       setLoading(false);
     }
-  }, [bookId, chapterId, dispatch]);
+  }, [chapterId, dispatch]);
 
   useEffect(() => {
     fetchComments();
@@ -44,22 +47,30 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
 
   const handleCreateComment = useCallback(
     checkAuth(async () => {
-      if (newComment.trim()) {
+      if (!newComment.trim()) {
+        alert("Comment cannot be empty!");
+        return;
+      }
+
+      try {
         const reqData = {
-          bookId: bookId,
           chapterId: chapterId,
           data: {
             content: newComment,
           },
         };
-        await dispatch(createChapterCommentAction(reqData));
-        fetchComments();
-        setNewComment("");
-      } else {
-        alert("Comment cannot be null!");
+        const response = await dispatch(createChapterCommentAction(reqData));
+        if (response && response.error) {
+          alert(response.error);
+        } else {
+          setNewComment("");
+        }
+      } catch (error) {
+        console.error("Error creating comment:", error);
+        alert("Failed to post comment");
       }
     }),
-    [newComment, bookId, dispatch, fetchComments]
+    [newComment, dispatch, chapterId, checkAuth]
   );
 
   const handleSubmitReply = useCallback(
@@ -67,28 +78,29 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
       if (newReply.trim()) {
         const reqData = {
           parentCommentId: parentCommentId,
-          bookId: bookId,
           chapterId: chapterId,
           data: {
             content: newReply,
           },
         };
-        await dispatch(createReplyChapterCommentAction(reqData));
-        fetchComments();
-        setNewReply("");
+        const response = await dispatch(createReplyChapterCommentAction(reqData));
+        if (response?.error) {
+          alert(response.error);
+        } else {
+          setNewReply("");
+        }
       } else {
         alert("Reply cannot be null!");
       }
     }),
-    [newReply, bookId, dispatch, fetchComments]
+    [newReply, dispatch, chapterId]
   );
 
   const handleDeleteComment = useCallback(
     checkAuth(async (commentId) => {
       await dispatch(deleteCommentAction(commentId));
-      fetchComments();
     }),
-    [dispatch, fetchComments]
+    [dispatch]
   );
 
   const handleClose = useCallback((event, reason) => {
@@ -115,19 +127,25 @@ export default function CommentDrawer({ open, user, bookId, chapterId, onToggleD
             Comments
           </Typography>
           <List>
-            {chapterComments?.map((comment, index) => (
-              <ListItem key={index} alignItems="flex-start">
-                <CommentItem
-                  comment={comment}
-                  newReply={newReply}
-                  checkAuth={checkAuth}
-                  handleReplyChange={handleReplyChange}
-                  handleSubmitReply={handleSubmitReply}
-                  handleDeleteComment={handleDeleteComment}
-                  user={user}
-                />
-              </ListItem>
-            ))}
+            {Array.isArray(chapterComments) && chapterComments.length > 0 ? (
+              chapterComments.map((comment, index) => (
+                <ListItem key={index} alignItems="flex-start">
+                  <CommentItem
+                    comment={comment}
+                    newReply={newReply}
+                    checkAuth={checkAuth}
+                    handleReplyChange={handleReplyChange}
+                    handleSubmitReply={handleSubmitReply}
+                    handleDeleteComment={handleDeleteComment}
+                    user={user}
+                  />
+                </ListItem>
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 2 }}>
+                No comments yet. Be the first to comment!
+              </Typography>
+            )}
           </List>
           <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
             <TextField

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -10,254 +10,193 @@ import {
   IconButton,
   Tooltip,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
   Alert,
   CircularProgress,
-  Snackbar,
+  Paper,
+  TableContainer,
+  useTheme,
+  Chip,
+  Avatar,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
-import { Edit, Delete, Block, CheckCircle } from "@mui/icons-material";
+import { Edit, Delete, Block, CheckCircle, Search, VerifiedUser, GppBad } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  banUserAction,
-  getAllUsers,
-  suspendUserAction,
-  unbanUserAction,
-  unsuspendUserAction,
-  updateUserRoleAction,
-} from "../../../redux/user/user.action";
-import { debounce } from "lodash";
-import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import { fetchAllUsers } from "../../../redux/admin/admin.action";
+
 const UserManagement = () => {
-  const { users, loading, error } = useSelector((state) => state.user);
+  const theme = useTheme();
   const dispatch = useDispatch();
-  const [openAction, setOpenAction] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { users, loading, error } = useSelector((state) => state.admin);
   const [page, setPage] = useState(0);
-  const [newRole, setNewRole] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const loadUsers = useCallback(
-    debounce(async (searchTerm, page) => {
-      try {
-        await dispatch(getAllUsers(page, 5, searchTerm));
-      } catch (e) {
-        console.log("Error fetching users: ", e);
-      }
-    }, 500),
-    [dispatch]
-  );
   useEffect(() => {
-    loadUsers();
-  }, [searchTerm, page, loadUsers]);
-  const handleSuspend = async (user) => {
-    try {
-      await dispatch(suspendUserAction(user.id));
-      setSuccessMessage("User suspended successfully.");
-    } catch (error) {
-      console.log(error);
-      setErrorMessage("Failed to suspend user.");
-    }
-  };
-  const handleUnsuspend = async (user) => {
-    try {
-      await dispatch(unsuspendUserAction(user.id));
-      setSuccessMessage("User unsuspended successfully.");
-    } catch (error) {
-      console.log(error);
-      setErrorMessage("Failed to suspend user.");
-    }
-  };
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchAllUsers(page, 10, searchTerm));
+    }, 500);
 
-  const handleBan = async (user) => {
-    try {
-      await dispatch(banUserAction(user.id));
-      setSuccessMessage("User banned successfully.");
-    } catch (error) {
-      console.log(error);
-      setErrorMessage("Failed to ban user.");
-    }
-  };
-  const handleUnban = async (user) => {
-    try {
-      await dispatch(unbanUserAction(user.id));
-      setSuccessMessage("User unbanned successfully.");
-    } catch (error) {
-      console.log(error);
-      setErrorMessage("Failed to ban user.");
-    }
-  };
-  const handleOpenRoleDialog = (user) => {
-    setSelectedUser(user);
-    setNewRole(user.role.name); // Assuming role has a 'name' property
-    setOpenAction("role");
-  };
+    return () => clearTimeout(delayDebounceFn);
+  }, [dispatch, page, searchTerm]);
 
-  const handleClose = () => {
-    setSelectedUser(null);
-    setOpenAction(false);
-    setNewRole("");
-  };
-
-  const handleSubmitRole = async () => {
-    try {
-      await dispatch(updateUserRoleAction(selectedUser.id, newRole));
-      setSuccessMessage("User role updated successfully.");
-      handleClose();
-    } catch (error) {
-      console.log(error);
-      setErrorMessage("Failed to update user role.");
+  const getStatusChip = (user) => {
+    if (user.banned) {
+      return <Chip label="Banned" color="error" size="small" icon={<Block />} />;
     }
-  };
-
-  const handleCloseSnackbar = () => {
-    setSuccessMessage("");
-    setErrorMessage("");
+    if (user.isSuspended) {
+      return <Chip label="Suspended" color="warning" size="small" icon={<GppBad />} />;
+    }
+    return <Chip label="Active" color="success" size="small" icon={<CheckCircle />} />;
   };
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        User Management
-      </Typography>
-
-      {loading && (
-        <Box display="flex" justifyContent="center" my={2}>
-          <CircularProgress />
+      <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box>
+          <Typography variant="h4" className="font-serif" fontWeight="700" sx={{ color: theme.palette.text.primary }}>
+            User Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage user accounts, roles, and statuses.
+          </Typography>
         </Box>
+        <TextField
+          placeholder="Search users..."
+          variant="outlined"
+          size="small"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{
+            width: 300,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              bgcolor: theme.palette.background.paper,
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, borderRadius: "12px" }}>
+          {error}
+        </Alert>
       )}
 
-      {error && <Alert severity="error">{error}</Alert>}
-
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Username</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Account Status</TableCell>
-            <TableCell>Suspension</TableCell>
-            <TableCell>Ban</TableCell>
-            <TableCell>Total Credits</TableCell>
-            <TableCell>Role</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.username}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.isVerified ? "Verified" : "Not Verified"}</TableCell>
-              <TableCell>{user.isSuspended ? "Suspened" : "Not Suspended"}</TableCell>
-              <TableCell>{user.banned ? "Banned" : "Not Banned"}</TableCell>
-              <TableCell>{user.credits}</TableCell>
-              <TableCell>{user.role.name}</TableCell>
-              <TableCell align="right">
-                {user.isSuspended ? (
-                  <Tooltip title="Unsuspend User">
-                    <IconButton color="success" onClick={() => handleUnsuspend(user)}>
-                      <Block />
-                    </IconButton>
-                  </Tooltip>
-                ) : (
-                  <Tooltip title="Suspend User">
-                    <IconButton color="error" onClick={() => handleSuspend(user)}>
-                      <Block />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                {user.banned ? (
-                  <Tooltip title="Unban User">
-                    <IconButton color="success" onClick={() => handleUnban(user)}>
-                      <RemoveCircleIcon />
-                    </IconButton>
-                  </Tooltip>
-                ) : (
-                  <Tooltip title="Ban User">
-                    <IconButton color="error" onClick={() => handleBan(user)}>
-                      <RemoveCircleIcon />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title="Update Role">
-                  <IconButton color="primary" onClick={() => handleOpenRoleDialog(user)}>
-                    <Edit />
-                  </IconButton>
-                </Tooltip>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          borderRadius: "16px",
+          border: "1px solid",
+          borderColor: theme.palette.divider,
+          bgcolor: theme.palette.background.paper,
+        }}
+      >
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: theme.palette.action.hover }}>
+              <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                Actions
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <CircularProgress />
+                </TableCell>
+              </TableRow>
+            ) : Array.isArray(users) && users.length > 0 ? (
+              users.map((user) => (
+                <TableRow key={user.id} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                  <TableCell>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Avatar src={user.avatarUrl} alt={user.username} sx={{ width: 40, height: 40 }}>
+                        {user.username?.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight="600">
+                          {user.fullname || user.username}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          @{user.username}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.role?.name || "USER"}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        borderColor: theme.palette.divider,
+                        fontWeight: 500,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>{getStatusChip(user)}</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit User">
+                      <IconButton size="small" sx={{ color: theme.palette.primary.main }}>
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Ban/Suspend">
+                      <IconButton size="small" sx={{ color: theme.palette.warning.main }}>
+                        <Block fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete User">
+                      <IconButton size="small" sx={{ color: theme.palette.error.main }}>
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">No users found.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      {/* Update Role Dialog */}
-      <Dialog open={openAction === "role"} onClose={handleClose}>
-        <DialogTitle>Update User Role</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel id="role-select-label">Role</InputLabel>
-            <Select labelId="role-select-label" value={newRole} label="Role" onChange={(e) => setNewRole(e.target.value)}>
-              <MenuItem value="ADMIN">Admin</MenuItem>
-              <MenuItem value="USER">User</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmitRole} variant="contained" color="primary" disabled={!newRole || loading}>
-            Update
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Success Snackbar */}
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert severity="success" onClose={handleCloseSnackbar}>
-          {successMessage}
-        </Alert>
-      </Snackbar>
-
-      {/* Error Snackbar */}
-      <Snackbar
-        open={!!errorMessage}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert severity="error" onClose={handleCloseSnackbar}>
-          {errorMessage}
-        </Alert>
-      </Snackbar>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mt: 3, gap: 2 }}>
         <Button
-          onClick={() => setPage(page - 1)}
-          disabled={page === 0}
-          sx={{
-            px: 4,
-            py: 2,
-            backgroundColor: "primary.main",
-            color: "white",
-            borderRadius: 3,
-            "&:disabled": { backgroundColor: "grey.300" },
-          }}
+          onClick={() => setPage(Math.max(0, page - 1))}
+          disabled={page === 0 || loading}
+          variant="outlined"
+          sx={{ borderRadius: "8px" }}
         >
           Previous
         </Button>
-        <Button onClick={() => setPage(page + 1)} sx={{ px: 4, py: 2, backgroundColor: "black", color: "white", borderRadius: 3 }}>
+        <Typography variant="body2" color="text.secondary">
+          Page {page + 1}
+        </Typography>
+        <Button
+          onClick={() => setPage(page + 1)}
+          disabled={loading || (users && users.length < 10)}
+          variant="outlined"
+          sx={{ borderRadius: "8px" }}
+        >
           Next
         </Button>
       </Box>

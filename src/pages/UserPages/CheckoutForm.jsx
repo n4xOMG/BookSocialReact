@@ -2,7 +2,7 @@ import { Alert, Box, Button } from "@mui/material";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { confirmPayment, createPaymentIntent } from "../../redux/chapter/chapter.action";
+import { createPayment, confirmUnifiedPayment } from "../../redux/chapter/chapter.action";
 
 const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
   const stripe = useStripe();
@@ -23,15 +23,24 @@ const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
     setFormError("");
 
     try {
-      // Step 1: Create Payment Intent on the backend
-      const paymentIntentResponse = await dispatch(
-        createPaymentIntent({
+      // Step 1: Create Payment Intent on the backend using unified endpoint
+      const paymentResponse = await dispatch(
+        createPayment({
           creditPackageId: creditPackage.id,
+          paymentProvider: "STRIPE",
           currency: "usd",
         })
       );
+      const paymentPayload = paymentResponse?.payload || paymentResponse?.data;
+      const clientSecret = paymentPayload?.clientSecret;
 
-      const clientSecret = paymentIntentResponse.clientSecret;
+      if (!clientSecret) {
+        const message = "Unable to initiate payment. Please try again.";
+        setFormError(message);
+        onError(message);
+        setProcessing(false);
+        return;
+      }
 
       // Step 2: Confirm the payment on the frontend
       const paymentResult = await stripe.confirmCardPayment(clientSecret, {
@@ -46,16 +55,21 @@ const CheckoutForm = ({ creditPackage, onError, onSuccess, jwt }) => {
         setProcessing(false);
       } else {
         if (paymentResult.paymentIntent.status === "succeeded") {
-          // Step 3: Inform backend to update user credits
-          await dispatch(
-            confirmPayment(
-              {
-                paymentIntentId: paymentResult.paymentIntent.id,
-                creditPackageId: creditPackage.id,
-              },
-              jwt
-            )
+          // Step 3: Inform backend to update user credits using unified endpoint
+          const confirmResponse = await dispatch(
+            confirmUnifiedPayment({
+              paymentIntentId: paymentResult.paymentIntent.id,
+              creditPackageId: creditPackage.id,
+              paymentProvider: "STRIPE",
+            })
           );
+          if (confirmResponse?.error) {
+            const message = confirmResponse.error;
+            setFormError(message);
+            onError(message);
+            setProcessing(false);
+            return;
+          }
           onSuccess();
           setProcessing(false);
         } else {

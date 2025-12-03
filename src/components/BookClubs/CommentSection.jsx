@@ -1,19 +1,21 @@
-import { Alert, Avatar, Box, Button, Snackbar, TextField, Typography } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import { Alert, Avatar, Box, Button, Divider, Snackbar, TextField, Typography, useTheme } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  getAllCommentByPostAction,
   createPostCommentAction,
   createReplyPostCommentAction,
-  deletepostCommentAction,
-  fetchPostById,
-} from "../../redux/post/post.action";
+  deletePostCommentAction,
+} from "../../redux/comment/comment.action";
 import { useAuthCheck } from "../../utils/useAuthCheck";
 import LoadingSpinner from "../LoadingSpinner";
 import CommentItem from "./CommentItem";
 
-const CommentSection = ({ comments, postId }) => {
+const CommentSection = ({ postId }) => {
+  const theme = useTheme();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { postComments } = useSelector((state) => state.comment);
   const [commentText, setCommentText] = useState("");
   const [newReply, setNewReply] = useState("");
   const [open, setOpen] = useState(false);
@@ -21,14 +23,10 @@ const CommentSection = ({ comments, postId }) => {
   const [localError, setLocalError] = useState(null);
   const { checkAuth, AuthDialog } = useAuthCheck();
 
-  const handleAddComment = () => {
-    if (!user) {
-      alert("Please log in to comment.");
-      return;
-    }
-
+  const handleAddComment = checkAuth(async () => {
     if (commentText.trim() === "") {
-      alert("Comment cannot be empty.");
+      setLocalError("Comment cannot be empty");
+      setOpen(true);
       return;
     }
 
@@ -36,28 +34,33 @@ const CommentSection = ({ comments, postId }) => {
       postId: postId,
       data: {
         content: commentText,
-        userId: user.id,
       },
     };
-    setLoading(true);
+
     try {
-      dispatch(createPostCommentAction(reqData));
+      const result = await dispatch(createPostCommentAction(reqData));
+      if (result?.error) {
+        setLocalError(result.error);
+        setOpen(true);
+      } else {
+        setCommentText("");
+      }
     } catch (error) {
       console.log("Error creating comment:", error);
-      setLocalError(error.message);
+      setLocalError(error.message || "Failed to post comment");
       setOpen(true);
-    } finally {
-      setCommentText("");
-      setLoading(false);
     }
-  };
+  });
+
   const handleReplyChange = useCallback((event) => {
     setNewReply(event.target.value);
   }, []);
+
   const handleSubmitReply = useCallback(
     checkAuth(async (parentCommentId) => {
       if (newReply.trim()) {
         const reqData = {
+          postId: postId,
           parentCommentId: parentCommentId,
           data: {
             content: newReply,
@@ -67,61 +70,141 @@ const CommentSection = ({ comments, postId }) => {
         if (response?.error) {
           setLocalError(response.error);
           setOpen(true);
+        } else {
+          setNewReply("");
         }
-        setNewReply("");
       } else {
-        alert("Reply cannot be null!");
+        setLocalError("Reply cannot be empty");
+        setOpen(true);
       }
     }),
-    [newReply, dispatch]
+    [newReply, dispatch, postId]
   );
 
   const handleDeleteComment = useCallback(
     checkAuth(async (commentId) => {
-      await dispatch(deletepostCommentAction(commentId));
-      await dispatch(fetchPostById(postId));
-      setOpen(false);
+      const result = await dispatch(deletePostCommentAction(commentId));
+      if (result?.error) {
+        setLocalError(result.error);
+        setOpen(true);
+      }
     }),
     [dispatch]
   );
+
   const handleClose = useCallback((event, reason) => {
     if (reason === "clickaway") return;
     setOpen(false);
     setLocalError(null);
   }, []);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      setLoading(true);
+      try {
+        await dispatch(getAllCommentByPostAction(user ? true : false, postId));
+      } catch (e) {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComments();
+  }, [postId, dispatch, user]);
+
   return (
     <>
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <Box sx={{ p: 2, borderTop: "1px solid #e0e0e0" }}>
-          <Typography variant="h6">Comments</Typography>
-          <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-            <Avatar src={user?.avatarUrl || "/placeholder.svg"} alt={user?.fullname} />
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Add a comment..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-            />
-            <Button variant="contained" onClick={handleAddComment}>
-              Post
-            </Button>
-          </Box>
-          <Box sx={{ mt: 2 }}>
-            {comments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                newReply={newReply}
-                checkAuth={checkAuth}
-                handleReplyChange={handleReplyChange}
-                handleSubmitReply={handleSubmitReply}
-                handleDeleteComment={handleDeleteComment}
-                user={user}
+        <Box
+          sx={{
+            p: 2,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            background: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.1)" : "rgba(255, 255, 255, 0.3)"),
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              mb: 2,
+              fontFamily: '"Playfair Display", serif',
+              fontWeight: 700,
+              fontSize: "1.25rem",
+              background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Comments
+          </Typography>
+
+          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <Avatar src={user?.avatarUrl || "/placeholder.svg"} alt={user?.username || "User"} sx={{ width: 40, height: 40 }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Add a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "12px",
+                    background: (theme) => (theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)"),
+                    backdropFilter: "blur(8px)",
+                  },
+                }}
               />
-            ))}
+              <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+                <Button
+                  variant="contained"
+                  onClick={handleAddComment}
+                  size="small"
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: "10px",
+                    background: "linear-gradient(135deg, #00c9a7, #56efca)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    boxShadow: "0 4px 16px rgba(0, 201, 167, 0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #56efca, #84fab0)",
+                      boxShadow: "0 6px 24px rgba(0, 201, 167, 0.5)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
+                >
+                  Post
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 2 }} />
+
+          <Box sx={{ mt: 2 }}>
+            {postComments && postComments.length > 0 ? (
+              postComments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  newReply={newReply}
+                  checkAuth={checkAuth}
+                  handleReplyChange={handleReplyChange}
+                  handleSubmitReply={handleSubmitReply}
+                  handleDeleteComment={handleDeleteComment}
+                  user={user}
+                />
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 2 }}>
+                No comments yet. Be the first to share your thoughts!
+              </Typography>
+            )}
           </Box>
         </Box>
       )}

@@ -1,7 +1,5 @@
 import { Button } from "@mui/material";
 import { useSlate } from "slate-react";
-import clsx from "clsx";
-import { css } from "@emotion/react";
 import { Editor } from "slate";
 
 const isMarkActive = (editor, format) => {
@@ -24,14 +22,23 @@ export const MarkButton = ({ format, icon }) => {
 
   return (
     <Button
-      active={isActive ? "true" : undefined}
+      size="small"
+      variant={isActive ? "contained" : "outlined"}
+      color={isActive ? "primary" : "inherit"}
+      sx={{
+        minWidth: "40px",
+        height: "40px",
+        p: 1,
+        borderRadius: "4px",
+        "& .MuiSvgIcon-root": {
+          fontSize: "1.2rem",
+        },
+      }}
       onMouseDown={(event) => {
         event.preventDefault();
         toggleMark(editor, format);
       }}
-      className={clsx(css`
-        ${isActive ? "background-color: lightgray;" : ""}
-      `)}
+      title={format.charAt(0).toUpperCase() + format.slice(1)}
     >
       {icon}
     </Button>

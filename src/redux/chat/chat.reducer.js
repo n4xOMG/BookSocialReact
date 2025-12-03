@@ -16,10 +16,34 @@ import {
   CREATE_MESSAGE_SUCCESS,
 } from "./chat.actionType";
 
+const sortMessages = (messages = []) => [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+const mergeMessages = (existing = [], incoming = []) => {
+  const next = [...existing];
+
+  incoming.forEach((message) => {
+    if (!message) {
+      return;
+    }
+
+    const hasId = message.id !== undefined && message.id !== null;
+    if (hasId) {
+      const existingIndex = next.findIndex((item) => item?.id === message.id);
+      if (existingIndex >= 0) {
+        next[existingIndex] = message;
+        return;
+      }
+    }
+
+    next.push(message);
+  });
+
+  return sortMessages(next);
+};
+
 const initialState = {
   chats: [],
-  messages: {}, // Correctly initialized as an object
-  message: null,
+  messages: {},
   loading: false,
   error: null,
   subscriptions: {},
@@ -35,9 +59,12 @@ export const chatReducer = (state = initialState, action) => {
       return { ...state, loading: true, error: null };
 
     case CREATE_MESSAGE_SUCCESS:
-      return { ...state, message: action.payload };
+      return {
+        ...state,
+        loading: false,
+      };
     case FETCH_USER_CHATS_SUCCESS:
-      return { ...state, loading: false, chats: action.payload };
+      return { ...state, loading: false, chats: action.payload || [] };
 
     case FETCH_CHAT_MESSAGES_SUCCESS:
       return {
@@ -45,7 +72,7 @@ export const chatReducer = (state = initialState, action) => {
         loading: false,
         messages: {
           ...state.messages,
-          [action.payload.chatId]: action.payload.messages,
+          [action.payload.chatId]: sortMessages(action.payload.messages || []),
         },
       };
 
@@ -55,37 +82,31 @@ export const chatReducer = (state = initialState, action) => {
         loading: false,
         messages: {
           ...state.messages,
-          [action.payload.chatId]: [
-            ...(state.messages[action.payload.chatId] || []),
-            {
-              id: action.payload.id, // Ensure ID is present
-              chatId: action.payload.chatId,
-              content: action.payload.content,
-              imageUrl: action.payload.imageUrl,
-              sender: action.payload.sender,
-              receiver: action.payload.receiver,
-              timestamp: new Date(action.payload.timestamp), // Parse timestamp
-              read: action.payload.read,
-            },
-          ],
+          [action.payload.chatId]: mergeMessages(state.messages[action.payload.chatId], [action.payload]),
         },
       };
 
     case RECEIVE_MESSAGE:
-      const { chatId } = action.payload;
       return {
         ...state,
         messages: {
           ...state.messages,
-          [chatId]: [...(state.messages[chatId] || []), action.payload],
+          [action.payload.chatId]: mergeMessages(state.messages[action.payload.chatId], [action.payload]),
         },
       };
 
     case CREATE_CHAT_SUCCESS:
+      if (!action.payload) {
+        return { ...state, loading: false };
+      }
+
+      const chatExists = state.chats.some((chat) => chat?.id === action.payload?.id);
       return {
         ...state,
         loading: false,
-        chats: [...state.chats, action.payload],
+        chats: chatExists
+          ? state.chats.map((chat) => (chat?.id === action.payload.id ? { ...chat, ...action.payload } : chat))
+          : [...state.chats, action.payload],
       };
 
     case FETCH_USER_CHATS_FAILED:

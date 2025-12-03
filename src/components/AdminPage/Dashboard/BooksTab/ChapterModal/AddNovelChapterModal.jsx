@@ -9,15 +9,17 @@ import {
   DialogTitle,
   FormControlLabel,
   TextField,
+  useTheme,
 } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { addChapterAction, addDraftChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
+import { addDraftChapterAction, getChapterByRoomId } from "../../../../../redux/chapter/chapter.action";
 
 export default function AddChapterModal({ open, onClose, bookId }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [chapterData, setChapterData] = useState({
     chapterNum: "",
@@ -52,8 +54,8 @@ export default function AddChapterModal({ open, onClose, bookId }) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: "bold" }}>Add New Chapter</DialogTitle>
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2, p: 2 }}>
+      <DialogTitle sx={{ fontWeight: "bold", color: theme.palette.primary.main }}>Add New Chapter</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 1, p: 2 }}>
         <TextField
           margin="normal"
           variant="outlined"
@@ -94,7 +96,7 @@ export default function AddChapterModal({ open, onClose, bookId }) {
           <Button onClick={onClose} variant="outlined" color="secondary">
             Cancel
           </Button>
-          <Button type="submit" variant="contained" color="primary">
+          <Button type="submit" variant="contained" color="primary" sx={{ fontWeight: "bold", color: "white", "&:hover": { color: theme.palette.primary.dark } }}>
             Create and Start Writing
           </Button>
         </DialogActions>

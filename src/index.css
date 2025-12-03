@@ -1,13 +1,184 @@
+/* Glassmorphism Design System - BookSocial 2025 */
+
+/* Import elegant fonts */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* Glassmorphism Colors - Light Mode */
+  --glass-bg-light: rgba(255, 255, 255, 0.65);
+  --glass-border-light: rgba(44, 62, 80, 0.15);
+  --glass-shadow-light: rgba(44, 62, 80, 0.08);
+
+  /* Glassmorphism Colors - Dark Mode */
+  --glass-bg-dark: rgba(26, 38, 52, 0.75);
+  --glass-border-dark: rgba(197, 160, 101, 0.15);
+  --glass-shadow-dark: rgba(0, 0, 0, 0.4);
+
+  /* Primary - Deep Slate Blue (Ink) */
+  --primary-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  --primary-dark: #1a252f;
+  --primary-main: #2c3e50;
+  --primary-light: #34495e;
+
+  /* Secondary - Antique Gold */
+  --secondary-gradient: linear-gradient(135deg, #c5a065 0%, #d4af37 100%);
+  --secondary-dark: #aa8a55;
+  --secondary-main: #c5a065;
+  --secondary-light: #e0c080;
+
+  /* Accent - Warm Paper & Leather */
+  --accent-coral: #cd5c5c; /* Indian Red */
+  --accent-gold: #d4af37;
+
+  /* Blur amounts */
+  --blur-light: blur(10px);
+  --blur-medium: blur(16px);
+  --blur-heavy: blur(24px);
+
+  /* Border radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Elegant serif for book-related elements */
+.font-serif {
+  font-family: "Playfair Display", Georgia, serif;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--glass-bg-light);
+  backdrop-filter: var(--blur-medium);
+  -webkit-backdrop-filter: var(--blur-medium);
+  border: 1px solid var(--glass-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px 0 var(--glass-shadow-light), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-dark {
+  background: var(--glass-bg-dark);
+  border: 1px solid var(--glass-border-dark);
+  box-shadow: 0 8px 32px 0 var(--glass-shadow-dark), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px 0 var(--glass-shadow-light), inset 0 0 0 1px rgba(197, 160, 101, 0.3);
+  border-color: rgba(197, 160, 101, 0.4);
+}
+
+/* Glassmorphic Button */
+.glass-button {
+  background: var(--glass-bg-light);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border: 1px solid var(--glass-border-light);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  color: var(--primary-main);
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(44, 62, 80, 0.15);
+  border-color: var(--secondary-main);
+}
+
+/* Smooth Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.1) 100%);
+  background-size: 1000px 100%;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-gradient);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--secondary-main);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(197, 160, 101, 0.3);
+  color: inherit;
+}
+
+::-moz-selection {
+  background: rgba(197, 160, 101, 0.3);
+  color: inherit;
 }

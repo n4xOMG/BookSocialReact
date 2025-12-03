@@ -1,73 +1,51 @@
-import { Avatar, Box, Card, CardContent, CardHeader, Grid, IconButton, List, Typography } from "@mui/material";
-import React from "react";
-import { likePost } from "../../redux/post/post.action";
-import CommentSection from "../BookClubs/CommentSection";
-import { useDispatch } from "react-redux";
-import { Favorite, Message, Share } from "@mui/icons-material";
+import { Card, CardContent, List, Typography, useTheme } from "@mui/material";
+import { useAuthCheck } from "../../utils/useAuthCheck";
+import PostItem from "../BookClubs/PostItem";
 
 const UserPosts = ({ posts }) => {
-  const dispatch = useDispatch();
-  const handleLike = (id) => {
-    dispatch(likePost(id));
-  };
+  const { checkAuth } = useAuthCheck();
+  const theme = useTheme();
+  const hasPosts = Array.isArray(posts) && posts.length > 0;
+
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
+    <Card
+      sx={{
+        borderRadius: "20px",
+        background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.7)" : "rgba(255, 255, 255, 0.7)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid",
+        borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.2)" : "rgba(157, 80, 187, 0.15)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+      }}
+    >
+      <CardContent sx={{ p: 3 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{
+            fontFamily: '"Playfair Display", serif',
+            fontWeight: 700,
+            background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            mb: 2,
+          }}
+        >
           Posts
         </Typography>
-        <List>
-          {posts.map((post) => (
-            <Card sx={{ mb: 3 }}>
-              <CardHeader
-                avatar={<Avatar src={post.user.avatarUrl || "/placeholder.svg"} alt={post.user.fullname} />}
-                title={<Typography variant="h6">{post.user.fullname}</Typography>}
-                subheader={post.timestamp ? new Date(post.timestamp).toLocaleString() : ""}
-              />
-              <CardContent>
-                {post.content && (
-                  <Typography variant="body1" gutterBottom>
-                    {post.content}
-                  </Typography>
-                )}
-                {post.images && post.images.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Grid container spacing={1}>
-                      {post.images.map((imageUrl, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Box
-                            component="img"
-                            src={imageUrl}
-                            alt={`Post Image ${index + 1}`}
-                            sx={{
-                              width: "100%",
-                              height: "auto",
-                              objectFit: "cover",
-                              borderRadius: 1,
-                            }}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Box>
-                )}
-              </CardContent>
-              <Box sx={{ display: "flex", justifyContent: "space-between", p: 2 }}>
-                <IconButton onClick={() => handleLike(post.id)}>
-                  <Favorite color={post.likes > 0 ? "error" : "inherit"} />
-                  {post.likes}
-                </IconButton>
-                <IconButton>
-                  <Message /> {post.comments || 0}
-                </IconButton>
-                <IconButton>
-                  <Share />
-                </IconButton>
-              </Box>
-              <CommentSection postId={post.id} />
-            </Card>
-          ))}
-        </List>
+        {hasPosts ? (
+          <List>
+            {posts.map((post) => (
+              <PostItem key={post.id} post={post} checkAuth={checkAuth} />
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            No posts to display yet.
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );

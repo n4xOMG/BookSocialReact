@@ -1,4 +1,3 @@
-import React, { useEffect, useMemo, useState } from "react";
 import { ClientSideSuspense, LiveblocksProvider, RoomProvider } from "@liveblocks/react";
 import {
   Alert,
@@ -13,15 +12,16 @@ import {
   Snackbar,
   Typography,
 } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { editChapterAction, getChapterByRoomId, publishChapterAction } from "../../../../../redux/chapter/chapter.action";
 import { useYjs } from "../../../../../hooks/useYjs";
-import { processChapterContent, prepareContentForSaving } from "./contentProcessing";
+import { editChapterAction, getChapterByRoomId, publishChapterAction } from "../../../../../redux/chapter/chapter.action";
 import { buildPresenceUser } from "../../../../../utils/presenceUtils";
-import { EditorHeader } from "./EditorHeader";
 import { CollaborativeSlateEditor } from "./CollaborativeSlateEditor";
+import { prepareContentForSaving, processChapterContent } from "./contentProcessing";
+import { EditorHeader } from "./EditorHeader";
 
 /**
  * Wrapper component that sets up Liveblocks provider and room
@@ -136,26 +136,7 @@ export const CollaborativeEditor = ({ presenceUser, roomId }) => {
 
   const chapterAuthorId = useMemo(() => {
     if (!chapter) return null;
-    const candidates = [
-      chapter.authorId,
-      chapter.author?.id,
-      chapter.ownerId,
-      chapter.owner?.id,
-      chapter.createdById,
-      chapter.createdBy?.id,
-      chapter.userId,
-      chapter.user?.id,
-      chapter.book?.authorId,
-      chapter.book?.author?.id,
-      chapter.book?.createdById,
-      chapter.book?.createdBy?.id,
-    ].filter((value) => value !== undefined && value !== null);
-
-    if (candidates.length === 0) {
-      return null;
-    }
-
-    return String(candidates[0]);
+    return chapter.authorId;
   }, [chapter]);
 
   const isAdmin = useMemo(() => {
@@ -167,7 +148,7 @@ export const CollaborativeEditor = ({ presenceUser, roomId }) => {
   const canManageChapter = useMemo(() => {
     if (isAdmin) return true;
     if (!currentUser?.id || !chapterAuthorId) return false;
-    return String(currentUser.id) === chapterAuthorId;
+    return String(currentUser.id) === String(chapterAuthorId);
   }, [isAdmin, currentUser?.id, chapterAuthorId]);
 
   const shareUrl = useMemo(() => {
@@ -212,9 +193,12 @@ export const CollaborativeEditor = ({ presenceUser, roomId }) => {
           navigate(-1);
         }, 1500);
       } catch (error) {
-        setSnackbarMessage("Failed to save draft.");
+        // Handle backend permission errors
+        const errorMessage = error?.response?.data?.message || error?.message || "Failed to save draft.";
+        setSnackbarMessage(errorMessage);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+        console.error("Save draft error:", error);
       } finally {
         setIsSaving(false);
       }
@@ -270,9 +254,12 @@ export const CollaborativeEditor = ({ presenceUser, roomId }) => {
           navigate(-1);
         }, 1500);
       } catch (error) {
-        setSnackbarMessage("Failed to publish chapter.");
+        // Handle backend permission errors
+        const errorMessage = error?.response?.data?.message || error?.message || "Failed to publish chapter.";
+        setSnackbarMessage(errorMessage);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+        console.error("Publish chapter error:", error);
       } finally {
         setIsPublishing(false);
       }

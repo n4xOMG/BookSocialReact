@@ -21,7 +21,8 @@ export default function Layout({
       sx={{
         display: "flex",
         width: "100%",
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         backgroundAttachment: "fixed",
         backgroundImage: theme.palette.background.backgroundImage,
         backgroundSize: "cover",

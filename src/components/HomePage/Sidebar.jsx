@@ -159,7 +159,6 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        overflowY: "auto",
         scrollbarWidth: "thin",
         scrollbarColor: `${theme.palette.primary.main} transparent`,
         "&::-webkit-scrollbar": {
@@ -195,7 +194,7 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
                 selected={isActive}
                 sx={{
                   my: 0.5,
-                  mx: 1,
+                  // mx: 1,
                   borderRadius: "12px",
                   py: 1.2,
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -275,7 +274,6 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
       <Box
         sx={{
           mt: "auto",
-          p: 1,
           borderTop: `1px solid ${theme.palette.divider}`,
           position: "sticky",
           bottom: 0,

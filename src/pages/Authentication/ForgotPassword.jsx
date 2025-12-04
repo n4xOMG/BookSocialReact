@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { sendForgotPasswordMail } from "../../redux/auth/auth.action";
 import { Alert, Box, Button, CircularProgress, Snackbar, TextField, Typography, Paper, IconButton, CssBaseline } from "@mui/material";
@@ -21,7 +21,7 @@ const ForgotPassword = ({ toggleTheme }) => {
   const dispatch = useDispatch();
   const authState = useSelector((store) => store.auth);
   const theme = useTheme();
-  const isDarkMode = theme.palette.mode === "dark";
+  const isDarkMode = useMemo(() => theme.palette.mode === "dark", [theme.palette.mode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

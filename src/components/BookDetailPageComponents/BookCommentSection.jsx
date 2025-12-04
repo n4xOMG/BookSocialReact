@@ -44,7 +44,6 @@ const BookCommentSection = ({ bookId, user }) => {
   const dispatch = useDispatch();
   const { checkAuth, AuthDialog } = useAuthCheck();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
-  
 
   const fetchComments = useCallback(
     async (page = 0, size = 10) => {
@@ -216,7 +215,7 @@ const BookCommentSection = ({ bookId, user }) => {
               borderRadius: 2,
               backgroundColor: "background.paper",
               "&:hover": {
-                  backgroundColor: "action.hover",
+                backgroundColor: "action.hover",
               },
             },
           }}

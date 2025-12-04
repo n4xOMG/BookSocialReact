@@ -19,7 +19,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import background from "../../assets/images/signin_background.png";
@@ -70,6 +70,11 @@ export default function SignUp({ toggleTheme }) {
   });
   const theme = useTheme();
 
+  // Clear any existing JWT on component mount for security
+  useEffect(() => {
+    localStorage.removeItem("jwt");
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setRegisterData((prev) => ({
@@ -100,7 +105,6 @@ export default function SignUp({ toggleTheme }) {
 
     if (Object.values(newRequirements).every((req) => req)) {
       setError("");
-      setIsLoading(false);
     }
   };
 
@@ -188,7 +192,6 @@ export default function SignUp({ toggleTheme }) {
   };
 
   useEffect(() => {
-    localStorage.removeItem("jwt");
     setPasswordsMatch(registerData.password === confirmPassword);
   }, [registerData.password, confirmPassword]);
 
@@ -199,7 +202,7 @@ export default function SignUp({ toggleTheme }) {
     }
   }, [authError]);
 
-  const isDarkMode = theme.palette.mode === "dark";
+  const isDarkMode = useMemo(() => theme.palette.mode === "dark", [theme.palette.mode]);
   const submissionError = authError || fallbackError;
 
   return (
@@ -499,15 +502,27 @@ export default function SignUp({ toggleTheme }) {
                         </Typography>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
-                        {requirements.uppercase && requirements.lowercase ? <Check color="success" /> : <DangerousIcon color="error" />}
+                        {requirements.uppercase ? <Check color="success" /> : <DangerousIcon color="error" />}
                         <Typography variant="body2" sx={{ ml: 1 }}>
-                          Contains uppercase and lowercase letters
+                          Contains uppercase letter
                         </Typography>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
-                        {requirements.number && requirements.special ? <Check color="success" /> : <DangerousIcon color="error" />}
+                        {requirements.lowercase ? <Check color="success" /> : <DangerousIcon color="error" />}
                         <Typography variant="body2" sx={{ ml: 1 }}>
-                          Includes numbers and special characters
+                          Contains lowercase letter
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {requirements.number ? <Check color="success" /> : <DangerousIcon color="error" />}
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          Includes number
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {requirements.special ? <Check color="success" /> : <DangerousIcon color="error" />}
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          Includes special character
                         </Typography>
                       </Box>
                     </Box>

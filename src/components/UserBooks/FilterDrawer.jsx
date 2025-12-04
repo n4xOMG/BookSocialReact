@@ -1,19 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Drawer,
-  FormControlLabel,
-  FormGroup,
-  IconButton,
-  List,
-  ListSubheader,
-  Typography,
-  Divider
-} from "@mui/material";
+import { Box, Button, Checkbox, Divider, Drawer, FormControlLabel, IconButton, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
 const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilterChange }) => {
@@ -59,7 +47,16 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
         },
       }}
     >
-      <Box sx={{ p: 3, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper }}>
+      <Box
+        sx={{
+          p: 3,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          bgcolor: theme.palette.background.paper,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <FilterListIcon sx={{ color: theme.palette.primary.main }} />
           <Typography variant="h6" className="font-serif" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
@@ -73,7 +70,11 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
             sx={{
               border: `1px solid ${theme.palette.divider}`,
               color: theme.palette.text.secondary,
-              "&:hover": { color: theme.palette.error.main, borderColor: theme.palette.error.main, bgcolor: theme.palette.error.light + "20" },
+              "&:hover": {
+                color: theme.palette.error.main,
+                borderColor: theme.palette.error.main,
+                bgcolor: theme.palette.error.light + "20",
+              },
             }}
             title="Reset filters"
           >
@@ -96,7 +97,10 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
       <Box sx={{ overflow: "auto", flex: 1, p: 2 }}>
         {categories?.length > 0 && (
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: theme.palette.primary.main, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ mb: 1.5, fontWeight: 700, color: theme.palette.primary.main, textTransform: "uppercase", letterSpacing: "0.05em" }}
+            >
               Categories
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
@@ -111,7 +115,11 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
                       sx={{ color: theme.palette.text.secondary, "&.Mui-checked": { color: theme.palette.primary.main } }}
                     />
                   }
-                  label={<Typography variant="body2" sx={{ color: theme.palette.text.primary }}>{category.name}</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
+                      {category.name}
+                    </Typography>
+                  }
                   sx={{ ml: 0, mr: 0, "&:hover": { bgcolor: theme.palette.action.hover, borderRadius: 1 } }}
                 />
               ))}
@@ -123,7 +131,10 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
 
         {tags?.length > 0 && (
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: theme.palette.secondary.main, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ mb: 1.5, fontWeight: 700, color: theme.palette.secondary.main, textTransform: "uppercase", letterSpacing: "0.05em" }}
+            >
               Tags
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
@@ -138,7 +149,11 @@ const FilterDrawer = ({ open, onClose, categories, tags, filterOptions, onFilter
                       sx={{ color: theme.palette.text.secondary, "&.Mui-checked": { color: theme.palette.secondary.main } }}
                     />
                   }
-                  label={<Typography variant="body2" sx={{ color: theme.palette.text.primary }}>{tag.name}</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
+                      {tag.name}
+                    </Typography>
+                  }
                   sx={{ ml: 0, mr: 0, "&:hover": { bgcolor: theme.palette.action.hover, borderRadius: 1 } }}
                 />
               ))}

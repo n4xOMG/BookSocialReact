@@ -1,5 +1,4 @@
-import * as React from "react";
-import { styled, useTheme } from "@mui/material/styles";
+import { Book, Bookmark, Brightness4, Brightness7, Chat, ChevronLeft, ChevronRight, Dashboard, Explore, Money } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -11,28 +10,14 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  SwipeableDrawer,
   Tooltip,
   Typography,
   useMediaQuery,
-  SwipeableDrawer,
 } from "@mui/material";
-import {
-  Book,
-  Bookmark,
-  Chat,
-  Explore,
-  Money,
-  Person,
-  Menu,
-  Close,
-  Brightness4,
-  Brightness7,
-  ChevronLeft,
-  ChevronRight,
-  Dashboard,
-} from "@mui/icons-material";
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { styled, useTheme } from "@mui/material/styles";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
 import ReadingHistoryCard from "./ReadingHistoryCard";

@@ -1,21 +1,8 @@
 import { Check, Visibility, VisibilityOff } from "@mui/icons-material";
 import DangerousIcon from "@mui/icons-material/Dangerous";
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  Snackbar,
-  TextField,
-  Typography,
-  Paper,
-  CssBaseline,
-  Link,
-  Avatar,
-} from "@mui/material";
+import { Alert, Box, Button, CircularProgress, IconButton, Snackbar, TextField, Typography, Paper, CssBaseline, Link } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { resetPasswordAction } from "../../redux/auth/auth.action";
@@ -38,7 +25,7 @@ const ResetPassword = ({ toggleTheme }) => {
   const [searchParams] = useSearchParams();
   const code = searchParams.get("code");
   const theme = useTheme();
-  const isDarkMode = theme.palette.mode === "dark";
+  const isDarkMode = useMemo(() => theme.palette.mode === "dark", [theme.palette.mode]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -77,7 +64,6 @@ const ResetPassword = ({ toggleTheme }) => {
 
     if (Object.values(newRequirements).every((req) => req)) {
       setError("");
-      // setIsLoading(false); // Note: keep isLoading for form submission
     }
   };
 
@@ -111,7 +97,6 @@ const ResetPassword = ({ toggleTheme }) => {
     }
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       await dispatch(resetPasswordAction(code, password));
       setOpen(true);
       setError("");
@@ -279,15 +264,27 @@ const ResetPassword = ({ toggleTheme }) => {
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                {requirements.uppercase || requirements.lowercase ? <Check color="success" /> : <DangerousIcon color="error" />}
+                {requirements.uppercase ? <Check color="success" /> : <DangerousIcon color="error" />}
                 <Typography variant="body2" sx={{ ml: 1 }}>
-                  Contains uppercase and lowercase letters
+                  Contains uppercase letter
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                {requirements.number || requirements.special ? <Check color="success" /> : <DangerousIcon color="error" />}
+                {requirements.lowercase ? <Check color="success" /> : <DangerousIcon color="error" />}
                 <Typography variant="body2" sx={{ ml: 1 }}>
-                  Includes numbers or special characters
+                  Contains lowercase letter
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                {requirements.number ? <Check color="success" /> : <DangerousIcon color="error" />}
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Includes number
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                {requirements.special ? <Check color="success" /> : <DangerousIcon color="error" />}
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Includes special character
                 </Typography>
               </Box>
             </Box>

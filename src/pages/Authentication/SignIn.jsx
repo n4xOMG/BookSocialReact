@@ -1,25 +1,23 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
-import Avatar from "@mui/material/Avatar";
-import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
-import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import Link from "@mui/material/Link";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import Typography from "@mui/material/Typography";
-import Container from "@mui/material/Container";
-import { useDispatch, useSelector } from "react-redux";
-import { getCurrentUserByJwt, loginUserAction } from "../../redux/auth/auth.action";
-import { Alert, IconButton, Paper } from "@mui/material"; // Thêm Paper component
-import { useNavigate, useLocation } from "react-router-dom";
-import LoadingSpinner from "../../components/LoadingSpinner";
-import background from "../../assets/images/signin_background.png";
 import { useTheme } from "@emotion/react";
-import { Brightness7, Brightness4 } from "@mui/icons-material";
+import { Brightness4, Brightness7 } from "@mui/icons-material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Alert, IconButton, Paper } from "@mui/material";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import Container from "@mui/material/Container";
+import CssBaseline from "@mui/material/CssBaseline";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Grid from "@mui/material/Grid";
+import Link from "@mui/material/Link";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import background from "../../assets/images/signin_background.png";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { getCurrentUserByJwt, loginUserAction } from "../../redux/auth/auth.action";
 
 function Copyright(props) {
   return (
@@ -33,10 +31,10 @@ export default function SignIn({ toggleTheme }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const authError = useSelector((store) => store.auth.error);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
   const theme = useTheme();
+  const isDarkMode = theme.palette.mode === "dark";
 
   // Check for redirect state
   useEffect(() => {
@@ -60,11 +58,14 @@ export default function SignIn({ toggleTheme }) {
       const rememberMe = data.get("remember") === "remember";
 
       const result = await dispatch(loginUserAction({ data: json, rememberMe }));
+
+      // Handle error case first
       if (result?.error) {
         setLoginError(result.error);
         return;
       }
 
+      // Handle success case
       if (result?.payload?.token) {
         const userResult = await dispatch(getCurrentUserByJwt(result.payload.token));
         if (userResult?.payload) {
@@ -75,8 +76,7 @@ export default function SignIn({ toggleTheme }) {
           setLoginError("Session expired. Please try logging in again.");
         }
       } else {
-        const message = result?.payload?.message || "Authentication failed.";
-        setLoginError(message);
+        setLoginError("Authentication failed. Please try again.");
       }
     } catch (e) {
       console.error("Error signing in: ", e);
@@ -85,14 +85,6 @@ export default function SignIn({ toggleTheme }) {
       setLoading(false);
     }
   };
-
-  const isDarkMode = theme.palette.mode === "dark";
-
-  useEffect(() => {
-    if (authError) {
-      setLoginError(authError);
-    }
-  }, [authError]);
 
   return (
     <>

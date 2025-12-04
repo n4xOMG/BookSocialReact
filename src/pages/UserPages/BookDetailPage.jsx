@@ -1,6 +1,6 @@
 import { FavoriteBorder, MenuBook, Report, StarRate } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useTheme } from "@mui/material";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -42,7 +42,7 @@ export const BookDetailPage = () => {
   const book = useSelector((store) => store.book.book);
   const relatedBooks = useSelector((store) => store.book.relatedBooks);
   const rating = useSelector((store) => store.book.rating);
-  const progresses = useSelector((store) => store.book.progresses || []);
+  const progresses = useSelector((store) => store.book.progresses);
   const categories = useSelector((store) => store.category.categories);
   const tags = useSelector((store) => store.tag.tags);
   const user = useSelector((store) => store.auth.user);

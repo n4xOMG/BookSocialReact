@@ -1,5 +1,5 @@
 import { Alert, Box, Button, CircularProgress, Snackbar, TextField, Typography, Paper, IconButton, CssBaseline } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { verifyOtpAction } from "../../redux/auth/auth.action";
@@ -29,7 +29,7 @@ export default function OtpVerification({ toggleTheme }) {
 
   const email = location.state?.email;
   const context = location.state?.context || "register";
-  const isDarkMode = theme.palette.mode === "dark";
+  const isDarkMode = useMemo(() => theme.palette.mode === "dark", [theme.palette.mode]);
 
   useEffect(() => {
     if (!email) {
@@ -38,14 +38,32 @@ export default function OtpVerification({ toggleTheme }) {
   }, [email, navigate]);
 
   const handleInputChange = (index, value) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
+    // Only allow digits and handle paste
+    const sanitizedValue = value.replace(/\D/g, "");
 
-      if (value && index < 5) {
+    if (sanitizedValue.length === 0) {
+      // Handle deletion
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+    } else if (sanitizedValue.length === 1) {
+      // Handle single digit input
+      const newOtp = [...otp];
+      newOtp[index] = sanitizedValue;
+      setOtp(newOtp);
+      if (index < 5) {
         inputRefs.current[index + 1]?.focus();
       }
+    } else if (sanitizedValue.length > 1 && index === 0) {
+      // Handle paste of multiple digits at first input
+      const newOtp = [...otp];
+      for (let i = 0; i < Math.min(sanitizedValue.length, 6); i++) {
+        newOtp[i] = sanitizedValue[i];
+      }
+      setOtp(newOtp);
+      // Focus last filled input or stay at current
+      const nextIndex = Math.min(sanitizedValue.length, 5);
+      inputRefs.current[nextIndex]?.focus();
     }
   };
 

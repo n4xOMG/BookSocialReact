@@ -1,26 +1,26 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import UnlockIcon from "@mui/icons-material/LockOpen";
 import {
+  Alert,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
   List,
   ListItem,
   ListItemText,
-  IconButton,
   Tooltip,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-  Alert,
   useMediaQuery,
 } from "@mui/material";
-import UnlockIcon from "@mui/icons-material/LockOpen";
+import { memo, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { getAllChaptersByBookIdAction, unlockChapterAction } from "../../../redux/chapter/chapter.action";
 import { isTokenExpired } from "../../../utils/useAuthCheck";
 
-export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
+export const TabChapters = memo(function TabChapters({ chapters, progresses, onNavigate, bookId }) {
   const dispatch = useDispatch();
   const jwt = isTokenExpired(localStorage.getItem("jwt")) ? null : localStorage.getItem("jwt");
   const { user } = useSelector((state) => state.auth);
@@ -28,6 +28,20 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [error, setError] = useState("");
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+
+  // Optimize progress lookup: O(N) -> O(1)
+  const progressMap = useMemo(() => {
+    const map = new Map();
+    if (Array.isArray(progresses)) {
+      progresses.forEach((p) => {
+        const chapterId = p?.chapterId || p?.chapter?.id;
+        if (chapterId) {
+          map.set(String(chapterId).toLowerCase(), p);
+        }
+      });
+    }
+    return map;
+  }, [progresses]);
 
   const handleUnlockClick = (chapter) => {
     setSelectedChapter(chapter);
@@ -46,7 +60,6 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
     try {
       await dispatch(unlockChapterAction(selectedChapter.id));
       await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
-      // Optionally, update the UI without reloading
       handleDialogClose();
     } catch (err) {
       console.error(err);
@@ -58,15 +71,7 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
     <>
       <List sx={{ spaceY: isMobile ? 1 : 2 }}>
         {chapters?.map((chapter) => {
-          const progress = Array.isArray(progresses)
-            ? progresses.find((p) => {
-                const progressChapterId = p?.chapterId || p?.chapter?.id;
-                if (!progressChapterId || !chapter?.id) {
-                  return false;
-                }
-                return String(progressChapterId).toLowerCase() === String(chapter.id).toLowerCase();
-              })
-            : null;
+          const progress = progressMap.get(String(chapter.id).toLowerCase());
 
           const rawProgress = progress?.progress;
           const numericProgress = typeof rawProgress === "number" ? rawProgress : parseFloat(rawProgress);
@@ -86,7 +91,6 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
                 borderRadius: 2,
                 transition: "all 0.2s ease-in-out",
                 height: 60,
-                borderRadius: 1.5,
                 border: "1px solid",
                 borderColor: "divider",
                 boxShadow: "0 8px 8px 0 rgba(0, 0, 0, 0.37)",
@@ -167,4 +171,4 @@ export function TabChapters({ chapters, progresses, onNavigate, bookId }) {
       </Dialog>
     </>
   );
-}
+});

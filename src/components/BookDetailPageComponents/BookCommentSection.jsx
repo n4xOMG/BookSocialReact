@@ -4,10 +4,8 @@ import {
   Button,
   CircularProgress,
   Divider,
-  IconButton,
   List,
   ListItem,
-  Paper,
   Snackbar,
   TextField,
   Typography,
@@ -17,7 +15,7 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import CommentIcon from "@mui/icons-material/Comment";
 import React, { memo, useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import {
   createBookCommentAction,
   createReplyBookCommentAction,
@@ -28,7 +26,15 @@ import { useAuthCheck } from "../../utils/useAuthCheck";
 import CommentItem from "../BookClubs/CommentItem";
 
 const BookCommentSection = ({ bookId, user }) => {
-  const { bookComments, pagination } = useSelector((store) => store.comment);
+  // Optimize selector to avoid re-renders on unrelated state changes
+  const { bookComments, pagination } = useSelector(
+    (store) => ({
+      bookComments: store.comment.bookComments,
+      pagination: store.comment.pagination,
+    }),
+    shallowEqual
+  );
+
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -38,7 +44,6 @@ const BookCommentSection = ({ bookId, user }) => {
   const dispatch = useDispatch();
   const { checkAuth, AuthDialog } = useAuthCheck();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
-  
 
   const fetchComments = useCallback(
     async (page = 0, size = 10) => {
@@ -60,7 +65,7 @@ const BookCommentSection = ({ bookId, user }) => {
         setLoadingMore(false);
       }
     },
-    [bookId, dispatch]
+    [bookId, dispatch, user]
   );
 
   useEffect(() => {
@@ -109,7 +114,7 @@ const BookCommentSection = ({ bookId, user }) => {
         setOpen(true);
       }
     }),
-    [newComment, bookId, dispatch, user, checkAuth]
+    [newComment, bookId, dispatch, checkAuth]
   );
 
   const handleSubmitReply = useCallback(
@@ -143,7 +148,7 @@ const BookCommentSection = ({ bookId, user }) => {
         setOpen(true);
       }
     }),
-    [newReply, bookId, dispatch]
+    [newReply, bookId, dispatch, checkAuth]
   );
 
   const handleDeleteComment = useCallback(
@@ -156,7 +161,7 @@ const BookCommentSection = ({ bookId, user }) => {
         setOpen(true);
       }
     }),
-    [dispatch]
+    [dispatch, checkAuth]
   );
 
   const handleClose = useCallback((event, reason) => {
@@ -210,7 +215,7 @@ const BookCommentSection = ({ bookId, user }) => {
               borderRadius: 2,
               backgroundColor: "background.paper",
               "&:hover": {
-                  backgroundColor: "action.hover",
+                backgroundColor: "action.hover",
               },
             },
           }}

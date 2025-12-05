@@ -14,17 +14,15 @@ import {
   OutlinedInput,
   Box,
   Typography,
-  IconButton,
   useTheme,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
-import UploadToCloudinary from "../../../../utils/uploadToCloudinary";
+import { UploadToServer } from "../../../../utils/uploadToServer";
 import { editBookAction } from "../../../../redux/book/book.action";
 
 const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) => {
   const dispatch = useDispatch();
 
-  // Local state for the form fields
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("");
@@ -45,42 +43,42 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
       setStatus(currentBook.status || "");
       setCategory(currentBook.categoryId || "");
       setSelectedTags(currentBook.tagIds || []);
-      setBookCoverPreview(currentBook.bookCover || "");
+      const cover = currentBook.bookCover;
+      if (cover && typeof cover === "object") {
+        setBookCoverPreview(cover.url || "");
+      } else {
+        setBookCoverPreview(cover || "");
+      }
       setCoverFile(null);
     }
   }, [currentBook]);
-  const getTagsByIds = (tagIds) => {
-    return tags.filter((tag) => tagIds.includes(tag.id));
+  const resolveUsername = () => {
+    if (!currentBook) return "admin";
+    return currentBook.author?.username || currentBook.authorName || "admin";
   };
   const handleSubmit = async () => {
-    // Basic validation
     if (!title || !description || !language || !status || !category) {
       setError("Please fill in all required fields.");
       return;
     }
-    const hasManga = getTagsByIds(selectedTags).some((tag) => tag.name.toLowerCase() === "novel");
-    const hasNovel = getTagsByIds(selectedTags).some((tag) => tag.name.toLowerCase() === "manga");
-
-    if (!hasManga && !hasNovel) {
-      setError("You must select either 'novel' or 'manga' tag.");
-      return;
-    } else if (hasManga && hasNovel) {
-      setError("A book cannot have both 'manga' and 'novel' tags.");
-      return;
-    } else {
-      setError("");
-    }
-
-    let uploadedImageUrl = currentBook.bookCover;
+    setError("");
+    let updatedBookCover = currentBook?.bookCover ?? null;
     setLoading(true);
     if (coverFile) {
       try {
-        uploadedImageUrl = await UploadToCloudinary(coverFile, "books");
+        const uploadResult = await UploadToServer(coverFile, resolveUsername(), `book_${title}_${Date.now()}`);
+        updatedBookCover = {
+          url: uploadResult.url,
+          isMild: uploadResult.safety?.level === "MILD",
+        };
       } catch (uploadError) {
         console.error("Failed to upload image:", uploadError);
         setError("Failed to upload the book cover. Please try again.");
+        setLoading(false);
         return;
       }
+    } else if (updatedBookCover && typeof updatedBookCover === "string") {
+      updatedBookCover = { url: updatedBookCover };
     }
 
     const updatedBook = {
@@ -91,15 +89,15 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
       status,
       categoryId: category,
       tagIds: selectedTags,
-      bookCover: uploadedImageUrl,
+      bookCover: updatedBookCover,
     };
 
     try {
       await dispatch(editBookAction(currentBook.id, updatedBook));
-      handleClose(); // Close the dialog upon successful submission
+      handleClose();
     } catch (updateError) {
       console.error("Failed to update book:", updateError);
-      setError("Failed to update the book. Please try again.");
+      setError(updateError?.message || "Failed to update the book. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -110,19 +108,6 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
     } = event;
     const newTags = typeof value === "string" ? value.split(",") : value;
     setSelectedTags(newTags);
-
-    const hasManga = getTagsByIds(newTags).some((tag) => tag.name.toLowerCase() === "manga");
-    const hasNovel = getTagsByIds(newTags).some((tag) => tag.name.toLowerCase() === "novel");
-
-    if (!hasManga && !hasNovel) {
-      setError("You must select either 'novel' or 'manga' tag.");
-      return;
-    } else if (hasManga && hasNovel) {
-      setError("A book cannot have both 'manga' and 'novel' tags.");
-      return;
-    } else {
-      setError("");
-    }
   };
 
   const handleCoverChange = (event) => {
@@ -135,8 +120,7 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: "bold", color: theme.palette.primary.main }}
-      >Edit Book</DialogTitle>
+      <DialogTitle sx={{ fontWeight: "bold", color: theme.palette.primary.main }}>Edit Book</DialogTitle>
       <DialogContent dividers>
         <Box
           component="form"
@@ -202,7 +186,7 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
           </FormControl>
 
           {/* Tags Selection (Multiple Select) */}
-          <FormControl fullWidth variant="outlined" error={!!error}>
+          <FormControl fullWidth variant="outlined">
             <InputLabel id="tags-select-label">Tags</InputLabel>
             <Select
               labelId="tags-select-label"
@@ -262,7 +246,12 @@ const EditBookDialog = ({ open, handleClose, currentBook, categories, tags }) =>
         <Button onClick={handleClose} color="secondary" disabled={loading}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading} sx={{ fontWeight: "bold", color: "white", "&:hover": { color: theme.palette.primary.dark } }}>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={loading}
+          sx={{ fontWeight: "bold", color: "white", "&:hover": { color: theme.palette.primary.dark } }}
+        >
           {loading ? "Saving..." : "Save Changes"}
         </Button>
       </DialogActions>

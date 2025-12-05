@@ -9,6 +9,21 @@ const emptyNode = {
   children: [{ text: "" }],
 };
 
+const createEmptySlateValue = () => JSON.parse(JSON.stringify(EMPTY_CONTENT));
+
+const cloneSlateValue = (value) => {
+  if (!Array.isArray(value) || value.length === 0) {
+    return createEmptySlateValue();
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (error) {
+    console.warn("Failed to clone Slate content, using empty value instead.", error);
+    return createEmptySlateValue();
+  }
+};
+
 const hasMeaningfulContent = (value) => {
   if (!Array.isArray(value)) {
     return false;
@@ -65,11 +80,25 @@ export const useSlateEditor = (sharedType, provider, initialContent, onContentCh
   const [editorReady, setEditorReady] = useState(false);
   const editorRef = useRef(null);
   const seededRef = useRef(false);
+  const cachedInitialValueRef = useRef(cloneSlateValue(initialContent));
+  const previousSharedTypeRef = useRef(null);
+
+  if (sharedType && previousSharedTypeRef.current !== sharedType) {
+    previousSharedTypeRef.current = sharedType;
+    seededRef.current = false;
+    cachedInitialValueRef.current = null;
+  }
 
   // Memoize initial value to prevent re-renders
   const initialValue = useMemo(() => {
-    return initialContent && initialContent.length > 0 ? JSON.parse(JSON.stringify(initialContent)) : EMPTY_CONTENT;
-  }, [initialContent]);
+    if (seededRef.current && cachedInitialValueRef.current) {
+      return cachedInitialValueRef.current;
+    }
+
+    const clonedValue = cloneSlateValue(initialContent);
+    cachedInitialValueRef.current = clonedValue;
+    return clonedValue;
+  }, [initialContent, sharedType]);
 
   // Create editor instance with Yjs integration
   const editor = useMemo(() => {

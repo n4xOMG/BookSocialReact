@@ -10,32 +10,33 @@ export default function MessageMenu() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { chats } = useSelector((state) => state.chat);
+  const { user } = useSelector((state) => state.auth);
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
+
   const open = Boolean(anchorEl);
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
+  const handleClick = (event) => setAnchorEl(event.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  const getUserChat = (chat) => {
+    if (!chat || !chat.userOne || !chat.userTwo) return null;
+    return chat.userOne.id === user.id ? chat.userTwo : chat.userOne;
   };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+
   const getLastMessageContent = (chat) => {
-    if (chat.messages && chat.messages.length > 0) {
+    if (chat.messages?.length > 0) {
       const lastMessage = chat.messages[chat.messages.length - 1];
       return lastMessage.content;
     }
-    return null;
+    return "No messages yet";
   };
+
   useEffect(() => {
     setLoading(true);
-    try {
-      dispatch(fetchUserChats());
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
-    }
+    dispatch(fetchUserChats()).finally(() => setLoading(false));
   }, [dispatch]);
+
   return (
     <>
       {loading ? (
@@ -53,6 +54,7 @@ export default function MessageMenu() {
               <Inbox />
             </Badge>
           </IconButton>
+
           <Menu
             anchorEl={anchorEl}
             open={open}
@@ -64,35 +66,47 @@ export default function MessageMenu() {
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, fontSize: 22 }}>
               Messages
             </Typography>
+
             <Paper sx={{ maxHeight: 300, overflowY: "auto" }}>
-              {chats?.map((chat, index) => (
-                <Box
-                  key={chat?.id}
-                  onClick={() => navigate(`/chats/${chat?.id}`)}
-                  sx={{
-                    backgroundColor: "background.paper",
-                    color: "black",
-                    cursor: "pointer",
-                    px: 1,
-                    py: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    "&:hover": {
-                      backgroundColor: "action.hover",
-                      color: "black",
-                    },
-                  }}
-                >
-                  <Avatar src={chat?.userOne?.avatarUrl} sx={{ mr: 2 }} />
-                  <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                      {chat?.userOne?.username}
-                    </Typography>
-                    <Typography variant="body2">{getLastMessageContent(chat)}</Typography>
+              {chats?.map((chat, index) => {
+                const otherUser = getUserChat(chat);
+
+                return (
+                  <Box
+                    key={chat?.id}
+                    onClick={() => {
+                      navigate(`/chats/${chat.id}`);
+                      handleClose();
+                    }}
+                    sx={{
+                      backgroundColor: "background.paper",
+                      cursor: "pointer",
+                      px: 1,
+                      py: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      "&:hover": {
+                        backgroundColor: "action.hover",
+                      },
+                    }}
+                  >
+                    <Avatar src={otherUser?.avatarUrl} sx={{ mr: 2 }} />
+                    <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                      <Typography variant="body1" sx={{ fontWeight: "bold" }} noWrap>
+                        {otherUser?.username || "Unknown"}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                        noWrap
+                      >
+                        {getLastMessageContent(chat)}
+                      </Typography>
+                    </Box>
+                    {index < chats.length - 1 && <Divider sx={{ my: 1 }} />}
                   </Box>
-                  {index < chats?.length - 1 && <Divider sx={{ my: 1 }} />}
-                </Box>
-              ))}
+                );
+              })}
             </Paper>
           </Menu>
         </div>

@@ -315,8 +315,7 @@ export default function MessagesPage() {
                 }}
               >
                 <Avatar
-                  src={currentChat.userOne.id === user.id ? user.avatarUrl : currentChat.userTwo.avatarUrl}
-                  sx={{
+                    src={currentChat.userOne.id === user.id ? currentChat.userTwo.avatarUrl : currentChat.userOne.avatarUrl}                  sx={{
                     width: 48,
                     height: 48,
                     border: "2px solid",

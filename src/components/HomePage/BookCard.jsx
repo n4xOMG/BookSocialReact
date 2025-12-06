@@ -190,8 +190,12 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
           </Typography>
         </Tooltip>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: "0.85rem" }}>
-          by {book.authorName || book.author?.name || "Unknown"}
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
+          Written by {book.artistName || book.author?.name || "Unknown"}
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: "0.75rem" }}>
+          Upload by {book.authorName || book.author?.name || "Unknown"}
         </Typography>
 
         <Box sx={{ mt: "auto" }}>
@@ -215,6 +219,19 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
 
           {bookTags.length > 0 && (
             <Stack direction="row" spacing={0.5} sx={{ overflow: "hidden", height: 24 }}>
+              <Chip
+                label={book.latestChapterNumber ? `Ch ${book.latestChapterNumber}` : "New"}
+                size="small"
+                sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText", 
+                    fontWeight: 600,
+                    borderRadius: "6px", 
+                    fontSize: "0.65rem",
+                    height: 22,
+                    border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              />
               {bookTags.slice(0, 2).map((tag) => (
                 <Chip
                   key={tag.id}

@@ -14,6 +14,7 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   // refs for navigation
   const prevRef = useRef(null);
@@ -60,7 +61,7 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
       sx={{
         position: "relative",
         width: "100%",
-        height: isMobile ? "70vh" : "75vh",
+        height: isMobile ? "630px" : isTablet ? "500px" : "600px",
         borderRadius: 4,
         overflow: "hidden",   
         "&:hover .nav-btn": { opacity: 1, visibility: "visible" },
@@ -79,7 +80,7 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
         observer={true}             
         observeParents={true}       
         resizeObserver={true}       
-        style={{ width: "100%", height: "100%", boxSizing: 'border-box'}}
+        style={{ width: "100%", height: "100%", boxSizing: 'border-box', bottom: isTablet ? 20 : 'auto'}}
       >
         {optimizedBooks.map((book) => (
           <SwiperSlide key={book.id}>
@@ -152,31 +153,37 @@ export const BookHeroCarousel = ({ books, categories = [], tags = [] }) => {
       <Box
         sx={{
           position: "absolute",
-          bottom:  isMobile ? 10 : 30 ,
-          left:  isMobile ? 10 : 50 ,
+          bottom:  isMobile ? 10 : isTablet ? 10 : 30 ,
+          left: isMobile ? "7%" : isTablet ? "auto" : 50 ,
+          right: isTablet ? 20 : "auto" ,
           transform: "none", 
-          width:  isMobile ? "90%": "35%" ,
+          width:  isMobile ? "90%": isTablet ? "50%" : "35%" ,
           zIndex: 3,
         }}
       >
         <Swiper
           onSwiper={setThumbsSwiper}
           modules={[Thumbs]}
-          slidesPerView={5}
-          spaceBetween={10}
+          // spaceBetween={10}
           watchSlidesProgress
+          // centeredSlides={true}
           breakpoints={{
-            600: { slidesPerView: 5 },
-            400: { slidesPerView: 4 },
-            0: { slidesPerView: 3 },
+            0: { 
+              slidesPerView: 4, 
+              spaceBetween: 5,
+            },
+            600: { 
+              slidesPerView: 5,
+              spaceBetween: 10,
+            },
           }}
         >
           {optimizedBooks.map((book) => (
             <SwiperSlide key={book.id}>
               <Box
                 sx={{
-                  width: "100%",
-                  height:  isMobile ? 50 : 70,
+                  width: isMobile ? "75%" : "100%",
+                  height:  70,
                   borderRadius: 2,
                   overflow: "hidden",
                   cursor: "pointer",

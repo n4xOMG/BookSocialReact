@@ -22,6 +22,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { searchBookAction } from "../../redux/book/book.action";
 import { getCategories } from "../../redux/category/category.action";
 import { getTags } from "../../redux/tag/tag.action";
+import { BookGrid } from "../../components/HomePage/BookGrid";
 
 const DEFAULT_PAGE_SIZE = 12;
 const DEFAULT_SORT = "id";
@@ -183,6 +184,10 @@ const BookSearchResults = () => {
   const totalResults = searchPageInfo?.totalElements ?? books.length;
   const showEmptyState = !searching && !error && books.length === 0;
 
+  const handleBookClick = (bookId) => {
+    navigate(`/books/${bookId}`);
+  };
+
   const getCategoryName = (book) => {
     if (book.categoryName) return book.categoryName;
     const match = categories.find((category) => category.id === book.categoryId);
@@ -285,53 +290,14 @@ const BookSearchResults = () => {
 
             {showEmptyState && <Alert severity="info">No books found matching your criteria.</Alert>}
 
-            <Grid container spacing={3}>
-              {books.map((book) => (
-                <Grid item xs={12} sm={6} lg={4} key={book.id}>
-                  <Card
-                    onClick={() => navigate(`/books/${book.id}`)}
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      cursor: "pointer",
-                      boxShadow: 3,
-                      transition: "transform 0.2s ease",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                      },
-                    }}
-                  >
-                    {book.bookCover && <CardMedia component="img" sx={{ height: 220 }} image={book.bookCover} alt={book.title} />}
-                    <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-                      <Typography gutterBottom variant="h6" component="div">
-                        {book.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Author: {book.authorName || book.author?.displayName || book.author?.name || "Unknown"}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Category: {getCategoryName(book)}
-                      </Typography>
-                      {book.description && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}
-                        >
-                          {book.description}
-                        </Typography>
-                      )}
-                      <Box sx={{ mt: 1, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                        {getTagLabels(book).map((tag) => (
-                          <Chip key={`${book.id}-${tag}`} label={tag} size="small" color="primary" variant="outlined" />
-                        ))}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+            {!searching && books.length > 0 && (
+                <BookGrid 
+                    books={books}
+                    onBookClick={handleBookClick}
+                    categories={categories} // Truyền categories
+                    tags={tags}             // Truyền tags
+                />
+            )}
 
             {totalPages > 1 && (
               <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>

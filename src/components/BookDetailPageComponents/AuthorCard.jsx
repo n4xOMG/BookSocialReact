@@ -57,13 +57,13 @@ const AuthorCard = ({ author, checkAuth }) => {
 
       <Divider sx={{ mb: 3 }} />
 
-      <Box sx={{ display: "flex", alignItems: "flex-start", flexDirection: isMobile ? "column" : "row", gap: 3 }}>
+      <Box sx={{ display: "flex", alignItems: "flex-start", flexDirection: "row", gap: 3 }}>
         <Avatar
           src={author.avatarUrl}
           alt={author.username}
           sx={{
-            width: 80,
-            height: 80,
+            width: isMobile ? 60 : 80,
+            height: isMobile ? 60 : 80,
             border: `3px solid ${theme.palette.primary.main}40`,
             boxShadow: theme.shadows[3],
             transition: "all 0.3s ease",
@@ -78,10 +78,11 @@ const AuthorCard = ({ author, checkAuth }) => {
           <Box
             sx={{
               display: "flex",
-              alignItems: isMobile ? "flex-start" : "center",
+              flexWrap: isMobile ? "wrap" : "nowrap",
+              alignItems: "center",
               justifyContent: "space-between",
               mb: 1,
-              flexDirection: isMobile ? "column" : "row",
+              flexDirection: "row",
               gap: 1,
             }}
           >
@@ -90,6 +91,7 @@ const AuthorCard = ({ author, checkAuth }) => {
               sx={{
                 fontWeight: 700,
                 color: theme.palette.primary.main,
+                flexShrink: 0
               }}
             >
               {author.username}

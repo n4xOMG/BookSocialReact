@@ -98,7 +98,7 @@ const BookClubs = () => {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100%", bgcolor: theme.palette.background.default }}>
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="md" sx={{ mt: isMobile ? 2 : 4, mb: 2 }}>
         <Paper
           elevation={0}
           sx={{
@@ -117,7 +117,7 @@ const BookClubs = () => {
             sx={{
               mb: 2,
               fontWeight: 700,
-              fontSize: "1.75rem",
+              fontSize: isMobile ? "1.25rem" :"1.75rem",
               color: theme.palette.text.primary,
             }}
           >

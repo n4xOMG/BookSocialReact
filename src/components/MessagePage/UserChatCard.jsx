@@ -1,17 +1,17 @@
 import { MoreHorizRounded } from "@mui/icons-material";
-import { Avatar, Box, Card, CardHeader, IconButton, useTheme } from "@mui/material";
-import React from "react";
+import { Avatar, Card, CardHeader, IconButton, useTheme } from "@mui/material";
 import { useSelector } from "react-redux";
 
 export default function UserChatCard({ chat, isSelected }) {
   const { user } = useSelector((state) => state.auth);
   const theme = useTheme();
   const userChat = chat.userOne.id === user.id ? chat.userTwo : chat.userOne;
-  const getInitials = (user) => {
-      if (!user || !user.username) return '?';
-      return user.username.charAt(0).toUpperCase();
+
+  const getInitials = (u) => {
+    if (!u || !u.username) return "?";
+    return u.username.charAt(0).toUpperCase();
   };
-  
+
   return (
     <Card
       sx={{
@@ -37,7 +37,7 @@ export default function UserChatCard({ chat, isSelected }) {
           : theme.palette.mode === "dark"
           ? "rgba(255, 255, 255, 0.1)"
           : "rgba(0, 0, 0, 0.1)",
-        borderLeft: isSelected ? `4px solid #9d50bb` : "none",
+        borderLeft: isSelected ? "4px solid #9d50bb" : "none",
         "&:hover": {
           background: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.15)" : "rgba(157, 80, 187, 0.1)",
           borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",

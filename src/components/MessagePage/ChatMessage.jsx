@@ -117,7 +117,7 @@ export default function ChatMessage({ message }) {
             <Typography
               variant="body2"
               sx={{
-                color: isReqUserMessages ? (theme.palette.mode === "light" ? "white" : "white") : "text.primary",
+                color: isReqUserMessages ? "white" : "text.primary",
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
               }}
@@ -132,7 +132,7 @@ export default function ChatMessage({ message }) {
                 display: "block",
                 mt: 0.5,
                 textAlign: "right",
-                color: isReqUserMessages ? (theme.palette.mode === "light" ? "primary.grey" : "rgba(255,255,255,0.7)") : "text.secondary",
+                color: isReqUserMessages ? "rgba(255,255,255,0.7)" : "text.secondary",
               }}
             >
               {formatRelativeTime(message.timestamp)}

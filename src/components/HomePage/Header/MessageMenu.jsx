@@ -26,8 +26,17 @@ export default function MessageMenu() {
 
   const getLastMessageContent = (chat) => {
     if (chat.messages?.length > 0) {
-      const lastMessage = chat.messages[chat.messages.length - 1];
-      return lastMessage.content;
+      // Sort messages by timestamp to get the most recent one
+      const sortedMessages = [...chat.messages].sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+      );
+      const lastMessage = sortedMessages[0];
+      if (lastMessage.content) {
+        return lastMessage.content;
+      }
+      if (lastMessage.image) {
+        return "📷 Image";
+      }
     }
     return "No messages yet";
   };
@@ -72,39 +81,40 @@ export default function MessageMenu() {
                 const otherUser = getUserChat(chat);
 
                 return (
-                  <Box
-                    key={chat?.id}
-                    onClick={() => {
-                      navigate(`/chats/${chat.id}`);
-                      handleClose();
-                    }}
-                    sx={{
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      px: 1,
-                      py: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      "&:hover": {
-                        backgroundColor: "action.hover",
-                      },
-                    }}
-                  >
-                    <Avatar src={otherUser?.avatarUrl} sx={{ mr: 2 }} />
-                    <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                      <Typography variant="body1" sx={{ fontWeight: "bold" }} noWrap>
-                        {otherUser?.username || "Unknown"}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                        noWrap
-                      >
-                        {getLastMessageContent(chat)}
-                      </Typography>
+                  <React.Fragment key={chat?.id}>
+                    <Box
+                      onClick={() => {
+                        navigate(`/chats/${chat.id}`);
+                        handleClose();
+                      }}
+                      sx={{
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        px: 1,
+                        py: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        "&:hover": {
+                          backgroundColor: "action.hover",
+                        },
+                      }}
+                    >
+                      <Avatar src={otherUser?.avatarUrl} sx={{ mr: 2 }} />
+                      <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                        <Typography variant="body1" sx={{ fontWeight: "bold" }} noWrap>
+                          {otherUser?.username || "Unknown"}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary" }}
+                          noWrap
+                        >
+                          {getLastMessageContent(chat)}
+                        </Typography>
+                      </Box>
                     </Box>
-                    {index < chats.length - 1 && <Divider sx={{ my: 1 }} />}
-                  </Box>
+                    {index < chats.length - 1 && <Divider />}
+                  </React.Fragment>
                 );
               })}
             </Paper>

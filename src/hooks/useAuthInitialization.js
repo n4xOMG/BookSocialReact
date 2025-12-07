@@ -4,13 +4,7 @@ import { getCurrentUserByJwt } from "../redux/auth/auth.action";
 import { isTokenExpired } from "../utils/useAuthCheck";
 import { logError } from "../utils/errorLogger";
 
-/**
- * Custom hook for auth initialization
- * Safely fetches user data on app mount without infinite loop risk
- *
- * FIXED: Previous implementation had infinite loop risk where
- * user state change would trigger re-fetch
- */
+
 export const useAuthInitialization = () => {
   const dispatch = useDispatch();
   const { user, loading: authLoading } = useSelector((state) => state.auth);
@@ -19,25 +13,21 @@ export const useAuthInitialization = () => {
   const jwt = localStorage.getItem("jwt");
 
   useEffect(() => {
-    // Only run once on mount
     if (hasInitializedRef.current) {
       return;
     }
 
     const initializeAuth = async () => {
-      // Skip if already loading or no token
       if (loading || authLoading || !jwt) {
         hasInitializedRef.current = true;
         return;
       }
 
-      // Skip if token expired
       if (isTokenExpired(jwt)) {
         hasInitializedRef.current = true;
         return;
       }
 
-      // Skip if user already loaded
       if (user) {
         hasInitializedRef.current = true;
         return;
@@ -55,7 +45,7 @@ export const useAuthInitialization = () => {
     };
 
     initializeAuth();
-  }, []); // Empty deps - only run once on mount
+  }, []);
 
   return { loading };
 };

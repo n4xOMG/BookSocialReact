@@ -1,6 +1,6 @@
 import { Avatar, Box, Card, CardHeader, TextField, Autocomplete, CircularProgress, Typography, useTheme } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { searchUser } from "../../redux/user/user.action";
 import { createChat } from "../../redux/chat/chat.action";

@@ -7,9 +7,7 @@ apiEvents.setMaxListeners(20);
 
 export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8181";
 
-// ==============================================================================
 // AUTH API - For authentication requests that don't need token
-// ==============================================================================
 export const authApi = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -17,9 +15,7 @@ export const authApi = axios.create({
   },
 });
 
-// ==============================================================================
 // MAIN API - For authenticated requests with token refresh
-// ==============================================================================
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -43,7 +39,6 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Add request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("jwt");
@@ -57,7 +52,6 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for handling token refresh
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -65,7 +59,6 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle rate limiting
     if (error.response && error.response.status === 429) {
       const retryAfter = error.response.headers["retry-after"] || error.response.headers["x-rate-limit-retry-after-seconds"] || 60;
       apiEvents.emit("rateLimitExceeded", {
@@ -78,23 +71,20 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 403) {
       const errorMessage = error.response.data?.message || "";
       if (errorMessage.includes("banned") || errorMessage.includes("suspended")) {
-        // Emit event for app to handle (logout, show message)
         apiEvents.emit("accountRestricted", {
           message: errorMessage,
           isBanned: errorMessage.toLowerCase().includes("banned"),
           isSuspended: errorMessage.toLowerCase().includes("suspended"),
         });
-        // Clear auth tokens
         localStorage.removeItem("jwt");
         localStorage.removeItem("tokenTimestamp");
       }
       return Promise.reject(error);
     }
 
-    // Handle authentication errors
+
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -111,7 +101,6 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Try to refresh token
         const token = localStorage.getItem("jwt");
         const rememberMe = localStorage.getItem("rememberMe") === "true";
 
@@ -127,26 +116,21 @@ api.interceptors.response.use(
           }
         );
 
-        // Backend sends token in 'data' field: { message, success, data: token }
         const newToken = response.data?.data || response.data?.token;
 
         if (newToken) {
           localStorage.setItem("jwt", newToken);
           localStorage.setItem("tokenTimestamp", Date.now().toString());
 
-          // Update original request auth header
           originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
 
-          // Process queue with new token
           processQueue(null, newToken);
 
           return api(originalRequest);
         }
       } catch (refreshError) {
-        // Failed to refresh token
         processQueue(refreshError, null);
 
-        // Redirect to login if needed
         if (window.location.pathname !== "/sign-in") {
           localStorage.removeItem("jwt");
           localStorage.removeItem("tokenTimestamp");
@@ -161,9 +145,8 @@ api.interceptors.response.use(
   }
 );
 
-// ==============================================================================
+
 // HTTP CLIENT - Alternative client with token expiry check (no auto-refresh)
-// ==============================================================================
 const httpClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -229,5 +212,4 @@ httpClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Default export for backward compatibility (was apiClient)
 export default httpClient;

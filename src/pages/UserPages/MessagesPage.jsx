@@ -3,6 +3,7 @@ import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typ
 import { Stomp } from "@stomp/stompjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { API_BASE_URL } from "../../api/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -16,6 +17,7 @@ import { UploadToServer } from "../../utils/uploadToServer";
 export default function MessagesPage() {
   const dispatch = useDispatch();
   const theme = useTheme();
+  const { chatId } = useParams();
   const { chats } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
   const [currentChat, setCurrentChat] = useState();
@@ -27,7 +29,7 @@ export default function MessagesPage() {
   const [isConnecting, setIsConnecting] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [isFetchingChats, setIsFetchingChats] = useState(true);
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const socketRef = useRef(null);
   const stompClientRef = useRef(null);
   const subscriptionRef = useRef(null);
@@ -44,6 +46,22 @@ export default function MessagesPage() {
     fetchChats();
   }, [dispatch]);
 
+
+  useEffect(() => {
+    if (chatId && chats.length > 0 && !currentChat) {
+      const chatFromUrl = chats.find((chat) => chat.id === chatId);
+      if (chatFromUrl) {
+        setCurrentChat(chatFromUrl);
+      }
+    }
+  }, [chatId, chats, currentChat]);
+
+
+  const otherUser = useMemo(() => {
+    if (!currentChat || !user) return null;
+    return currentChat.userOne.id === user.id ? currentChat.userTwo : currentChat.userOne;
+  }, [currentChat, user]);
+
   const handleSelectImage = (e) => {
     const file = e.target.files[0];
     setSelectedImage(file);
@@ -59,7 +77,7 @@ export default function MessagesPage() {
     try {
       let imageObj = null;
       if (selectedImage) {
-        const uploadResult = await UploadToServer(selectedImage, user.username, `chat/chat_images/${currentChat.id}`);
+        const uploadResult = await UploadToServer(selectedImage, user.username, `chatimages_${currentChat.id}_${Date.now()}`);
         imageObj = {
           url: uploadResult.url,
           isMild: uploadResult.safety?.level === "MILD"
@@ -84,7 +102,7 @@ export default function MessagesPage() {
     }
   };
 
-  // Setup WebSocket connection
+
   const setupStompClient = () => {
     try {
       setIsConnecting(true);
@@ -111,21 +129,18 @@ export default function MessagesPage() {
         setIsConnected(false);
       };
     } catch (error) {
-      console.error("Error setting up STOMP client:", error);
+
       attemptReconnect();
     }
   };
 
   useEffect(() => {
     return setupStompClient();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle visibility change to reconnect when tab becomes active again
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && !isConnected) {
-        console.log("Page became visible, checking connection...");
         if (stompClientRef.current && !stompClientRef.current.connected) {
           setupStompClient();
         }
@@ -133,17 +148,14 @@ export default function MessagesPage() {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected]);
 
   const attemptReconnect = () => {
     if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
       reconnectAttemptsRef.current += 1;
-      console.log(`Attempting reconnect ${reconnectAttemptsRef.current} of ${MAX_RECONNECT_ATTEMPTS} in ${RECONNECT_INTERVAL}ms`);
 
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current);
@@ -153,21 +165,18 @@ export default function MessagesPage() {
         setupStompClient();
       }, RECONNECT_INTERVAL);
     } else {
-      console.error("Max reconnect attempts reached");
       setIsConnecting(false);
     }
   };
 
   const onConnect = () => {
-    console.log("Connected to WebSocket");
     setIsConnecting(false);
     setIsConnected(true);
     reconnectAttemptsRef.current = 0;
     subscribeToChat();
   };
 
-  const onErr = (err) => {
-    console.log("Websocket error: ", err);
+  const onErr = () => {
     setIsConnecting(false);
     setIsConnected(false);
     attemptReconnect();
@@ -181,11 +190,8 @@ export default function MessagesPage() {
 
     if (stompClientRef.current && stompClientRef.current.connected && user && currentChat) {
       try {
-        console.log(`Subscribing to group: /group/${currentChat.id}/private`);
         subscriptionRef.current = stompClientRef.current.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
       } catch (error) {
-        console.error("Error subscribing to chat:", error);
-        // If this fails, we might need to reconnect
         if (error.message.includes("no underlying")) {
           attemptReconnect();
         }
@@ -200,12 +206,9 @@ export default function MessagesPage() {
       if (stompClientRef.current.connected) {
         stompClientRef.current.send(`/app/chat/${currentChat?.id.toString()}`, {}, JSON.stringify(newMessage));
       } else {
-        console.error("STOMP client not connected, attempting to reconnect");
         setupStompClient();
-        // Could queue message to be sent after reconnection if needed
       }
     } catch (error) {
-      console.error("Error sending message:", error);
       if (error.message.includes("no underlying")) {
         attemptReconnect();
       }
@@ -213,7 +216,6 @@ export default function MessagesPage() {
   };
 
   const onMessageReceived = (payload) => {
-    console.log("Message received from WebSocket:", payload.body);
     const receivedMessage = JSON.parse(payload.body);
     dispatch({ type: RECEIVE_MESSAGE, payload: receivedMessage });
   };
@@ -236,12 +238,21 @@ export default function MessagesPage() {
   }, [rawMessages]);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current && messages.length > 0) {
+      messagesContainerRef.current.scrollTop = 0;
     }
-  }, [messages]);
+  }, [currentChat]);
 
-  // Show LoadingSpinner while connecting or fetching chats
+  useEffect(() => {
+    if (messagesContainerRef.current && messages.length > 0) {
+      const timeoutId = setTimeout(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = 0;
+        }
+      }, 50);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages.length]);
   if (isConnecting || isFetchingChats) {
     return <LoadingSpinner />;
   }
@@ -293,7 +304,7 @@ export default function MessagesPage() {
                       setCurrentChat(chat);
                     }}
                   >
-                    <UserChatCard chat={chat} />
+                    <UserChatCard chat={chat} isSelected={currentChat?.id === chat.id} />
                   </div>
                 ))}
               </Box>
@@ -315,7 +326,8 @@ export default function MessagesPage() {
                 }}
               >
                 <Avatar
-                    src={currentChat.userOne.id === user.id ? currentChat.userTwo.avatarUrl : currentChat.userOne.avatarUrl}                  sx={{
+                  src={otherUser?.avatarUrl}
+                  sx={{
                     width: 48,
                     height: 48,
                     border: "2px solid",
@@ -331,14 +343,23 @@ export default function MessagesPage() {
                     color: theme.palette.mode === "dark" ? "#fff" : "#1a1a2e",
                   }}
                 >
-                  {currentChat.name}
+                  {otherUser?.username}
                 </Typography>
               </Box>
-              <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
-                {messages?.map((message) => (
+              <Box
+                ref={messagesContainerRef}
+                sx={{
+                  flexGrow: 1,
+                  overflowY: "auto",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column-reverse",
+                }}
+              >
+
+                {[...messages].reverse().map((message) => (
                   <ChatMessage key={message.id} message={message} />
                 ))}
-                <div ref={messagesEndRef} />
               </Box>
               <Box
                 sx={{

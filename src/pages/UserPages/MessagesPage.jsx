@@ -11,17 +11,17 @@ import ChatMessage from "../../components/MessagePage/ChatMessage";
 import SearchUser from "../../components/MessagePage/SearchUser";
 import UserChatCard from "../../components/MessagePage/UserChatCard";
 import { createMessage, fetchChatMessages, fetchUserChats } from "../../redux/chat/chat.action";
-import { RECEIVE_MESSAGE } from "../../redux/chat/chat.actionType";
 import { UploadToServer } from "../../utils/uploadToServer";
 
 export default function MessagesPage() {
   const dispatch = useDispatch();
   const theme = useTheme();
   const { chatId } = useParams();
-  const { chats } = useSelector((state) => state.chat);
+  const { chats, messages: allMessages } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
   const [currentChat, setCurrentChat] = useState();
   const rawMessages = useSelector((state) => (currentChat ? state.chat.messages[currentChat.id] || [] : []));
+  const seenMessageCountsRef = useRef({});
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [messageText, setMessageText] = useState("");
@@ -32,7 +32,6 @@ export default function MessagesPage() {
   const messagesContainerRef = useRef(null);
   const socketRef = useRef(null);
   const stompClientRef = useRef(null);
-  const subscriptionRef = useRef(null);
   const reconnectTimerRef = useRef(null);
   const MAX_RECONNECT_ATTEMPTS = 5;
   const reconnectAttemptsRef = useRef(0);
@@ -120,9 +119,6 @@ export default function MessagesPage() {
         if (reconnectTimerRef.current) {
           clearTimeout(reconnectTimerRef.current);
         }
-        if (subscriptionRef.current) {
-          subscriptionRef.current.unsubscribe();
-        }
         if (stompClientRef.current) {
           stompClientRef.current.disconnect();
         }
@@ -136,6 +132,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     return setupStompClient();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -151,6 +148,7 @@ export default function MessagesPage() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected]);
 
   const attemptReconnect = () => {
@@ -173,30 +171,13 @@ export default function MessagesPage() {
     setIsConnecting(false);
     setIsConnected(true);
     reconnectAttemptsRef.current = 0;
-    subscribeToChat();
+    // Global WebSocket subscription now handles message receiving
   };
 
   const onErr = () => {
     setIsConnecting(false);
     setIsConnected(false);
     attemptReconnect();
-  };
-
-  const subscribeToChat = () => {
-    if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
-      subscriptionRef.current = null;
-    }
-
-    if (stompClientRef.current && stompClientRef.current.connected && user && currentChat) {
-      try {
-        subscriptionRef.current = stompClientRef.current.subscribe(`/group/${currentChat.id}/private`, onMessageReceived);
-      } catch (error) {
-        if (error.message.includes("no underlying")) {
-          attemptReconnect();
-        }
-      }
-    }
   };
 
   const sendMessageToServer = (newMessage) => {
@@ -215,17 +196,6 @@ export default function MessagesPage() {
     }
   };
 
-  const onMessageReceived = (payload) => {
-    const receivedMessage = JSON.parse(payload.body);
-    dispatch({ type: RECEIVE_MESSAGE, payload: receivedMessage });
-  };
-
-  useEffect(() => {
-    if (stompClientRef.current && user && currentChat && isConnected) {
-      subscribeToChat();
-    }
-  }, [user, currentChat, isConnected]);
-
   useEffect(() => {
     if (currentChat) {
       dispatch(fetchChatMessages(currentChat.id));
@@ -241,6 +211,7 @@ export default function MessagesPage() {
     if (messagesContainerRef.current && messages.length > 0) {
       messagesContainerRef.current.scrollTop = 0;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChat]);
 
   useEffect(() => {
@@ -297,16 +268,35 @@ export default function MessagesPage() {
             <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
               <SearchUser />
               <Box sx={{ mt: 2 }}>
-                {chats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    onClick={() => {
-                      setCurrentChat(chat);
-                    }}
-                  >
-                    <UserChatCard chat={chat} isSelected={currentChat?.id === chat.id} />
-                  </div>
-                ))}
+                {chats.map((chat) => {
+                  const chatMessages = allMessages[chat.id] || [];
+                  const seenCount = seenMessageCountsRef.current[chat.id] || 0;
+                  const unreadCount = Math.max(0, chatMessages.length - seenCount);
+                  const hasNewMessage = unreadCount > 0 && currentChat?.id !== chat.id;
+                  
+                  return (
+                    <div
+                      key={chat.id}
+                      onClick={() => {
+                        setCurrentChat(chat);
+                        // Mark as seen when selected
+                        seenMessageCountsRef.current[chat.id] = (allMessages[chat.id] || []).length;
+                      }}
+                    >
+                      <UserChatCard 
+                        chat={chat} 
+                        isSelected={currentChat?.id === chat.id}
+                        hasNewMessage={hasNewMessage}
+                        unreadCount={hasNewMessage ? unreadCount : 0}
+                        onChatDeleted={(deletedChatId) => {
+                          if (currentChat?.id === deletedChatId) {
+                            setCurrentChat(null);
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </Box>
             </Box>
           </Box>

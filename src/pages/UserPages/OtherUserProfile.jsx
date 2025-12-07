@@ -1,5 +1,5 @@
 import { Alert, Box, Container, Grid, useTheme } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -9,7 +9,7 @@ import UserPosts from "../../components/OtherUserProfile/UserPosts";
 import { getBooksByAuthorAction } from "../../redux/book/book.action";
 import { fetchPostsByUserId } from "../../redux/post/post.action";
 import { blockUser, getBlockedUsers, getUserById, unblockUser } from "../../redux/user/user.action";
-import { createChat } from "../../redux/chat/chat.action";
+import { createChat, fetchUserChats } from "../../redux/chat/chat.action";
 const OtherUserProfile = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
@@ -21,13 +21,32 @@ const OtherUserProfile = () => {
   const { user: currentUser } = useSelector((state) => state.auth, shallowEqual);
   const { booksByAuthor } = useSelector((state) => state.book, shallowEqual);
   const { postsByUser } = useSelector((state) => state.post, shallowEqual);
+  const { chats } = useSelector((state) => state.chat, shallowEqual);
   const [blockLoading, setBlockLoading] = useState(false);
   const isViewingOwnProfile = useMemo(() => currentUser?.id === userId, [currentUser?.id, userId]);
   const blockedSet = useMemo(() => new Set((blockedUsers || []).map((blockedUser) => blockedUser.id)), [blockedUsers]);
   const isBlocked = blockedSet.has(userId);
+
+  // Find existing chat with the target user
+  const findExistingChat = useCallback((targetUserId) => {
+    if (!chats || !currentUser) return null;
+    return chats.find((chat) => {
+      const isUserOne = chat.userOne?.id === currentUser.id && chat.userTwo?.id === targetUserId;
+      const isUserTwo = chat.userTwo?.id === currentUser.id && chat.userOne?.id === targetUserId;
+      return isUserOne || isUserTwo;
+    });
+  }, [chats, currentUser]);
+
   const handleMessageClick = async () => {
     if (isBlocked || isViewingOwnProfile) return;
     try {
+      // First, check if a chat already exists with this user
+      const existingChat = findExistingChat(userId);
+      if (existingChat) {
+        navigate(`/chats/${existingChat.id}`);
+        return;
+      }
+      // If no existing chat, create a new one
       const chatId = await dispatch(createChat(userId));
       navigate(`/chats/${chatId}`);
     } catch (error) {
@@ -73,6 +92,13 @@ const OtherUserProfile = () => {
 
   useEffect(() => {
     dispatch(getBlockedUsers()).catch(() => {
+      /* handled silently */
+    });
+  }, [dispatch]);
+
+  // Fetch user chats to check for existing conversations
+  useEffect(() => {
+    dispatch(fetchUserChats()).catch(() => {
       /* handled silently */
     });
   }, [dispatch]);

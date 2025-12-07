@@ -2,13 +2,15 @@ import { Stomp } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { API_BASE_URL } from "../api/api";
 import { receiveNotification } from "../redux/notification/notification.action";
+import { RECEIVE_MESSAGE } from "../redux/chat/chat.actionType";
 import { store } from "../redux/store";
 import { createLogger } from "../utils/logger";
 
 const logger = createLogger("WebSocket");
 
 let stompClient = null;
-let subscription = null;
+let notificationSubscription = null;
+let chatSubscriptions = {}; // Map of chatId -> subscription
 let isConnecting = false;
 let reconnectTimer = null;
 let activeUsername = null;
@@ -43,7 +45,7 @@ export const connectWebSocket = (username) => {
 
         // Subscribe to the user's notification channel
         const topic = `/user/${username}/notifications`;
-        subscription = stompClient.subscribe(topic, (message) => {
+        notificationSubscription = stompClient.subscribe(topic, (message) => {
           try {
             const notification = JSON.parse(message.body);
             logger.info("New notification received", notification);
@@ -94,12 +96,75 @@ export const connectWebSocket = (username) => {
   }
 };
 
+// Subscribe to chat messages for all user's chats
+export const subscribeToChatMessages = (chatIds) => {
+  if (!stompClient || !stompClient.connected) {
+    logger.warn("Cannot subscribe to chats - WebSocket not connected");
+    return;
+  }
+
+  // Unsubscribe from chats that are no longer in the list
+  Object.keys(chatSubscriptions).forEach((existingChatId) => {
+    if (!chatIds.includes(existingChatId)) {
+      try {
+        chatSubscriptions[existingChatId].unsubscribe();
+        delete chatSubscriptions[existingChatId];
+        logger.info(`Unsubscribed from chat: ${existingChatId}`);
+      } catch (error) {
+        logger.error(`Error unsubscribing from chat ${existingChatId}`, error);
+      }
+    }
+  });
+
+  // Subscribe to new chats
+  chatIds.forEach((chatId) => {
+    if (!chatSubscriptions[chatId]) {
+      try {
+        const topic = `/group/${chatId}/private`;
+        chatSubscriptions[chatId] = stompClient.subscribe(topic, (message) => {
+          try {
+            const receivedMessage = JSON.parse(message.body);
+            logger.info(`Chat message received for chat: ${chatId}`);
+            store.dispatch({ type: RECEIVE_MESSAGE, payload: receivedMessage });
+          } catch (error) {
+            logger.error("Error processing chat message", error);
+          }
+        });
+        logger.info(`Subscribed to chat: ${chatId}`);
+      } catch (error) {
+        logger.error(`Error subscribing to chat ${chatId}`, error);
+      }
+    }
+  });
+};
+
+// Unsubscribe from all chat messages
+export const unsubscribeFromChatMessages = () => {
+  Object.keys(chatSubscriptions).forEach((chatId) => {
+    try {
+      chatSubscriptions[chatId].unsubscribe();
+    } catch (error) {
+      logger.error(`Error unsubscribing from chat ${chatId}`, error);
+    }
+  });
+  chatSubscriptions = {};
+  logger.info("Unsubscribed from all chat messages");
+};
+
+// Get WebSocket connection status
+export const isWebSocketConnected = () => {
+  return stompClient && stompClient.connected;
+};
+
 export const disconnectWebSocket = () => {
   try {
-    if (subscription) {
-      subscription.unsubscribe();
-      subscription = null;
-      logger.info("Unsubscribed from topics");
+    // Unsubscribe from chat messages
+    unsubscribeFromChatMessages();
+
+    if (notificationSubscription) {
+      notificationSubscription.unsubscribe();
+      notificationSubscription = null;
+      logger.info("Unsubscribed from notifications");
     }
 
     if (stompClient && stompClient.connected) {
@@ -124,3 +189,4 @@ export const checkWebSocketConnection = () => {
   }
   return true;
 };
+

@@ -1,6 +1,6 @@
 import { Inbox } from "@mui/icons-material";
 import { Avatar, Badge, Box, Divider, IconButton, Menu, Paper, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchUserChats } from "../../../redux/chat/chat.action";
 import LoadingSpinner from "../../LoadingSpinner";
@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 export default function MessageMenu() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { chats } = useSelector((state) => state.chat);
+  const { chats, messages } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -25,9 +25,10 @@ export default function MessageMenu() {
   };
 
   const getLastMessageContent = (chat) => {
-    if (chat.messages?.length > 0) {
-      // Sort messages by timestamp to get the most recent one
-      const sortedMessages = [...chat.messages].sort(
+    // Check Redux messages first (for real-time updates), then fallback to chat.messages
+    const chatMessages = messages[chat.id] || chat.messages || [];
+    if (chatMessages.length > 0) {
+      const sortedMessages = [...chatMessages].sort(
         (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
       );
       const lastMessage = sortedMessages[0];
@@ -40,6 +41,12 @@ export default function MessageMenu() {
     }
     return "No messages yet";
   };
+
+  // Chats are sorted by the reducer - just create stable reference
+  const sortedChats = useMemo(() => {
+    if (!chats) return [];
+    return [...chats];
+  }, [chats]);
 
   useEffect(() => {
     setLoading(true);
@@ -59,7 +66,7 @@ export default function MessageMenu() {
             aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
           >
-            <Badge badgeContent={chats?.length} color="primary">
+            <Badge badgeContent={sortedChats?.length} color="primary">
               <Inbox />
             </Badge>
           </IconButton>
@@ -77,7 +84,7 @@ export default function MessageMenu() {
             </Typography>
 
             <Paper sx={{ maxHeight: 300, overflowY: "auto" }}>
-              {chats?.map((chat, index) => {
+              {sortedChats?.map((chat, index) => {
                 const otherUser = getUserChat(chat);
 
                 return (
@@ -113,7 +120,7 @@ export default function MessageMenu() {
                         </Typography>
                       </Box>
                     </Box>
-                    {index < chats.length - 1 && <Divider />}
+                    {index < sortedChats.length - 1 && <Divider />}
                   </React.Fragment>
                 );
               })}
@@ -124,3 +131,4 @@ export default function MessageMenu() {
     </>
   );
 }
+

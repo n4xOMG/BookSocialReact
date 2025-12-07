@@ -8,6 +8,9 @@ import {
   CREATE_MESSAGE_FAILED,
   CREATE_MESSAGE_REQUEST,
   CREATE_MESSAGE_SUCCESS,
+  DELETE_CHAT_FAILED,
+  DELETE_CHAT_REQUEST,
+  DELETE_CHAT_SUCCESS,
   FETCH_CHAT_MESSAGES_FAILED,
   FETCH_CHAT_MESSAGES_REQUEST,
   FETCH_CHAT_MESSAGES_SUCCESS,
@@ -78,6 +81,19 @@ export const createMessage = (reqData) => async (dispatch) => {
     const errorMessage = extractErrorMessage(error);
     dispatch({ type: CREATE_MESSAGE_FAILED, payload: errorMessage });
     error.message = errorMessage;
+    throw error;
+  }
+};
+
+export const deleteChat = (chatId) => async (dispatch) => {
+  dispatch({ type: DELETE_CHAT_REQUEST });
+  try {
+    await api.delete(`${API_BASE_URL}/api/chats/${chatId}`);
+    dispatch({ type: DELETE_CHAT_SUCCESS, payload: chatId });
+    return { success: true };
+  } catch (error) {
+    const errorMessage = extractErrorMessage(error);
+    dispatch({ type: DELETE_CHAT_FAILED, payload: errorMessage });
     throw error;
   }
 };

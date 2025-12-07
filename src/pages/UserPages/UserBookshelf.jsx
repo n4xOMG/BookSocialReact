@@ -1,5 +1,5 @@
 import { Book, Search } from "@mui/icons-material";
-import { Avatar, Box, Button, Card, CardContent, CardMedia, Fade, Rating, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, Card, CardContent, CardMedia, Fade, Rating, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,8 @@ export default function UserBookshelf() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const size = 12;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Fetch books on mount changes
   useEffect(() => {
@@ -38,6 +40,7 @@ export default function UserBookshelf() {
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) || book.authorName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [userFavouredBooks, searchTerm]);
+
 
   return (
     <Box sx={{ display: "flex", overscrollBehavior: "contain" }}>
@@ -72,7 +75,13 @@ export default function UserBookshelf() {
         </Box>
 
         {loading && page === 0 ? (
-          <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3}>
+          <Box 
+            display="grid" 
+            sx={{ 
+              gap: 3, 
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(250px, 1fr))",
+            }}
+          >
             {[...Array(8)].map((_, index) => (
               <Card
                 key={index}
@@ -101,14 +110,20 @@ export default function UserBookshelf() {
         ) : (
           <Fade in={!loading}>
             <Box>
-              <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3}>
+              <Box 
+                display="grid" 
+                sx={{ 
+                  gap: 3, 
+                  gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(250px, 1fr))",
+                }}
+              >
                 {filteredAndSortedBooks.map((book) => (
                   <Card
                     onClick={() => navigate(`/books/${book.id}`)}
                     key={book.id}
                     sx={{
                       display: "flex",
-                      flexDirection: "column",
+                      flexDirection: isMobile ? "row" : "column",
                       boxShadow: 3,
                       transition: "box-shadow 0.2s",
                       "&:hover": { boxShadow: 6 },
@@ -116,11 +131,21 @@ export default function UserBookshelf() {
                   >
                     <CardMedia
                       component="img"
-                      image={book.bookCover}
+                      image={book.bookCover.url}
                       alt={`Cover of ${book.title}`}
-                      sx={{ height: 240, objectFit: "cover" }}
+                      sx={{ 
+                        height: isMobile ? 137 : 240,
+                        width: isMobile ? 90 : "100%", 
+                        objectFit: "cover",
+                        flexShrink: 0, 
+                      }}
                     />
-                    <CardContent>
+                    <CardContent
+                      sx={{
+                        flexGrow: 1,
+                        p: isMobile ? 3 : 2,
+                      }}
+                    >
                       <Typography
                         variant="h6"
                         fontWeight="medium"

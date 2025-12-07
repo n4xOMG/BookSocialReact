@@ -2,12 +2,14 @@ import { Box, Button, Chip, Link, Stack, Typography, useMediaQuery } from "@mui/
 
 export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery((theme) => theme.breakpoints.down("md"));
+  const maxTags = isMobile ? 2 : 5;
   return (
     <Box
       sx={{
         position: "relative",
         width: "100%",
-        height: "100%",
+        height: isMobile ? "auto" : "100%",
         display: "flex",
         flexDirection: isMobile ? "column" : "row" ,
         alignItems: "center",
@@ -22,14 +24,13 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
           order: isMobile ? 2 : 'initial',
           position: "relative",
           zIndex: 2,
-          flex: 1,
-          px: isMobile ? 0 : 6,
-          py: isMobile ? 0 : 0,
+          flex: isMobile ? "auto" : 1,
+          px: isMobile ? 0 : isTablet ? 3 : 6,
+          py: isMobile ? 2 : isTablet ? 0 : 0,
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          maxWidth: isMobile ? "100%" : "50%",
-          bottom: isMobile ? 40 : 30,
+          maxWidth: isMobile ? "100%" : isTablet ? "100%" : "50%",
         }}
       >
         {/* Title */}
@@ -40,11 +41,12 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
             order: isMobile ? 1 : 'initial',
             fontWeight: 800,
             mb: 1,
-            fontSize: isMobile ? "1.8rem": "2.8rem",
+            fontSize: isMobile ? "1.5rem": isTablet ? "2rem" : "2.8rem",
             textAlign: isMobile ? "center" : "left",
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
+            overflow: "hidden",
             color: "primary.main",
             letterSpacing: "-0.02em",
           }}
@@ -58,7 +60,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                 spacing={1} 
                 flexWrap="wrap" 
                 justifyContent= {isMobile ? "center": "flex-start"}
-                sx={{order: isMobile ? 2 : 'initial', mb: isMobile ? 1 : 2 }}
+                sx={{order: isMobile ? 2 : 'initial', mb: isMobile ? 1 : isTablet ? 1 : 2 }}
             >
                 <Chip
                   label={book.latestChapterNumber ? `Ch ${book.latestChapterNumber}` : "New"}
@@ -83,7 +85,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                     }}
                   />
                 )}
-                {bookTags.slice(0, 5).map((tag) => (
+                {bookTags.slice(0, maxTags).map((tag) => (
                   <Chip
                     key={tag.id}
                     label={tag.name}
@@ -98,9 +100,9 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                     }}
                   />
                 ))}
-                {bookTags.length > 5 && (
+                {bookTags.length > maxTags && (
                   <Chip
-                    label={`+${bookTags.length - 5}`}
+                    label={`+${bookTags.length - maxTags}`}
                     size="small"
                     sx={{
                       bgcolor: "background.paper",
@@ -124,7 +126,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                 order: isMobile ? 3 : 'initial',
                 color: "text.secondary",
                 textAlign: isMobile ? "center": "left",
-                fontSize: isMobile ? "0.9rem": "1rem",
+                fontSize: isMobile ? "0.9rem" : isTablet ? "0.9rem" :"1rem",
               }}
             >
               Category: {categoryName}
@@ -137,19 +139,19 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
             sx={{
               order: isMobile ? 4 : 'initial',
               display: 'flex',
-              justifyContent: isMobile ? "center": "flex-start", 
-              flexDirection: isMobile ? "column" : "row",
+              justifyContent: isMobile ? "center": isTablet ? "flex-start" : "flex-start", 
+              flexDirection: isMobile ? "column" : isTablet ? "column" : "row",
               alignItems: 'center',
-              mb: isMobile ? 1 : 2, 
-              gap: isMobile ? 0 : 0.5,
+              mb: isMobile ? 1 : isTablet ? 1 : 2, 
+              gap: isMobile ? 0 : isTablet ? 0 : 0.5,
             }}
           >
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
               flexDirection: 'row',
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: isMobile ? 'center' : 'flex-start',
+              width: isMobile ? '100%' : isTablet ? '100%' : 'auto',
+              justifyContent: isMobile ? 'center' : isTablet ? 'flex-start' : 'flex-start',
               gap: 1,
             }}>
               <Typography 
@@ -166,7 +168,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
                 fontWeight="600" 
                 sx={{ 
                   color: "text.secondary", 
-                  marginRight: isMobile ? 0 : 5,
+                  marginRight: isMobile ? 0 : isTablet ? 0 :  5,
                   }}
                 >
                   {book.artistName || "Unknown Artist"}
@@ -177,7 +179,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
               sx={{ 
                 color: "text.secondary", 
                 marginRight: 5,
-                display: isMobile ? 'none' : 'block'
+                display: isMobile ? 'none' : isTablet ? 'none' : 'block'
                 }}
               >
                 |
@@ -186,8 +188,8 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
               display: 'flex',
               alignItems: 'center',
               flexDirection: 'row',
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: isMobile ? 'center' : 'flex-start',
+              width: isMobile ? '100%' :  isTablet ? '100%' : 'auto',
+              justifyContent: isMobile ? 'center' :  isTablet ? 'flex-start' : 'flex-start',
               gap: 1,
             }}>
               <Typography 
@@ -230,9 +232,9 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
             sx={{
               order: isMobile ? 5 : 'initial',
               display: isMobile ? 'none' : "-webkit-box",
-              WebkitLineClamp: isMobile ? 2 : 5, 
+              WebkitLineClamp: isMobile ? 2 : isTablet ? 3 : 5, 
               WebkitBoxOrient: "vertical",
-              mb: isMobile ? 1 : 3,
+              mb: isMobile ? 1 : isTablet ? 1 : 3,
               maxHeight: isMobile ? 80 : 140,
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -273,13 +275,15 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
           order: isMobile ? 1 : 'initial',
           position: "relative",
           zIndex: 2,
-          flex: 1,
+          flex: isMobile ? 'auto'  : 'initial',
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          maxWidth: isMobile ? "100%": "40%" ,
-          px: isMobile? 1: 4 ,
-          py: isMobile? 1: 0 ,
+          maxWidth: isMobile ? "100%": isTablet ? "50%" : "40%" ,
+          px: isMobile? 1:  isTablet ? 1 : 4 ,
+          py: isMobile? 1: isTablet ? 1 : 0 ,
+          height: isMobile ? '300px' : 'auto', 
+          overflow: 'hidden', 
         }}
       >
         <Box
@@ -287,7 +291,7 @@ export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
           src={book.optimizedCoverUrl || book.bookCover}
           alt={book.title}
           sx={{
-            width: isMobile ? "60%" : "70%",
+            width: isMobile ? "60%" : isTablet ? "60%" : "70%",
             height: "auto",
             borderRadius: 2,
             boxShadow: "0 8px 30px rgba(0,0,0,0.6)",

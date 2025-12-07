@@ -47,7 +47,7 @@ const ReadingHistoryCard = memo(({ readingProgresses = [] }) => {
         <Box
           key={progress.id || index}
           sx={{
-            mb: 2,
+            mb: 1.5,
             p: 1.5,
             borderRadius: 2,
             cursor: "pointer",
@@ -63,21 +63,22 @@ const ReadingHistoryCard = memo(({ readingProgresses = [] }) => {
             {progress.bookCover ? (
               <Box
                 component="img"
-                src={progress.bookCover}
+                src={progress.bookCover.url}
                 alt={progress.bookTitle}
                 sx={{
-                  width: 40,
-                  height: 56,
+                  width: 50,
+                  height: 70,
                   borderRadius: 1,
                   objectFit: "cover",
                   flexShrink: 0,
+                  boxShadow: 2,
                 }}
               />
             ) : (
-              <Skeleton variant="rectangular" width={40} height={56} sx={{ borderRadius: 1 }} />
+              <Skeleton variant="rectangular" width={50} height={70} sx={{ borderRadius: 1 }} />
             )}
 
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ flex: 1, minWidth: 0,}}>
               <Typography
                 variant="body2"
                 fontWeight="medium"
@@ -95,6 +96,7 @@ const ReadingHistoryCard = memo(({ readingProgresses = [] }) => {
                 color="text.secondary"
                 sx={{
                   display: "block",
+                  textAlign: 'left',
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -103,8 +105,8 @@ const ReadingHistoryCard = memo(({ readingProgresses = [] }) => {
                 {progress.bookAuthor}
               </Typography>
 
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
-                <AccessTimeIcon sx={{ fontSize: 12, color: "text.secondary" }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5}}>
+                <AccessTimeIcon sx={{ fontSize: 8, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
                   {formatLastReadDate(progress.lastReadAt)}
                 </Typography>

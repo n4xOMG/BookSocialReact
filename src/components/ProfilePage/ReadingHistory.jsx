@@ -188,7 +188,7 @@ const ReadingHistory = ({ userId }) => {
               >
                 <Box
                   component="img"
-                  src={item.bookCover}
+                  src={item.bookCover.url}
                   alt={item.bookTitle}
                   sx={{
                     width: 80,

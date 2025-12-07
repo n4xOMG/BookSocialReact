@@ -7,7 +7,11 @@ export default function UserChatCard({ chat, isSelected }) {
   const { user } = useSelector((state) => state.auth);
   const theme = useTheme();
   const userChat = chat.userOne.id === user.id ? chat.userTwo : chat.userOne;
-
+  const getInitials = (user) => {
+      if (!user || !user.username) return '?';
+      return user.username.charAt(0).toUpperCase();
+  };
+  
   return (
     <Card
       sx={{
@@ -75,7 +79,9 @@ export default function UserChatCard({ chat, isSelected }) {
               boxShadow: isSelected ? "0 4px 12px rgba(157, 80, 187, 0.3)" : "none",
             }}
             src={userChat.avatarUrl || "https://www.w3schools.com/howto/img_avatar.png"}
-          />
+          >
+            {!userChat.avatarUrl && getInitials(userChat)}
+          </Avatar>
         }
       />
     </Card>

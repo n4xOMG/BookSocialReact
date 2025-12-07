@@ -112,11 +112,13 @@ const AuthorDashboardInner = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h4">Author Dashboard</Typography>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto", overflowX: 'hidden' }}>
+      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems="center" sx={{ mb: 2, alignItems: { xs: "flex-start", sm: "center" } }}>
+        <Typography variant="h4" sx={{ mb: { xs: 1, sm: 0 } }}>Author Dashboard</Typography>
         <Stack direction="row" spacing={1}>
-          <Chip label={user?.fullname || user?.username} />
+          <Chip 
+            label={user?.fullname || user?.username} 
+          />
           {dashboard?.payoutMethodConfigured ? (
             <Chip color="success" label="PayPal Configured" />
           ) : (

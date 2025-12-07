@@ -207,10 +207,14 @@ export const sendForgotPasswordMail = (email) => async (dispatch) => {
   }
 };
 
-export const resetPasswordAction = (code, password) => async (dispatch) => {
+export const resetPasswordAction = (email, password, resetToken) => async (dispatch) => {
   dispatch({ type: RESET_PASSWORD_REQUEST });
   try {
-    const { data } = await httpClient.post(`${API_BASE_URL}/auth/reset-password?code=${code}`, { password });
+    const { data } = await httpClient.post(`${API_BASE_URL}/auth/reset-password`, {
+      email,
+      password,
+      resetToken,
+    });
     logger.debug("Reset password response: ", { data });
 
     // Check if backend explicitly marked as failed
@@ -302,8 +306,10 @@ export const verifyOtpAction = (email, otp, context) => async (dispatch) => {
     }
 
     const message = extractMessage(data) || "OTP verified successfully.";
+    // Extract resetToken from response data (returned for RESET_PASSWORD context)
+    const resetToken = typeof data?.data === "string" ? data.data : null;
     dispatch({ type: VERIFY_OTP_SUCCEED, payload: message });
-    return { payload: { message, success: true } };
+    return { payload: { message, success: true, resetToken } };
   } catch (error) {
     const message = extractErrorMessage(error, "OTP verification failed");
     dispatch({ type: VERIFY_OTP_FAILED, payload: message });

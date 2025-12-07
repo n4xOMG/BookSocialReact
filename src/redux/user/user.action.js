@@ -250,7 +250,7 @@ export const searchUser = (query) => async (dispatch) => {
 };
 export const followAuthorAction = (authorId) => async (dispatch) => {
   try {
-    const response = await api.post(`${API_BASE_URL}/user/follow/${authorId}`);
+    const response = await api.post(`${API_BASE_URL}/api/user/follow/${authorId}`);
     const { data, message, success } = extractResponsePayload(response);
     logger.debug("Follow author response: ", { data });
     dispatch({ type: FOLLOW_AUTHOR_SUCCESS, payload: data });
@@ -264,7 +264,7 @@ export const followAuthorAction = (authorId) => async (dispatch) => {
 
 export const unfollowAuthorAction = (authorId) => async (dispatch) => {
   try {
-    const response = await api.post(`${API_BASE_URL}/unfollow/${authorId}`);
+    const response = await api.post(`${API_BASE_URL}/api/user/unfollow/${authorId}`);
     const { data, message, success } = extractResponsePayload(response);
     logger.debug("Unfollow author response: ", { data });
     dispatch({ type: UNFOLLOW_AUTHOR_SUCCESS, payload: data });
@@ -278,7 +278,7 @@ export const unfollowAuthorAction = (authorId) => async (dispatch) => {
 export const getUserPreferences = () => async (dispatch) => {
   dispatch({ type: GET_USER_PREFERENCES_REQUEST });
   try {
-    const response = await api.get(`${API_BASE_URL}/user/preferences`);
+    const response = await api.get(`${API_BASE_URL}/api/user/preferences`);
     const { data, message, success } = extractResponsePayload(response);
     dispatch({ type: GET_USER_PREFERENCES_SUCCESS, payload: data });
     return { payload: data, message, success };
@@ -372,7 +372,7 @@ export const getBlockedUsers = () => async (dispatch) => {
 export const blockUser = (userIdToBlock) => async (dispatch) => {
   dispatch({ type: BLOCK_USER_REQUEST });
   try {
-    const response = await api.post(`${API_BASE_URL}/user/block/${userIdToBlock}`);
+    const response = await api.post(`${API_BASE_URL}/api/user/block/${userIdToBlock}`);
     const { data, message, success } = extractResponsePayload(response);
     logger.debug("Block user response: ", { data });
     dispatch({ type: BLOCK_USER_SUCCESS, payload: data });
@@ -388,7 +388,7 @@ export const blockUser = (userIdToBlock) => async (dispatch) => {
 export const unblockUser = (userIdToUnblock) => async (dispatch) => {
   dispatch({ type: UNBLOCK_USER_REQUEST });
   try {
-    const response = await api.post(`${API_BASE_URL}/user/unblock/${userIdToUnblock}`);
+    const response = await api.post(`${API_BASE_URL}/api/user/unblock/${userIdToUnblock}`);
     const { message, success } = extractResponsePayload(response);
     dispatch({ type: UNBLOCK_USER_SUCCESS, payload: userIdToUnblock });
     return { payload: userIdToUnblock, message, success };

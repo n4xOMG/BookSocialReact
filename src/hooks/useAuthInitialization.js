@@ -57,5 +57,5 @@ export const useAuthInitialization = () => {
     initializeAuth();
   }, []); // Empty deps - only run once on mount
 
-  return { loading: loading || authLoading };
+  return { loading };
 };

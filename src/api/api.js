@@ -74,6 +74,23 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Handle banned/suspended account errors (403)
+    if (error.response && error.response.status === 403) {
+      const errorMessage = error.response.data?.message || "";
+      if (errorMessage.includes("banned") || errorMessage.includes("suspended")) {
+        // Emit event for app to handle (logout, show message)
+        apiEvents.emit("accountRestricted", {
+          message: errorMessage,
+          isBanned: errorMessage.toLowerCase().includes("banned"),
+          isSuspended: errorMessage.toLowerCase().includes("suspended"),
+        });
+        // Clear auth tokens
+        localStorage.removeItem("jwt");
+        localStorage.removeItem("tokenTimestamp");
+      }
+      return Promise.reject(error);
+    }
+
     // Handle authentication errors
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {

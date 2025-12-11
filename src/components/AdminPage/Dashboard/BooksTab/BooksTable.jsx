@@ -84,7 +84,7 @@ const BooksTable = ({
               <TableRow key={book.id} hover>
                 <TableCell>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar alt={book.title} src={book.bookCover} variant="rounded" sx={{ width: 60, height: 80, objectFit: "cover" }} />
+                    <Avatar alt={book.title} src={book.bookCover.url} variant="rounded" sx={{ width: 60, height: 80, objectFit: "cover" }} />
                     <Box>
                       <Typography variant="subtitle1" fontWeight="medium">
                         {book.title}

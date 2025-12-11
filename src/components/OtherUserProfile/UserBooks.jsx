@@ -1,4 +1,4 @@
-import { Card, CardActionArea, CardContent, CardMedia, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Card, CardActionArea, CardContent, CardMedia, Grid, Tooltip, Typography, useTheme } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const UserBooks = ({ books }) => {
@@ -57,24 +57,40 @@ const UserBooks = ({ books }) => {
                     <CardMedia
                       component="img"
                       height="140"
-                      image={book.bookCover}
+                      image={book.bookCover.url}
                       alt={book.title}
                       sx={{
                         borderRadius: "16px 16px 0 0",
                       }}
                     />
-                    <Typography
-                      variant="subtitle1"
-                      align="center"
-                      sx={{
-                        px: 1,
-                        py: 1.5,
-                        fontWeight: 600,
-                        color: theme.palette.mode === "dark" ? "#fff" : "#1a1a2e",
-                      }}
+                    <Box 
+                        sx={{ 
+                            height: 70, 
+                            px: 1, 
+                            display: 'flex', 
+                            alignItems: 'flex-start',
+                            justifyContent: 'center',
+                        }}
                     >
-                      {book.title}
-                    </Typography>
+                      <Tooltip title={book.title} placement="bottom">
+                        <Typography
+                          variant="subtitle1"
+                          align="center"
+                          sx={{
+                            fontWeight: 600,
+                            color: theme.palette.mode === "dark" ? "#fff" : "#1a1a2e",
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2, 
+                            WebkitBoxOrient: 'vertical',
+                            whiteSpace: 'normal',
+                          }}
+                        >
+                          {book.title}
+                        </Typography>
+                      </Tooltip>
+                    </Box>
                   </CardActionArea>
                 </Card>
               </Grid>

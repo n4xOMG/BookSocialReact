@@ -59,7 +59,7 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                <AccessTimeIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
                <Typography variant="caption" color="text.secondary">
-                 {formatExactTime(chapter.updatedAt)}
+                 {formatExactTime(chapter.uploadDate)}
                </Typography>
             </Box>
             

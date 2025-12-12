@@ -60,7 +60,7 @@ export default function NovelChapterDetail({
 
   const handleBackToBookPage = () => {
     saveProgress();
-    navigate(`/books/${bookId}`);
+    navigate(-1);
   };
 
   // Process chapter content - handle both JSON and legacy HTML

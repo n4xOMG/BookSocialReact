@@ -106,6 +106,11 @@ const UserBooks = () => {
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
   const handleClearSearch = () => setSearchQuery("");
   
+  const handleViewChapter = (chapter) => {
+    const bookId = chapter.bookId || selectedBookId; 
+    navigate(`/books/${bookId}/chapters/${chapter.id}`);
+  };
+
   const handleFilterChange = (newFilters) => {
     setFilterOptions((prev) => ({ ...prev, ...newFilters }));
   };
@@ -506,6 +511,7 @@ const UserBooks = () => {
                 ) : chapters.length > 0 ? (
                    <UserBookChapterList
                       chapters={chapters}
+                      onViewChapter={handleViewChapter}
                       onEditChapter={(c) => handleOpenModal("editChapter", c)}
                       onDeleteChapter={(c) => handleOpenModal("deleteChapter", c)}
                    />

@@ -4,11 +4,12 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import { UserBookChapterItem } from "./UserBookChapterItem";
 import { Box } from "@mui/material";
 
-export const UserBookChapterList = React.memo(({ chapters, onEditChapter, onDeleteChapter }) => {
+export const UserBookChapterList = React.memo(({ chapters, onViewChapter, onEditChapter, onDeleteChapter }) => {
   const renderRow = useCallback(
     ({ index, style, data }) => (
       <UserBookChapterItem 
         chapter={data.chapters[index]} 
+        onView={data.onViewChapter}
         onEdit={data.onEditChapter} 
         onDelete={data.onDeleteChapter} 
         style={style} 
@@ -26,7 +27,7 @@ export const UserBookChapterList = React.memo(({ chapters, onEditChapter, onDele
             itemCount={chapters.length}
             itemSize={72}
             width={width}
-            itemData={{ chapters, onEditChapter, onDeleteChapter }}
+            itemData={{ chapters, onViewChapter, onEditChapter, onDeleteChapter }}
             overscanCount={5}
           >
             {renderRow}

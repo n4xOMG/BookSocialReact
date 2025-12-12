@@ -7,7 +7,7 @@ import { Box, IconButton, Tooltip, Typography, useTheme, Chip, Stack } from "@mu
 import React from "react";
 import { formatExactTime } from "../../utils/formatDate";
 
-export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, style }) => {
+export const UserBookChapterItem = React.memo(({ chapter, onView, onEdit, onDelete, style }) => {
   const theme = useTheme();
 
   return (
@@ -63,7 +63,7 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
                </Typography>
             </Box>
             
-            {chapter.status === "DRAFT" && (
+            {chapter.draft && (
                <Chip 
                  label="Draft" 
                  size="small" 
@@ -89,7 +89,7 @@ export const UserBookChapterItem = React.memo(({ chapter, onEdit, onDelete, styl
           }}
         >
           <Tooltip title="View">
-            <IconButton size="small" sx={{ "&:hover": { color: theme.palette.primary.main } }}>
+            <IconButton size="small" onClick={() => onView(chapter)} sx={{ "&:hover": { color: theme.palette.primary.main } }}>
               <VisibilityIcon fontSize="small" />
             </IconButton>
           </Tooltip>

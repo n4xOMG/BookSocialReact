@@ -56,35 +56,43 @@ const parseApiResponse = (response) => ({
 
 const getErrorMessage = (error) => error?.response?.data?.message || error.message || "An unexpected error occurred.";
 
-export const getAllChaptersByBookIdAction = (bookId) => async (dispatch) => {
-  dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
+export const getAllChaptersByBookIdAction =
+  (bookId, sortBy = "uploadDate", sortDir = "asc") =>
+  async (dispatch) => {
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
 
-  try {
-    const response = await httpClient.get(`${API_BASE_URL}/books/${bookId}/chapters`);
-    const { data, message, success } = parseApiResponse(response);
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data || [] });
-    return { payload: data, message, success };
-  } catch (error) {
-    const errorMessage = getErrorMessage(error);
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: errorMessage });
-    return { error: errorMessage };
-  }
-};
+    try {
+      const response = await httpClient.get(`${API_BASE_URL}/books/${bookId}/chapters`, {
+        params: { sortBy, sortDir },
+      });
+      const { data, message, success } = parseApiResponse(response);
+      dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data || [] });
+      return { payload: data, message, success };
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: errorMessage });
+      return { error: errorMessage };
+    }
+  };
 
-export const manageChapterByBookId = (bookId) => async (dispatch) => {
-  dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
+export const manageChapterByBookId =
+  (bookId, sortBy = "uploadDate", sortDir = "asc") =>
+  async (dispatch) => {
+    dispatch({ type: GET_CHAPTERS_BY_BOOK_REQUEST });
 
-  try {
-    const response = await api.get(`${API_BASE_URL}/api/books/${bookId}/chapters`);
-    const { data, message, success } = parseApiResponse(response);
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data || [] });
-    return { payload: data, message, success };
-  } catch (error) {
-    const errorMessage = getErrorMessage(error);
-    dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: errorMessage });
-    return { error: errorMessage };
-  }
-};
+    try {
+      const response = await api.get(`${API_BASE_URL}/api/books/${bookId}/chapters`, {
+        params: { sortBy, sortDir },
+      });
+      const { data, message, success } = parseApiResponse(response);
+      dispatch({ type: GET_CHAPTERS_BY_BOOK_SUCCESS, payload: data || [] });
+      return { payload: data, message, success };
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      dispatch({ type: GET_CHAPTERS_BY_BOOK_FAILED, payload: errorMessage });
+      return { error: errorMessage };
+    }
+  };
 
 export const getChaptersByBookAndLanguageAction = (bookId, languageId) => async (dispatch) => {
   dispatch({ type: GET_CHAPTERS_BY_BOOK_AND_LANGUAGE_REQUEST });

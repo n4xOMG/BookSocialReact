@@ -59,7 +59,7 @@ export const TabChapters = memo(function TabChapters({ chapters, progresses, onN
 
     try {
       await dispatch(unlockChapterAction(selectedChapter.id));
-      await dispatch(getAllChaptersByBookIdAction(jwt, bookId));
+      await dispatch(getAllChaptersByBookIdAction(bookId));
       handleDialogClose();
     } catch (err) {
       console.error(err);

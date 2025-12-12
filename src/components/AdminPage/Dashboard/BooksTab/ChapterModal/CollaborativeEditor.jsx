@@ -330,7 +330,7 @@ export const CollaborativeEditor = ({ presenceUser, roomId }) => {
   }
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <EditorHeader
         onSaveDraft={handleSaveDraft}
         onPublish={handlePublish}
@@ -343,18 +343,21 @@ export const CollaborativeEditor = ({ presenceUser, roomId }) => {
       />
 
       {!canManageChapter && (
-        <Alert severity="info" sx={{ mx: 2, mb: 2 }}>
+        <Alert severity="info" sx={{ mx: 2, mb: 2, flexShrink: 0 }}>
           You can participate in editing, but only the chapter author can save drafts or publish changes.
         </Alert>
       )}
 
-      <CollaborativeSlateEditor
-        sharedType={sharedType}
-        provider={provider}
-        initialContent={content}
-        onContentChange={(newContent) => setContent(newContent)}
-        presenceUser={presenceUser}
-      />
+      {/* Scrollable editor container - takes remaining height */}
+      <Box sx={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
+        <CollaborativeSlateEditor
+          sharedType={sharedType}
+          provider={provider}
+          initialContent={content}
+          onContentChange={(newContent) => setContent(newContent)}
+          presenceUser={presenceUser}
+        />
+      </Box>
 
       <Snackbar
         open={snackbarOpen}

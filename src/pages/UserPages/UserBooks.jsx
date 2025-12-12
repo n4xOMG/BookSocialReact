@@ -21,6 +21,7 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Menu,
 } from "@mui/material";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -79,6 +80,13 @@ const UserBooks = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [openFilterDrawer, setOpenFilterDrawer] = useState(false);
   const [filterOptions, setFilterOptions] = useState(() => createInitialFilters());
+
+
+  // Chapter Sorting State
+  const [chapterSortBy, setChapterSortBy] = useState("uploadDate");
+  const [chapterSortDir, setChapterSortDir] = useState("asc");
+  const [chapterSortAnchorEl, setChapterSortAnchorEl] = useState(null);
+
   const observer = useRef(null);
 
   const { categories: selectedCategories, tags: selectedTags, sortBy, sortOrder } = filterOptions;
@@ -116,6 +124,15 @@ const UserBooks = () => {
   };
 
   const toggleFilterDrawer = () => setOpenFilterDrawer((prev) => !prev);
+
+  // Chapter Sort Handlers
+  const handleOpenChapterSort = (event) => setChapterSortAnchorEl(event.currentTarget);
+  const handleCloseChapterSort = () => setChapterSortAnchorEl(null);
+  const handleChapterSortChange = (sortBy, sortDir) => {
+    setChapterSortBy(sortBy);
+    setChapterSortDir(sortDir);
+    handleCloseChapterSort();
+  };
 
   // Data Fetching - Load More Books
   const loadMoreBooks = useCallback(async () => {
@@ -212,20 +229,30 @@ const UserBooks = () => {
       setIsDetailLoading(false);
       return;
     }
+    
+    // Fetch Book Details
+    dispatch(getBookByIdAction(null, selectedBookId));
+
+  }, [dispatch, selectedBookId]);
+
+  // Fetch Chapters when book or sort changes
+  useEffect(() => {
+    if (!selectedBookId) return;
+
     let cancelled = false;
-    const fetchDetails = async () => {
+    const fetchChapters = async () => {
       setIsDetailLoading(true);
       try {
-        await Promise.all([dispatch(getBookByIdAction(null, selectedBookId)), dispatch(manageChapterByBookId(selectedBookId))]);
+        await dispatch(manageChapterByBookId(selectedBookId, chapterSortBy, chapterSortDir));
       } catch (error) {
-        console.error("Error loading book details:", error);
+        console.error("Error loading chapters:", error);
       } finally {
         if (!cancelled) setIsDetailLoading(false);
       }
     };
-    fetchDetails();
+    fetchChapters();
     return () => { cancelled = true; };
-  }, [dispatch, selectedBookId]);
+  }, [dispatch, selectedBookId, chapterSortBy, chapterSortDir]);
 
   // Helpers
   const getTagsByIds = (tagIds = []) => {
@@ -423,16 +450,38 @@ const UserBooks = () => {
                       Table of Contents
                    </Typography>
                    {selectedBookId && (
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter")}
-                        color="secondary"
-                        sx={{ borderRadius: "8px", textTransform: "none" }}
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Tooltip title="Sort Chapters">
+                        <IconButton onClick={handleOpenChapterSort} size="small">
+                          <SortIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Menu
+                        anchorEl={chapterSortAnchorEl}
+                        open={Boolean(chapterSortAnchorEl)}
+                        onClose={handleCloseChapterSort}
+                        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                        transformOrigin={{ vertical: "top", horizontal: "right" }}
                       >
-                        Add Chapter
-                      </Button>
+                        <MenuItem onClick={() => handleChapterSortChange("uploadDate", "asc")}>Oldest First</MenuItem>
+                        <MenuItem onClick={() => handleChapterSortChange("uploadDate", "desc")}>Newest First</MenuItem>
+                        <MenuItem onClick={() => handleChapterSortChange("chapterNum", "asc")}>Chapter Number (Asc)</MenuItem>
+                        <MenuItem onClick={() => handleChapterSortChange("chapterNum", "desc")}>Chapter Number (Desc)</MenuItem>
+                        <MenuItem onClick={() => handleChapterSortChange("price", "asc")}>Price (Low to High)</MenuItem>
+                        <MenuItem onClick={() => handleChapterSortChange("price", "desc")}>Price (High to Low)</MenuItem>
+                      </Menu>
+
+                       <Button
+                         variant="contained"
+                         size="small"
+                         startIcon={<AddIcon />}
+                         onClick={() => handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter")}
+                         color="secondary"
+                         sx={{ borderRadius: "8px", textTransform: "none" }}
+                       >
+                         Add Chapter
+                       </Button>
+                    </Box>
                    )}
                 </Box>
                 {selectedBookId && (

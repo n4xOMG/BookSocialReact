@@ -158,7 +158,7 @@ const Inner = () => {
 };
 
 const AuthorPayoutSettings = () => (
-  <ProtectedRoute roles={["AUTHOR", "ADMIN"]}>
+  <ProtectedRoute roles={["USER", "ADMIN"]}>
     <Inner />
   </ProtectedRoute>
 );

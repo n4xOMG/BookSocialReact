@@ -9,6 +9,7 @@ import { Element, Leaf } from "./TextEditorUtils/Element";
 import { HOTKEYS } from "./TextEditorUtils/ToolbarFunctions";
 import { toggleMark } from "./TextEditorUtils/MarkButton";
 import { Cursors } from "./Cursors";
+import { HoveringToolbar } from "./HoveringToolbar";
 import { EditorToolbar } from "./EditorToolbar";
 
 /**
@@ -75,7 +76,6 @@ export const CollaborativeSlateEditor = ({ sharedType, provider, initialContent,
     <Paper
       elevation={3}
       sx={{
-        flex: 1,
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -84,58 +84,75 @@ export const CollaborativeSlateEditor = ({ sharedType, provider, initialContent,
         width: "100%",
         margin: "0 auto",
         maxWidth: "1000px",
-        overflow: "auto",
         color: "#111827",
+        height: "100%",
+        minHeight: 0, // Important for flex scroll containers
       }}
     >
-      <Box
-        sx={{
-          position: "relative",
-          padding: "1.5em",
-          height: "100%",
-        }}
-      >
-        <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
+      <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
+        {/* Sticky toolbar container */}
+        <Box
+          sx={{
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            backgroundColor: "#fff",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            borderRadius: "12px 12px 0 0",
+          }}
+        >
           <EditorToolbar />
+        </Box>
+        
+        <HoveringToolbar />
 
-          {editorReady ? (
-            <Cursors editorRef={editorRef} editorDomRef={editorDomRef}>
-              <Editable
-                renderElement={renderElement}
-                renderLeaf={renderLeaf}
-                placeholder="Enter some text..."
-                onKeyDown={handleKeyDown}
-                style={{
+        {/* Scrollable content area */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            position: "relative",
+            minHeight: 0, // Required for flex scroll containers
+          }}
+        >
+          <Box sx={{ padding: "1.5em" }}>
+            {editorReady ? (
+              <Cursors editorRef={editorRef} editorDomRef={editorDomRef}>
+                <Editable
+                  renderElement={renderElement}
+                  renderLeaf={renderLeaf}
+                  placeholder="Enter some text..."
+                  onKeyDown={handleKeyDown}
+                  style={{
+                    minHeight: "500px",
+                    padding: "16px",
+                    fontSize: "16px",
+                    lineHeight: "1.6",
+                    border: "none",
+                  }}
+                />
+              </Cursors>
+            ) : (
+              <Box
+                sx={{
                   minHeight: "500px",
                   padding: "8px",
                   fontSize: "16px",
                   lineHeight: "1.6",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              />
-            </Cursors>
-          ) : (
-            <Box
-              sx={{
-                minHeight: "500px",
-                padding: "8px",
-                fontSize: "16px",
-                lineHeight: "1.6",
-                border: "1px solid #e0e0e0",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography variant="body1" color="text.secondary">
-                Initializing editor...
-              </Typography>
-            </Box>
-          )}
-        </Slate>
-      </Box>
+              >
+                <Typography variant="body1" color="text.secondary">
+                  Initializing editor...
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Slate>
     </Paper>
   );
 };

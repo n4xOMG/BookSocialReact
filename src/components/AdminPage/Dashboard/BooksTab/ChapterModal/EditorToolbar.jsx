@@ -16,14 +16,25 @@ import { MarkButton } from "./TextEditorUtils/MarkButton";
  */
 export const EditorToolbar = () => {
   return (
-    <Paper elevation={1} sx={{ mb: 2, p: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 1.5,
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 1,
+        bgcolor: "background.paper",
+      }}
+    >
       <MarkButton format="bold" icon={<FormatBoldIcon />} />
       <MarkButton format="italic" icon={<FormatItalicIcon />} />
       <MarkButton format="underline" icon={<FormatUnderlinedIcon />} />
+      <div style={{ width: "1px", height: "24px", backgroundColor: "#e0e0e0", margin: "0 4px" }} />
       <BlockButton format="left" icon={<FormatAlignLeftIcon />} />
       <BlockButton format="center" icon={<FormatAlignCenterIcon />} />
       <BlockButton format="right" icon={<FormatAlignRightIcon />} />
       <BlockButton format="justify" icon={<FormatAlignJustifyIcon />} />
+      <div style={{ width: "1px", height: "24px", backgroundColor: "#e0e0e0", margin: "0 4px" }} />
       <InsertImageButton />
     </Paper>
   );

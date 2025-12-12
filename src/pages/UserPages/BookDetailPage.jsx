@@ -1,6 +1,6 @@
-import { FavoriteBorder, MenuBook, Report, StarRate } from "@mui/icons-material";
+import { FavoriteBorder, MenuBook, Report, StarRate, Sort as SortIcon } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useTheme } from "@mui/material";
+import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useTheme, Menu, MenuItem, Tooltip } from "@mui/material";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -37,6 +37,11 @@ export const BookDetailPage = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [loading, setLoading] = useState(true);
+  
+  // Chapter Sorting
+  const [chapterSortBy, setChapterSortBy] = useState("uploadDate");
+  const [chapterSortDir, setChapterSortDir] = useState("asc");
+  const [sortAnchorEl, setSortAnchorEl] = useState(null);
 
   // Optimized Selectors
   const book = useSelector((store) => store.book.book);
@@ -47,6 +52,7 @@ export const BookDetailPage = () => {
   const tags = useSelector((store) => store.tag.tags);
   const user = useSelector((store) => store.auth.user);
   const chapters = useSelector((store) => store.chapter.chapters);
+  const chapterLoading = useSelector((store) => store.chapter.loading);
   
   const jwt = localStorage.getItem("jwt");
   const { checkAuth, AuthDialog } = useAuthCheck();
@@ -60,9 +66,6 @@ export const BookDetailPage = () => {
         const bookRes = await dispatch(getBookByIdAction(bookId));
         if (!bookRes?.payload) return;
 
-        // Fetch chapters
-        await dispatch(getAllChaptersByBookIdAction(bookId));
-        
         // Parallel fetches
         const promises = [
           dispatch(getAvgBookRating(bookId)),
@@ -92,6 +95,11 @@ export const BookDetailPage = () => {
       dispatch(clearChapters());
     };
   }, [bookId, dispatch, jwt, user]);
+
+  // Fetch Chapters when sort changes
+  useEffect(() => {
+    dispatch(getAllChaptersByBookIdAction(bookId, chapterSortBy, chapterSortDir));
+  }, [dispatch, bookId, chapterSortBy, chapterSortDir]);
 
   // Memoized overall progress calculation
   const overallProgress = useMemo(() => {
@@ -143,6 +151,14 @@ export const BookDetailPage = () => {
     }
   });
 
+  const handleOpenSort = (event) => setSortAnchorEl(event.currentTarget);
+  const handleCloseSort = () => setSortAnchorEl(null);
+  const handleSortChange = (sortBy, sortDir) => {
+    setChapterSortBy(sortBy);
+    setChapterSortDir(sortDir);
+    handleCloseSort();
+  };
+
   // Memoized styles
   const paperStyle = useMemo(() => ({
     p: { xs: 2, md: 4 },
@@ -168,6 +184,8 @@ export const BookDetailPage = () => {
 
   const isFavorite = book.followedByCurrentUser;
   const firstChapterId = chapters && chapters.length > 0 ? chapters[0].id : null;
+
+
 
   return (
     <Box sx={{ flex: 1, width: "100%", minHeight: "100vh", bgcolor: theme.palette.background.default }}>
@@ -316,6 +334,26 @@ export const BookDetailPage = () => {
                   onNavigate={navigate}
                   bookId={bookId}
                   user={user || null}
+                  loading={chapterLoading}
+                  action={
+                    <>
+                      <Tooltip title="Sort Chapters">
+                        <IconButton onClick={handleOpenSort} size="small">
+                          <SortIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Menu
+                        anchorEl={sortAnchorEl}
+                        open={Boolean(sortAnchorEl)}
+                        onClose={handleCloseSort}
+                      >
+                       <MenuItem onClick={() => handleSortChange("uploadDate", "asc")}>Oldest First</MenuItem>
+                       <MenuItem onClick={() => handleSortChange("uploadDate", "desc")}>Newest First</MenuItem>
+                       <MenuItem onClick={() => handleSortChange("chapterNum", "asc")}>Chapter Number (Asc)</MenuItem>
+                       <MenuItem onClick={() => handleSortChange("chapterNum", "desc")}>Chapter Number (Desc)</MenuItem>
+                      </Menu>
+                    </>
+                  }
                 />
               </Paper>
 

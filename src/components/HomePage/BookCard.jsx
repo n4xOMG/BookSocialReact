@@ -3,6 +3,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardMedia,
@@ -20,6 +21,12 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
   const navigate = useNavigate();
   const [imageLoaded, setImageLoaded] = useState(false);
   const theme = useTheme();
+
+  const isMild = useMemo(() => {
+    return book.bookCover.isMild;
+  }, [book.bookCover]);
+
+  const [isBlurred, setIsBlurred] = useState(isMild);
 
   const handleImageLoad = () => setImageLoaded(true);
 
@@ -46,7 +53,12 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
     [book, onClick, navigate]
   );
 
-  const optimizedCoverUrl = useMemo(() => book.bookCover.url, [book.bookCover.url]);
+  const optimizedCoverUrl = useMemo(() => {
+    if (typeof book.bookCover === "object") {
+      return book.bookCover.url;
+    }
+    return book.bookCover;
+  }, [book.bookCover]);
 
   return (
     <Card
@@ -98,13 +110,51 @@ export const BookCard = memo(({ book, onClick, showRating = true, showActions = 
             height: "100%",
             objectFit: "cover",
             opacity: imageLoaded ? 1 : 0,
-            transition: "opacity 0.5s, transform 0.5s ease",
+            filter: isBlurred ? "blur(20px)" : "none",
+            transition: "opacity 0.5s, transform 0.5s ease, filter 0.3s ease",
             ".MuiCard-root:hover &": {
-              transform: "scale(1.05)",
+              transform: isBlurred ? "none" : "scale(1.05)",
             },
           }}
           onLoad={handleImageLoad}
         />
+
+        {/* Mild Content Overlay */}
+        {isBlurred && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              bgcolor: "rgba(0,0,0,0.3)",
+              zIndex: 3,
+            }}
+          >
+            <Typography variant="caption" sx={{ color: "white", mb: 1, fontWeight: "bold", fontSize: "0.75rem" }}>
+              Mild Content
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsBlurred(false);
+              }}
+              sx={{
+                minWidth: "auto",
+                padding: "4px 12px",
+                fontSize: "0.7rem",
+                bgcolor: "rgba(0,0,0,0.6)",
+                "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+              }}
+            >
+              Show
+            </Button>
+          </Box>
+        )}
         
         {/* Overlays */}
         <Box

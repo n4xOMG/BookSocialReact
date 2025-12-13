@@ -9,9 +9,9 @@ import { Box, Button, Card, CardMedia, Chip, IconButton, Stack, Tooltip, Typogra
 import React from "react";
 
 const BookCover = ({ book }) => {
-  const coverUrl = typeof book.bookCover === "object" ? book.bookCover.url : book.bookCover;
-  // Check for isMild or mild property directly on the bookCover object if it's an object
-  const isMild = typeof book.bookCover === "object" ? (book.bookCover.isMild || book.bookCover.mild) : false;
+  const coverUrl = book.bookCover.url;
+
+  const isMild = book.bookCover.isMild;
   const [isBlurred, setIsBlurred] = React.useState(isMild);
 
   return (

@@ -26,6 +26,7 @@ import {
   GET_BOOK_SUCCESS,
   GET_BOOKS_BY_AUTHOR_FAILED,
   GET_BOOKS_BY_AUTHOR_SUCCESS,
+  GET_BOOKS_BY_USER_ID_SUCCESS,
   GET_FAVOURED_BOOK_FAILED,
   GET_FAVOURED_BOOK_SUCCESS,
   GET_FEATURED_BOOKS_FAILED,
@@ -73,6 +74,7 @@ const initialState = {
   userFavouredBooks: [],
   userFavouredBooksHasMore: true,
   booksByAuthor: [],
+  booksByUserProfile: [],
   booksByAuthorPage: 0,
   booksByAuthorHasMore: true,
   featuredBooks: [],
@@ -225,6 +227,23 @@ export const bookReducer = (state = initialState, action) => {
         booksByAuthor: pageNumber > 0 ? [...state.booksByAuthor, ...content] : content,
         booksByAuthorPage: pageNumber,
         booksByAuthorHasMore: hasMore,
+      };
+    }
+
+    case GET_BOOKS_BY_USER_ID_SUCCESS: {
+      const payload = action.payload?.data ?? action.payload;
+      const content = Array.isArray(payload) ? payload : payload?.content || [];
+      const pageNumber = payload?.pageable?.pageNumber ?? 0;
+      const hasMore = typeof payload?.last === "boolean" ? !payload.last : false;
+
+      return {
+        ...state,
+        booksByUserProfile:
+          pageNumber > 0
+            ? [...state.booksByUserProfile, ...content]
+            : content,
+        booksByUserProfilePage: pageNumber,
+        booksByUserProfileHasMore: hasMore,
       };
     }
 

@@ -44,6 +44,7 @@ const UserInfo = ({ user, handleMessageClick, isBlocked, onBlockToggle, blockLoa
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
+                textAlign: 'left',
                 mb: 1,
               }}
             >
@@ -54,6 +55,7 @@ const UserInfo = ({ user, handleMessageClick, isBlocked, onBlockToggle, blockLoa
               sx={{
                 color: "text.secondary",
                 mb: 2,
+                textAlign: 'left',
               }}
             >
               {user?.bio}

@@ -33,6 +33,9 @@ import {
   GET_BOOKS_BY_AUTHOR_FAILED,
   GET_BOOKS_BY_AUTHOR_REQUEST,
   GET_BOOKS_BY_AUTHOR_SUCCESS,
+  GET_BOOKS_BY_USER_ID_REQUEST,
+  GET_BOOKS_BY_USER_ID_SUCCESS,
+  GET_BOOKS_BY_USER_ID_FAILED,
   GET_BOOKS_BY_MONTH_FAILED,
   GET_BOOKS_BY_MONTH_REQUEST,
   GET_BOOKS_BY_MONTH_SUCCESS,
@@ -162,6 +165,33 @@ export const getBooksByAuthorAction =
       const message = extractErrorMessage(error);
       logger.info("Error fetching books by author:", message);
       dispatch({ type: GET_BOOKS_BY_AUTHOR_FAILED, payload: message });
+      return { error: message };
+    }
+  };
+
+export const getBooksByUserIdAction =
+  (userId, { page = 0, size = 10, sortBy = "title", sortDir = "asc" } = {}) =>
+  async (dispatch) => {
+    dispatch({ type: GET_BOOKS_BY_USER_ID_REQUEST });
+
+    try {
+      const params = new URLSearchParams();
+      params.append("page", page);
+      params.append("size", size);
+      params.append("sortBy", sortBy);
+      params.append("sortDir", sortDir);
+
+      const response = await httpClient.get(
+        `${API_BASE_URL}/books/author/${userId}`,
+        { params }
+      );
+
+      const payload = response?.data?.data ?? response?.data ?? [];
+      dispatch({ type: GET_BOOKS_BY_USER_ID_SUCCESS, payload });
+      return { payload };
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      dispatch({ type: GET_BOOKS_BY_USER_ID_FAILED, payload: message });
       return { error: message };
     }
   };

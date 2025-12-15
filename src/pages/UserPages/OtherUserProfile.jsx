@@ -6,7 +6,7 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import UserBooks from "../../components/OtherUserProfile/UserBooks";
 import UserInfo from "../../components/OtherUserProfile/UserInfo";
 import UserPosts from "../../components/OtherUserProfile/UserPosts";
-import { getBooksByAuthorAction } from "../../redux/book/book.action";
+import { getBooksByUserIdAction } from "../../redux/book/book.action";
 import { fetchPostsByUserId } from "../../redux/post/post.action";
 import { blockUser, getBlockedUsers, getUserById, unblockUser } from "../../redux/user/user.action";
 import { createChat, fetchUserChats } from "../../redux/chat/chat.action";
@@ -19,7 +19,7 @@ const OtherUserProfile = () => {
   const [error, setError] = useState(null);
   const { user, blockedUsers } = useSelector((state) => state.user, shallowEqual);
   const { user: currentUser } = useSelector((state) => state.auth, shallowEqual);
-  const { booksByAuthor } = useSelector((state) => state.book, shallowEqual);
+  const { booksByUserProfile  } = useSelector((state) => state.book, shallowEqual);
   const { postsByUser } = useSelector((state) => state.post, shallowEqual);
   const { chats } = useSelector((state) => state.chat, shallowEqual);
   const [blockLoading, setBlockLoading] = useState(false);
@@ -78,7 +78,7 @@ const OtherUserProfile = () => {
         try {
           await dispatch(getUserById(userId));
           await dispatch(fetchPostsByUserId(userId));
-          await dispatch(getBooksByAuthorAction(userId));
+          await dispatch(getBooksByUserIdAction(userId));
         } catch (err) {
           console.error("Error fetching user data:", err);
           setError(err.response?.data || err.message);
@@ -155,7 +155,7 @@ const OtherUserProfile = () => {
             <UserPosts posts={postsByUser} />
           </Grid>
           <Grid item xs={12} md={4}>
-            <UserBooks books={booksByAuthor} />
+            <UserBooks books={booksByUserProfile} />
           </Grid>
         </Grid>
       </Container>

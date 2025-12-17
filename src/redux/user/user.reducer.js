@@ -59,6 +59,10 @@ import {
   GET_NEW_USERS_BY_MONTH_REQUEST,
   GET_NEW_USERS_BY_MONTH_SUCCESS,
   GET_NEW_USERS_BY_MONTH_FAILED,
+  GET_PROFILE_USER_REQUEST,
+  GET_PROFILE_USER_SUCCESS,
+  GET_PROFILE_USER_FAILED,
+  CLEAR_PROFILE_USER,
 } from "./user.actionType";
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
@@ -93,6 +97,7 @@ const initialState = {
   jwt: null,
   error: null,
   user: null,
+  profileUser: null,
   users: [],
   searchUsers: [],
   userFollowers: [],
@@ -343,5 +348,31 @@ export const userReducer = (state = initialState, action) => {
       return { ...state, loading: false, loadingMore: false, error: action.payload };
     default:
       return state;
+    case GET_PROFILE_USER_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+
+    case GET_PROFILE_USER_SUCCESS:
+      return {
+        ...state,
+        profileUser: action.payload,
+        loading: false,
+      };
+
+    case GET_PROFILE_USER_FAILED:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
+
+    case CLEAR_PROFILE_USER:
+      return {
+        ...state,
+        profileUser: null,
+      };
   }
 };

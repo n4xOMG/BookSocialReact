@@ -1,5 +1,5 @@
-import { Box, Button, Chip, Link, Stack, Typography, useMediaQuery } from "@mui/material";
-
+import { Box, Button, Chip, Stack, Typography, useMediaQuery } from "@mui/material";
+import { Link } from 'react-router-dom';
 export const BookHeroSlide = ({ book, onRead, categoryName, bookTags= [] }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery((theme) => theme.breakpoints.down("md"));

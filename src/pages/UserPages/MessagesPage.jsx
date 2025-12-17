@@ -1,5 +1,6 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography, useTheme } from "@mui/material";
+import { Link } from 'react-router-dom';
 import { Stomp } from "@stomp/stompjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -326,11 +327,22 @@ export default function MessagesPage() {
                   }}
                 />
                 <Typography
-                  sx={{
-                    ml: 2,
-                    fontWeight: 600,
-                    fontSize: "1.1rem",
-                    color: theme.palette.mode === "dark" ? "#fff" : "#1a1a2e",
+                component={Link}
+                to={`/profile/${otherUser?.id}`}
+                variant="subtitle1" 
+                fontWeight="600" 
+                sx={{ 
+                  cursor: "pointer", 
+                  lineHeight: 1, 
+                  display: "block",
+                  textDecoration: "none",
+                  color: "text.secondary", 
+                  fontStyle: "bold",
+                  pl: 2,
+                  "&:hover": {
+                              textDecoration: "underline",
+                              color: "primary.main",
+                            },  
                   }}
                 >
                   {otherUser?.username}

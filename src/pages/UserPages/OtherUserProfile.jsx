@@ -6,10 +6,11 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import UserBooks from "../../components/OtherUserProfile/UserBooks";
 import UserInfo from "../../components/OtherUserProfile/UserInfo";
 import UserPosts from "../../components/OtherUserProfile/UserPosts";
-import { getBooksByAuthorAction } from "../../redux/book/book.action";
+import { getBooksByUserIdAction } from "../../redux/book/book.action";
 import { fetchPostsByUserId } from "../../redux/post/post.action";
-import { blockUser, getBlockedUsers, getUserById, unblockUser } from "../../redux/user/user.action";
+import { blockUser, followAuthorAction, getBlockedUsers, getProfileUserById, getUserById, unblockUser, unfollowAuthorAction } from "../../redux/user/user.action";
 import { createChat, fetchUserChats } from "../../redux/chat/chat.action";
+import { CLEAR_PROFILE_USER } from "../../redux/user/user.actionType";
 const OtherUserProfile = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
@@ -17,9 +18,9 @@ const OtherUserProfile = () => {
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { user, blockedUsers } = useSelector((state) => state.user, shallowEqual);
+  const { profileUser: user, blockedUsers } = useSelector((state) => state.user, shallowEqual);
   const { user: currentUser } = useSelector((state) => state.auth, shallowEqual);
-  const { booksByAuthor } = useSelector((state) => state.book, shallowEqual);
+  const { booksByUserProfile  } = useSelector((state) => state.book, shallowEqual);
   const { postsByUser } = useSelector((state) => state.post, shallowEqual);
   const { chats } = useSelector((state) => state.chat, shallowEqual);
   const [blockLoading, setBlockLoading] = useState(false);
@@ -36,6 +37,21 @@ const OtherUserProfile = () => {
       return isUserOne || isUserTwo;
     });
   }, [chats, currentUser]);
+
+  const handleFollowToggle = async () => {
+    if (!currentUser || isViewingOwnProfile) return;
+
+    try {
+      if (user?.followedByCurrentUser) {
+        await dispatch(unfollowAuthorAction(user.id));
+      } else {
+        await dispatch(followAuthorAction(user.id));
+      }
+    } catch (err) {
+      console.error("Failed to toggle follow:", err);
+    }
+  };
+
 
   const handleMessageClick = async () => {
     if (isBlocked || isViewingOwnProfile) return;
@@ -76,9 +92,9 @@ const OtherUserProfile = () => {
         setLoading(true);
         setError(null);
         try {
-          await dispatch(getUserById(userId));
+          await dispatch(getProfileUserById(userId));
           await dispatch(fetchPostsByUserId(userId));
-          await dispatch(getBooksByAuthorAction(userId));
+          await dispatch(getBooksByUserIdAction(userId));
         } catch (err) {
           console.error("Error fetching user data:", err);
           setError(err.response?.data || err.message);
@@ -102,6 +118,12 @@ const OtherUserProfile = () => {
       /* handled silently */
     });
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch({ type: CLEAR_PROFILE_USER });
+    dispatch(getProfileUserById(userId));
+  }, [dispatch, userId]);
+
 
   if (loading) {
     return <LoadingSpinner />;
@@ -148,6 +170,8 @@ const OtherUserProfile = () => {
             onBlockToggle={handleBlockToggle}
             blockLoading={blockLoading}
             disableActions={isViewingOwnProfile}
+            onFollowToggle={handleFollowToggle}
+            isFollowing={user?.followedByCurrentUser}
           />
         </Box>
         <Grid container spacing={4}>
@@ -155,7 +179,7 @@ const OtherUserProfile = () => {
             <UserPosts posts={postsByUser} />
           </Grid>
           <Grid item xs={12} md={4}>
-            <UserBooks books={booksByAuthor} />
+            <UserBooks books={booksByUserProfile} />
           </Grid>
         </Grid>
       </Container>

@@ -244,7 +244,7 @@ const BookPerformanceChart = ({ bookPerformance, loading }) => {
                     <TableRow key={book.bookId} hover>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Avatar src={book.bookCover} alt={book.title} sx={{ width: 40, height: 40 }} />
+                          <Avatar src={book.bookCover.url} alt={book.title} sx={{ width: 40, height: 40 }} />
                           <Box>
                             <Typography variant="body2" fontWeight="medium">
                               {book.title}

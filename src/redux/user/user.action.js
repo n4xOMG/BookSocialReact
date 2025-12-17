@@ -61,6 +61,9 @@ import {
   UPDATE_USER_ROLE_REQUEST,
   UPDATE_USER_ROLE_SUCCESS,
   UPDATE_USER_SUCCESS,
+  GET_PROFILE_USER_REQUEST,
+  GET_PROFILE_USER_SUCCESS,
+  GET_PROFILE_USER_FAILED,
 } from "./user.actionType";
 
 const logger = createLogger("UserActions");
@@ -105,6 +108,33 @@ export const getUserById = (userId) => async (dispatch) => {
     return { error: message };
   }
 };
+
+export const getProfileUserById = (userId) => async (dispatch) => {
+  dispatch({ type: GET_PROFILE_USER_REQUEST });
+
+  try {
+    const response = await api.get(`${API_BASE_URL}/user/profile/${userId}`);
+    const { data, message, success } = extractResponsePayload(response);
+    const userData = data ?? null;
+
+    dispatch({
+      type: GET_PROFILE_USER_SUCCESS,
+      payload: userData,
+    });
+
+    return { payload: userData, message, success };
+  } catch (error) {
+    const message = extractErrorMessage(error);
+
+    dispatch({
+      type: GET_PROFILE_USER_FAILED,
+      payload: message,
+    });
+
+    return { error: message };
+  }
+};
+
 
 export const editUserAction = (userId, userData) => async (dispatch) => {
   dispatch({ type: UPDATE_USER_REQUEST });

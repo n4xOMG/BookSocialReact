@@ -1,10 +1,9 @@
-// UserInfo.jsx
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { Avatar, Box, Button, Card, CardContent, Grid, Typography, useTheme } from "@mui/material";
 import React from "react";
 
-const UserInfo = ({ user, handleMessageClick, isBlocked, onBlockToggle, blockLoading, disableActions }) => {
+const UserInfo = ({ user, handleMessageClick, isBlocked, onBlockToggle, blockLoading, disableActions, onFollowToggle, isFollowing, }) => {
   const theme = useTheme();
 
   return (
@@ -87,6 +86,30 @@ const UserInfo = ({ user, handleMessageClick, isBlocked, onBlockToggle, blockLoa
               >
                 Message
               </Button>
+
+              {!disableActions && (
+                <Button
+                  variant={isFollowing ? "contained" : "outlined"}
+                  color={isFollowing ? "error" : "primary"}
+                  onClick={onFollowToggle}
+                  sx={{
+                    borderRadius: "12px",
+                    px: 3,
+                    py: 1,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    boxShadow: isFollowing
+                      ? "0 4px 16px rgba(255, 107, 107, 0.3)"
+                      : "0 4px 16px rgba(157, 80, 187, 0.3)",
+                    "&:hover": {
+                      transform: "translateY(-2px)",
+                    },
+                  }}
+                >
+                  {isFollowing ? "Unfollow" : "Follow"}
+                </Button>
+              )}
+
               {!disableActions && (
                 <Button
                   variant="outlined"

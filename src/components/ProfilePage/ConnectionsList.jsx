@@ -4,7 +4,9 @@ import { Avatar, Box, Button, Divider, Grid, Paper, Skeleton, Typography, useThe
 import PropTypes from "prop-types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { blockUser, getBlockedUsers, getUserFollowers, getUserFollowings, unblockUser } from "../../redux/user/user.action";
+import { blockUser, followAuthorAction, getBlockedUsers, getUserFollowers, getUserFollowings, unblockUser, unfollowAuthorAction } from "../../redux/user/user.action";
+import { PersonRemoveOutlined } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 const PLACEHOLDER_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/BLANK.jpg/138px-BLANK.jpg";
 
@@ -13,31 +15,23 @@ const VARIANT_META = {
     title: "Your Followers",
     emptyTitle: "No Followers Yet",
     emptyDescription: "When people follow you, they'll appear here. Share your profile to connect with more readers!",
-    actionLabel: "Block",
-    actionColor: "error",
-    ActionIcon: BlockIcon,
   },
   following: {
     title: "People You Follow",
     emptyTitle: "You're Not Following Anyone Yet",
     emptyDescription: "Follow authors and other readers to keep up with their activities and recommendations.",
-    actionLabel: "Block",
-    actionColor: "error",
-    ActionIcon: BlockIcon,
   },
   blocked: {
     title: "Blocked Users",
     emptyTitle: "You Haven't Blocked Anyone",
     emptyDescription:
       "Use the block option on followers or following lists to prevent unwanted interactions. Blocked users will appear here.",
-    actionLabel: "Unblock",
-    actionColor: "primary",
-    ActionIcon: LockOpenIcon,
   },
 };
 
 const ConnectionsList = ({ userId, variant }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pendingId, setPendingId] = useState(null);
@@ -74,6 +68,9 @@ const ConnectionsList = ({ userId, variant }) => {
     (user) => {
       if (variant === "blocked") {
         return dispatch(unblockUser(user.id));
+      }
+      if (variant === "following") {
+        return dispatch(unfollowAuthorAction(user.id));
       }
       return dispatch(blockUser(user.id));
     },
@@ -114,7 +111,23 @@ const ConnectionsList = ({ userId, variant }) => {
   const meta = VARIANT_META[variant];
   const ActionIconComponent = meta?.ActionIcon;
 
-  const users = Array.isArray(dataset) ? dataset : [];
+  const users = useMemo(() => {
+    if (!Array.isArray(dataset)) return [];
+
+    const map = new Map();
+    dataset.forEach((u) => {
+      if (u?.id) {
+        map.set(u.id, u);
+      }
+    });
+
+    return Array.from(map.values());
+  }, [dataset]);
+
+  const followingIds = useMemo(() => {
+    return new Set((userFollowings || []).map(u => u.id));
+  }, [userFollowings]);
+
 
   if (loading) {
     return (
@@ -217,6 +230,7 @@ const ConnectionsList = ({ userId, variant }) => {
           {users.map((user) => {
             const displayName = user.fullname || user.username;
             const subtitle = user.username ? `@${user.username}` : user.bio;
+            const isFollowing = followingIds.has(user.id);
             return (
               <Grid item xs={12} sm={6} md={4} key={user.id}>
                 <Paper
@@ -249,10 +263,12 @@ const ConnectionsList = ({ userId, variant }) => {
                       border: "2px solid",
                       borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
                       boxShadow: "0 4px 12px rgba(157, 80, 187, 0.2)",
+                      cursor: "pointer",
                     }}
+                    onClick={() => navigate(`/profile/${user.id}`)}
                   />
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" fontWeight="medium" noWrap>
+                    <Typography variant="subtitle1" fontWeight="medium" noWrap sx={{cursor: "pointer"}} onClick={() => navigate(`/profile/${user.id}`)}>
                       {displayName || "Unknown User"}
                     </Typography>
                     {subtitle && (
@@ -262,23 +278,58 @@ const ConnectionsList = ({ userId, variant }) => {
                     )}
                     <Button
                       size="small"
-                      variant="outlined"
-                      color={meta?.actionColor}
-                      startIcon={ActionIconComponent ? <ActionIconComponent fontSize="small" /> : null}
-                      sx={{ mt: 1, textTransform: "none", borderRadius: 5, fontSize: "0.75rem" }}
+                      variant={variant === "followers" && isFollowing ? "contained" : "outlined"}
+                      color={
+                        variant === "blocked"
+                          ? "primary"
+                          : variant === "following"
+                          ? "error"
+                          : "primary"
+                      }
+                      startIcon={
+                        variant === "blocked" ? (
+                          <LockOpenIcon fontSize="small" />
+                        ) : variant === "following" ? (
+                          <PersonRemoveOutlined fontSize="small" />
+                        ) : null
+                      }
+                      sx={{
+                        mt: 1,
+                        textTransform: "none",
+                        borderRadius: 5,
+                        fontSize: "0.75rem",
+                      }}
+                      disabled={pendingId === user.id}
                       onClick={async () => {
                         try {
                           setPendingId(user.id);
-                          await performAction(user);
+
+                          if (variant === "blocked") {
+                            await dispatch(unblockUser(user.id));
+                          } 
+                          else if (variant === "following") {
+                            await dispatch(unfollowAuthorAction(user.id));
+                          } 
+                          else if (variant === "followers" && !isFollowing) {
+                            await dispatch(followAuthorAction(user.id));
+                          }
+
                         } catch (err) {
                           setError(err.message || "Unable to update user.");
                         } finally {
                           setPendingId(null);
                         }
                       }}
-                      disabled={pendingId === user.id}
                     >
-                      {pendingId === user.id ? `${meta?.actionLabel}ing...` : meta?.actionLabel}
+                      {pendingId === user.id
+                        ? "Processing..."
+                        : variant === "blocked"
+                        ? "Unblock"
+                        : variant === "following"
+                        ? "Unfollow"
+                        : isFollowing
+                        ? "Following"
+                        : "Follow back"}
                     </Button>
                   </Box>
                 </Paper>

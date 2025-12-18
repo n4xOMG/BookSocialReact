@@ -80,50 +80,57 @@ const PostDetail = () => {
 
     return (
       <Grid container spacing={1} sx={{ mt: 2, mb: 1 }}>
-        {images.slice(0, 4).map((url, index) => (
-          <Grid
-            key={index}
-            item
-            xs={count === 1 ? 12 : count === 2 ? 6 : count === 3 && index === 0 ? 12 : 6}
-            sx={{
-              position: "relative",
-              height: count === 1 ? "auto" : count === 2 ? 400 : count === 3 && index === 0 ? 250 : 200,
-            }}
-          >
-            <Box
-              component="img"
-              src={url}
-              onClick={() => handleImageClick(index, source)}
+        {images.slice(0, 4).map((item, index) => {
+          const imageUrl =
+            typeof item === "string"
+              ? item
+              : item?.url || "";
+
+          return (
+            <Grid
+              key={index}
+              item
+              xs={count === 1 ? 12 : count === 2 ? 6 : count === 3 && index === 0 ? 12 : 6}
               sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 2,
-                cursor: "pointer",
+                position: "relative",
+                height: count === 1 ? "auto" : count === 2 ? 400 : count === 3 && index === 0 ? 250 : 200,
               }}
-            />
-            {index === 3 && count > 4 && (
+            >
               <Box
+                component="img"
+                src={imageUrl}
+                onClick={() => handleImageClick(index, source)}
                 sx={{
-                  position: "absolute",
-                  inset: 0,
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  color: "#fff",
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
                   borderRadius: 2,
                   cursor: "pointer",
                 }}
-                onClick={() => handleImageClick(index, source)}
-              >
-                +{count - 4} more
-              </Box>
-            )}
-          </Grid>
-        ))}
+              />
+              {index === 3 && count > 4 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    bgcolor: "rgba(0,0,0,0.5)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    color: "#fff",
+                    fontSize: "1.5rem",
+                    fontWeight: "bold",
+                    borderRadius: 2,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleImageClick(index, source)}
+                >
+                  +{count - 4} more
+                </Box>
+              )}
+            </Grid>
+          )
+        })}
       </Grid>
     );
   };
@@ -219,8 +226,7 @@ const PostDetail = () => {
             avatar={<Avatar src={post.user.avatarUrl || "/placeholder.svg"} alt={post.user.username} sx={{ width: 48, height: 48 }} />}
             title={
               <Typography 
-                component={Link}
-                to={`/profile/${post.user.id}`}
+                onClick={() => navigate(`/profile/${post.user.id}`)}
                 variant="subtitle1" 
                 fontWeight="600" 
                 sx={{ 
@@ -307,6 +313,7 @@ const PostDetail = () => {
                         backgroundColor: "rgba(255,255,255,0.8)",
                         width: 24,
                         height: 24,
+                        cursor: "pointer"
                       }}
                     >
                       &#10005;
@@ -353,14 +360,14 @@ const PostDetail = () => {
                     }
                     title={
                       <Typography
-                        component={Link}
-                        to={`/profile/${post.sharedPostUser.id}`}
+                        onClick={() => navigate(`/profile/${post.sharedPostUser.id}`)}
                         variant="subtitle2"
                         fontWeight="600"
                         sx={{
                           textDecoration: "none",
                           color: "inherit",
                           "&:hover": { textDecoration: "underline", color: "primary.main" },
+                          cursor: "pointer"
                         }}
                     >
                       {post.sharedPostUser?.username || "User"}
@@ -369,8 +376,7 @@ const PostDetail = () => {
                   subheader={
                     <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
                       <Typography 
-                        component={Link}
-                        to={`/posts/${post.sharedPostId}`}
+                        onClick={() => navigate(`/posts/${post.sharedPostId}`)}
                         variant="caption" 
                         color="text.secondary" 
                         sx={{
@@ -380,7 +386,8 @@ const PostDetail = () => {
                           "&:hover": {
                                     textDecoration: "underline",
                                     color: "primary.main",
-                                  }
+                                  },
+                          cursor: "pointer",
                         }}
                       >
                         {formatRelativeTime(post.sharedPostTimestamp)}

@@ -87,48 +87,48 @@ const PostDetail = () => {
               : item?.url || "";
 
           return (
-            <Grid
-              key={index}
-              item
-              xs={count === 1 ? 12 : count === 2 ? 6 : count === 3 && index === 0 ? 12 : 6}
-              sx={{
-                position: "relative",
-                height: count === 1 ? "auto" : count === 2 ? 400 : count === 3 && index === 0 ? 250 : 200,
-              }}
-            >
-              <Box
-                component="img"
+          <Grid
+            key={index}
+            item
+            xs={count === 1 ? 12 : count === 2 ? 6 : count === 3 && index === 0 ? 12 : 6}
+            sx={{
+              position: "relative",
+              height: count === 1 ? "auto" : count === 2 ? 400 : count === 3 && index === 0 ? 250 : 200,
+            }}
+          >
+            <Box
+              component="img"
                 src={imageUrl}
-                onClick={() => handleImageClick(index, source)}
+              onClick={() => handleImageClick(index, source)}
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: 2,
+                cursor: "pointer",
+              }}
+            />
+            {index === 3 && count > 4 && (
+              <Box
                 sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
+                  position: "absolute",
+                  inset: 0,
+                  bgcolor: "rgba(0,0,0,0.5)",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "#fff",
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
                   borderRadius: 2,
                   cursor: "pointer",
                 }}
-              />
-              {index === 3 && count > 4 && (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    inset: 0,
-                    bgcolor: "rgba(0,0,0,0.5)",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    color: "#fff",
-                    fontSize: "1.5rem",
-                    fontWeight: "bold",
-                    borderRadius: 2,
-                    cursor: "pointer",
-                  }}
-                  onClick={() => handleImageClick(index, source)}
-                >
-                  +{count - 4} more
-                </Box>
-              )}
-            </Grid>
+                onClick={() => handleImageClick(index, source)}
+              >
+                +{count - 4} more
+              </Box>
+            )}
+          </Grid>
           )
         })}
       </Grid>
@@ -386,8 +386,8 @@ const PostDetail = () => {
                           "&:hover": {
                                     textDecoration: "underline",
                                     color: "primary.main",
-                                  },
-                          cursor: "pointer",
+                                      },
+                              cursor: "pointer",
                         }}
                       >
                         {formatRelativeTime(post.sharedPostTimestamp)}

@@ -42,7 +42,7 @@ const ReadingHistoryCard = memo(({ readingProgresses = [] }) => {
   const sortedProgresses = [...readingProgresses].sort((a, b) => new Date(b.lastReadAt) - new Date(a.lastReadAt)).slice(0, 5); // Limit to 5 most recent books
 
   return (
-    <Box sx={{ maxHeight: 320, overflowY: "auto", pr: 1 }}>
+    <Box sx={{ maxHeight: 150, overflowY: "auto", pr: 1 }}>
       {sortedProgresses.map((progress, index) => (
         <Box
           key={progress.id || index}

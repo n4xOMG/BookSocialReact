@@ -10,9 +10,9 @@ import {
   CircularProgress,
   Divider,
   FormControl,
-  Grid,
   IconButton,
   InputAdornment,
+  Menu,
   MenuItem,
   Paper,
   Select,
@@ -20,13 +20,12 @@ import {
   Tooltip,
   Typography,
   useMediaQuery,
-  useTheme,
-  Menu,
+  useTheme
 } from "@mui/material";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { useNavigate } from "react-router-dom";
 
 // Modals
 import AddMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/AddMangaChapterModal";

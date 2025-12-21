@@ -7,7 +7,8 @@ import Layout from "./Layout";
 import { CollaborativeEditorWrapper } from "./components/AdminPage/Dashboard/BooksTab/ChapterModal/CollaborativeEditorWrapper";
 import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
 import RateLimitAlert from "./components/common/RateLimitAlert";
-import { useAuthInitialization, useRateLimitAlert, useTheme, useWebSocketConnection } from "./hooks";
+import AccountRestrictionAlert from "./components/common/AccountRestrictionAlert";
+import { useAuthInitialization, useRateLimitAlert, useAccountRestrictionAlert, useTheme, useWebSocketConnection } from "./hooks";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
 import OtpVerification from "./pages/Authentication/OtpVerification";
@@ -42,6 +43,7 @@ function App() {
   // Custom hooks for separated concerns
   const { theme, toggleTheme } = useTheme();
   const { rateLimitAlert, handleCloseRateLimitAlert } = useRateLimitAlert();
+  const { accountRestrictionAlert, handleCloseAccountRestrictionAlert } = useAccountRestrictionAlert();
   const { loading } = useAuthInitialization();
   useWebSocketConnection();
 
@@ -104,6 +106,13 @@ function App() {
         </Routes>
         <AuthDialog />
         <RateLimitAlert open={rateLimitAlert.open} handleClose={handleCloseRateLimitAlert} retryAfter={rateLimitAlert.retryAfter} />
+        <AccountRestrictionAlert
+          open={accountRestrictionAlert.open}
+          handleClose={handleCloseAccountRestrictionAlert}
+          message={accountRestrictionAlert.message}
+          isBanned={accountRestrictionAlert.isBanned}
+          isSuspended={accountRestrictionAlert.isSuspended}
+        />
       </div>
     </ThemeProvider>
   );

@@ -16,18 +16,17 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { formatDistanceToNow } from "date-fns";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ViewImageModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
 import CommentSection from "../../components/BookClubs/CommentSection";
 import ShareModal from "../../components/BookClubs/ShareModal";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { addPost, deletePost, fetchPostById, likePost, updatePost } from "../../redux/post/post.action";
-import { useAuthCheck } from "../../utils/useAuthCheck";
+import { formatExactTime, formatRelativeTime } from "../../utils/formatDate";
 import { UploadToServer } from "../../utils/uploadToServer";
-import { formatRelativeTime, formatExactTime } from "../../utils/formatDate";
+import { useAuthCheck } from "../../utils/useAuthCheck";
 
 const PostDetail = () => {
   const { postId } = useParams();

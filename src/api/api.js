@@ -67,19 +67,36 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle banned/suspended account errors (403)
+    // Handle banned account errors (403)
     if (error.response && error.response.status === 403) {
       const errorMessage = error.response.data?.message || "";
-      if (errorMessage.includes("banned") || errorMessage.includes("suspended")) {
+      if (errorMessage.toLowerCase().includes("banned")) {
         apiEvents.emit("accountRestricted", {
           message: errorMessage,
-          isBanned: errorMessage.toLowerCase().includes("banned"),
-          isSuspended: errorMessage.toLowerCase().includes("suspended"),
+          isBanned: true,
+          isSuspended: false,
         });
         localStorage.removeItem("jwt");
         localStorage.removeItem("tokenTimestamp");
+        localStorage.removeItem("user");
+        return Promise.reject(error);
       }
-      return Promise.reject(error);
+    }
+
+    // Handle suspended account errors (401)
+    if (error.response && error.response.status === 401) {
+      const errorMessage = error.response.data?.message || "";
+      if (errorMessage.toLowerCase().includes("suspended")) {
+        apiEvents.emit("accountRestricted", {
+          message: errorMessage,
+          isBanned: false,
+          isSuspended: true,
+        });
+        localStorage.removeItem("jwt");
+        localStorage.removeItem("tokenTimestamp");
+        localStorage.removeItem("user");
+        return Promise.reject(error);
+      }
     }
 
 

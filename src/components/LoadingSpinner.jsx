@@ -1,47 +1,34 @@
 import { Box, CircularProgress, useTheme } from "@mui/material";
 import React from "react";
 
-const LoadingSpinner = () => {
+const LoadingSpinner = ({ fullscreen = false }) => {
   const theme = useTheme();
 
   return (
     <Box
       sx={{
+        position: fullscreen ? "fixed" : "absolute",
+        inset: 0,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "200px",
+        zIndex: 1300,
       }}
     >
       <Box
         sx={{
-          position: "relative",
+          width: 64,
+          height: 64,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          width: "80px",
-          height: "80px",
-          background: theme.palette.background.paper,
-          backdropFilter: "blur(20px)",
-          border: "1px solid",
-          borderColor: theme.palette.divider,
-          borderRadius: "16px",
-          boxShadow: theme.shadows[4],
         }}
       >
-        <CircularProgress
-          size={40}
-          thickness={4}
-          sx={{
-            color: theme.palette.primary.main,
-            "& .MuiCircularProgress-circle": {
-              strokeLinecap: "round",
-            },
-          }}
-        />
+        <CircularProgress size={32} thickness={4} />
       </Box>
     </Box>
   );
 };
+
 
 export default LoadingSpinner;

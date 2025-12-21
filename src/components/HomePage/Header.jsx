@@ -215,13 +215,12 @@ const Header = ({ onSidebarToggle }) => {
                   onClick={() => navigate("/")}
                 >
                   <Avatar
-                    src="/logo.png"
+                    src="/logo512.png"
                     alt="BookSocial"
                     sx={{
                       width: 40,
                       height: 40,
                       mr: 1.5,
-                      background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
                       display: { xs: "none", sm: "flex" },
                       border: "2px solid",
                       borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.15)" : "rgba(157, 80, 187, 0.2)",

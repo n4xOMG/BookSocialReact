@@ -7,7 +7,8 @@ import Layout from "./Layout";
 import { CollaborativeEditorWrapper } from "./components/AdminPage/Dashboard/BooksTab/ChapterModal/CollaborativeEditorWrapper";
 import ChapterDetailPage from "./components/HomePage/ChapterDetailPage/ChapterDetailPage";
 import RateLimitAlert from "./components/common/RateLimitAlert";
-import { useAuthInitialization, useRateLimitAlert, useTheme, useWebSocketConnection } from "./hooks";
+import AccountRestrictionAlert from "./components/common/AccountRestrictionAlert";
+import { useAuthInitialization, useRateLimitAlert, useAccountRestrictionAlert, useTheme, useWebSocketConnection } from "./hooks";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
 import OtpVerification from "./pages/Authentication/OtpVerification";
@@ -29,6 +30,11 @@ import UserBooks from "./pages/UserPages/UserBooks";
 import UserBookshelf from "./pages/UserPages/UserBookshelf";
 import UserUploadBook from "./pages/UserPages/UserUploadBook";
 import { useAuthCheck } from "./utils/useAuthCheck";
+import AboutUs from "./pages/Static/AboutUs";
+import FAQ from "./pages/Static/FAQ";
+import PrivacyPolicy from "./pages/Static/PrivacyPolicy";
+import TermsOfUse from "./pages/Static/TermsOfUse";
+import ContactUs from "./pages/Static/ContactUs";
 
 function App() {
   const { user } = useSelector((store) => store.auth, shallowEqual);
@@ -37,6 +43,7 @@ function App() {
   // Custom hooks for separated concerns
   const { theme, toggleTheme } = useTheme();
   const { rateLimitAlert, handleCloseRateLimitAlert } = useRateLimitAlert();
+  const { accountRestrictionAlert, handleCloseAccountRestrictionAlert } = useAccountRestrictionAlert();
   const { loading } = useAuthInitialization();
   useWebSocketConnection();
 
@@ -63,37 +70,49 @@ function App() {
         <Routes>
           <Route element={<Layout toggleTheme={toggleTheme} />}>
             <Route path="/" element={<HomePage />} />
-            {/* <Route path="/stories" element={user ? <UserBooks toggleTheme={toggleTheme}/> : <HomePage toggleTheme={toggleTheme}/>} /> */}
             <Route path="/library" element={user ? <UserBookshelf /> : <HomePage />} />
             <Route path="/book-clubs" element={<BookClubs />} />
-            <Route path="/profile" element={user ? <ProfilePage /> : <HomePage />} />
-            <Route path="/profile/:userId" element={<OtherUserProfile />} />
             <Route path="/books/:bookId" element={<BookDetailPage />} />
             <Route path="/credit-packages" element={<CreditPackages />} />
             <Route path="/search-results" element={<BookSearchResults />} />
             <Route path="/posts/:postId" element={<PostDetail />} />
-            <Route path="/author/dashboard" element={<AuthorDashboard />} />
             <Route path="/author/payout-settings" element={<AuthorPayoutSettings />} />
-            <Route path="/chats/:chatId" element={user ? <MessagesPage /> : <Navigate to="/" replace />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfUse />} />
+            <Route path="/contact" element={<ContactUs />} />
           </Route>
-          <Route element={<Layout toggleTheme={toggleTheme} showHeader={false} />}>
+          <Route element={<Layout toggleTheme={toggleTheme} showFooter={false}/>}>
+            <Route path="/chats/:chatId" element={user ? <MessagesPage /> : <Navigate to="/" replace />} />
+            <Route path="/profile" element={user ? <ProfilePage /> : <HomePage />} />
+            <Route path="/profile/:userId" element={<OtherUserProfile />} />
+            <Route path="/author/dashboard" element={<AuthorDashboard />} />
+          </Route>
+          <Route element={<Layout toggleTheme={toggleTheme} showHeader={false} showFooter={false}/>}>
             <Route path="/stories" element={<UserBooks />} />
           </Route>
-
-          <Route path="/sign-in" element={<SignIn toggleTheme={toggleTheme} />} />
-          <Route path="/sign-up" element={user ? <Navigate to="/" replace /> : <SignUp toggleTheme={toggleTheme} />} />
-          <Route path="/verify-otp" element={user ? <Navigate to="/" replace /> : <OtpVerification toggleTheme={toggleTheme} />} />
-          <Route path="/forgot-password" element={<ForgotPassword toggleTheme={toggleTheme} />} />
-          <Route path="/reset-password" element={<ResetPassword toggleTheme={toggleTheme} />} />
-
+          <Route element={<Layout toggleTheme={toggleTheme} showHeader={false} showSidebar={false}/>}>
+            <Route path="/sign-in" element={<SignIn toggleTheme={toggleTheme} />} />
+            <Route path="/sign-up" element={user ? <Navigate to="/" replace /> : <SignUp toggleTheme={toggleTheme} />} />
+            <Route path="/verify-otp" element={user ? <Navigate to="/" replace /> : <OtpVerification toggleTheme={toggleTheme} />} />
+            <Route path="/forgot-password" element={<ForgotPassword toggleTheme={toggleTheme} />} />
+            <Route path="/reset-password" element={<ResetPassword toggleTheme={toggleTheme} />} />
+          </Route>
           <Route path="/admin/*" element={<AdminDashboard />} />
-
           <Route path="/upload-book" element={<UserUploadBook />} />
           <Route path="/books/:bookId/chapters/:chapterId" element={<ChapterDetailPage />} />
           <Route path="/edit-chapter/:roomId" element={<CollaborativeEditorWrapper />} />
         </Routes>
         <AuthDialog />
         <RateLimitAlert open={rateLimitAlert.open} handleClose={handleCloseRateLimitAlert} retryAfter={rateLimitAlert.retryAfter} />
+        <AccountRestrictionAlert
+          open={accountRestrictionAlert.open}
+          handleClose={handleCloseAccountRestrictionAlert}
+          message={accountRestrictionAlert.message}
+          isBanned={accountRestrictionAlert.isBanned}
+          isSuspended={accountRestrictionAlert.isSuspended}
+        />
       </div>
     </ThemeProvider>
   );

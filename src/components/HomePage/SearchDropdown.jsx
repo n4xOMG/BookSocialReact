@@ -121,7 +121,7 @@ const SearchDropdown = ({ anchorEl, searchQuery, onClose }) => {
                   <ListItemAvatar sx={{ minWidth: 60, mr: 1 }}>
                     <CardMedia
                       component="img"
-                      image={book.bookCover || "https://via.placeholder.com/60x80?text=No+Cover"}
+                      image={book.bookCover.url || "https://via.placeholder.com/60x80?text=No+Cover"}
                       alt={book.title}
                       sx={{ width: 50, height: 70, objectFit: "cover", borderRadius: 1 }}
                     />

@@ -16,18 +16,17 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { formatDistanceToNow } from "date-fns";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ViewImageModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/ViewImageModal";
 import CommentSection from "../../components/BookClubs/CommentSection";
 import ShareModal from "../../components/BookClubs/ShareModal";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { addPost, deletePost, fetchPostById, likePost, updatePost } from "../../redux/post/post.action";
-import { useAuthCheck } from "../../utils/useAuthCheck";
+import { formatExactTime, formatRelativeTime } from "../../utils/formatDate";
 import { UploadToServer } from "../../utils/uploadToServer";
-import { formatRelativeTime, formatExactTime } from "../../utils/formatDate";
+import { useAuthCheck } from "../../utils/useAuthCheck";
 
 const PostDetail = () => {
   const { postId } = useParams();
@@ -80,7 +79,13 @@ const PostDetail = () => {
 
     return (
       <Grid container spacing={1} sx={{ mt: 2, mb: 1 }}>
-        {images.slice(0, 4).map((url, index) => (
+        {images.slice(0, 4).map((item, index) => {
+          const imageUrl =
+            typeof item === "string"
+              ? item
+              : item?.url || "";
+
+          return (
           <Grid
             key={index}
             item
@@ -92,7 +97,7 @@ const PostDetail = () => {
           >
             <Box
               component="img"
-              src={url}
+                src={imageUrl}
               onClick={() => handleImageClick(index, source)}
               sx={{
                 width: "100%",
@@ -123,7 +128,8 @@ const PostDetail = () => {
               </Box>
             )}
           </Grid>
-        ))}
+          )
+        })}
       </Grid>
     );
   };
@@ -219,8 +225,7 @@ const PostDetail = () => {
             avatar={<Avatar src={post.user.avatarUrl || "/placeholder.svg"} alt={post.user.username} sx={{ width: 48, height: 48 }} />}
             title={
               <Typography 
-                component={Link}
-                to={`/profile/${post.user.id}`}
+                onClick={() => navigate(`/profile/${post.user.id}`)}
                 variant="subtitle1" 
                 fontWeight="600" 
                 sx={{ 
@@ -307,6 +312,7 @@ const PostDetail = () => {
                         backgroundColor: "rgba(255,255,255,0.8)",
                         width: 24,
                         height: 24,
+                        cursor: "pointer"
                       }}
                     >
                       &#10005;
@@ -353,14 +359,14 @@ const PostDetail = () => {
                     }
                     title={
                       <Typography
-                        component={Link}
-                        to={`/profile/${post.sharedPostUser.id}`}
+                        onClick={() => navigate(`/profile/${post.sharedPostUser.id}`)}
                         variant="subtitle2"
                         fontWeight="600"
                         sx={{
                           textDecoration: "none",
                           color: "inherit",
                           "&:hover": { textDecoration: "underline", color: "primary.main" },
+                          cursor: "pointer"
                         }}
                     >
                       {post.sharedPostUser?.username || "User"}
@@ -369,8 +375,7 @@ const PostDetail = () => {
                   subheader={
                     <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
                       <Typography 
-                        component={Link}
-                        to={`/posts/${post.sharedPostId}`}
+                        onClick={() => navigate(`/posts/${post.sharedPostId}`)}
                         variant="caption" 
                         color="text.secondary" 
                         sx={{
@@ -380,7 +385,8 @@ const PostDetail = () => {
                           "&:hover": {
                                     textDecoration: "underline",
                                     color: "primary.main",
-                                  }
+                                      },
+                              cursor: "pointer",
                         }}
                       >
                         {formatRelativeTime(post.sharedPostTimestamp)}

@@ -12,7 +12,10 @@ import { formatExactTime } from "../../utils/formatDate";
 
 const PostImage = ({ item, index, count, handleImageClick, source }) => {
   const theme = useTheme();
-  const imageUrl = typeof item === "object" ? item.url : item;
+  const imageUrl =
+    typeof item === "string"
+      ? item
+      : item?.url || "";
   const isMild = typeof item === "object" ? (item.isMild || item.mild) : false;
   const [isBlurred, setIsBlurred] = useState(isMild);
 
@@ -212,6 +215,12 @@ const PostItem = ({ post, checkAuth }) => {
     setShowComments(!showComments);
   };
 
+  const images = imageSource === "shared"
+    ? post.sharedPostImages
+    : post.images;
+
+  const currentImage = images?.[currentImageIndex];
+
   return (
     <Card
       elevation={0}
@@ -235,9 +244,8 @@ const PostItem = ({ post, checkAuth }) => {
         avatar={<Avatar src={post.user.avatarUrl || "/placeholder.svg"} alt={post.user.username} sx={{ width: 48, height: 48 }} />}
         title={
           <Typography
-            component={Link}
-            to={`/profile/${post.user.id}`}
             variant="subtitle1"
+            onClick={() => navigate(`/profile/${post.user.id}`)}
             fontWeight="600"
             sx={{
               cursor: "pointer",
@@ -258,11 +266,11 @@ const PostItem = ({ post, checkAuth }) => {
         subheader={
           <Tooltip title={formatExactTime(post.timestamp)} placement="bottom">
             <Typography
-              component={Link}
-              to={`/posts/${post.id}`}
+              onClick={() => navigate(`/posts/${post.id}`)}
               variant="caption"
               color="text.secondary"
               sx={{
+                cursor: "pointer",
                 mt: 0,
                 lineHeight: 1,
                 textDecoration: "none",
@@ -485,22 +493,11 @@ const PostItem = ({ post, checkAuth }) => {
       />
 
       {/* View Image Modal */}
-      {post.images.length > 0 && (
+      {isModalOpen && currentImage && (
         <ViewImageModal
           open={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          image={post.images[currentImageIndex]}
-          onNext={handleNextImage}
-          onPrev={handlePrevImage}
-        />
-      )}
-
-      {/* View Image Modal for Shared Post Images */}
-      {post.sharedPostImages && post.sharedPostImages.length > 0 && (
-        <ViewImageModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          image={post.sharedPostImages[currentImageIndex] || post.images[currentImageIndex]}
+          image={currentImage}
           onNext={handleNextImage}
           onPrev={handlePrevImage}
         />

@@ -55,9 +55,6 @@ export default function MessageMenu() {
 
   return (
     <>
-      {loading ? (
-        <LoadingSpinner />
-      ) : (
         <div>
           <IconButton
             id="basic-button"
@@ -66,7 +63,15 @@ export default function MessageMenu() {
             aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
           >
-            <Badge badgeContent={sortedChats?.length} color="primary">
+            <Badge 
+                variant={loading ? "dot" : "standard"}
+                badgeContent={loading ? null : sortedChats?.length}
+                color="primary"
+                sx={{
+                  opacity: loading ? 0.5 : 1,
+                  transition: "opacity 0.2s",
+                }}
+            >
               <Inbox />
             </Badge>
           </IconButton>
@@ -84,7 +89,24 @@ export default function MessageMenu() {
             </Typography>
 
             <Paper sx={{ maxHeight: 300, overflowY: "auto" }}>
-              {sortedChats?.map((chat, index) => {
+              {loading ? (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ p: 2, textAlign: "center" }}
+                >
+                  Loading conversations...
+                </Typography>
+              ) : sortedChats?.length === 0 ? (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ p: 2, textAlign: "center" }}
+                >
+                  No messages yet
+                </Typography>
+              ) : (
+              sortedChats?.map((chat, index) => {
                 const otherUser = getUserChat(chat);
 
                 return (
@@ -123,11 +145,11 @@ export default function MessageMenu() {
                     {index < sortedChats.length - 1 && <Divider />}
                   </React.Fragment>
                 );
-              })}
+              })
+              )}
             </Paper>
           </Menu>
         </div>
-      )}
     </>
   );
 }

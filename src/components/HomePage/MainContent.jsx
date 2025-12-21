@@ -344,11 +344,11 @@ export const MainContent = memo(({ featuredBooks = [], trendingBooks = [] }) => 
                   categories={categories} 
                   tags={tags} 
                 />
-              ) : (
+              ) : !isLoading ? (
                 <Box sx={{ textAlign: "center", py: 4 }}>
                   <CircularProgress size={30} />
                 </Box>
-              )}
+              ) : null}
               <Box
                 ref={loader}
                 sx={{

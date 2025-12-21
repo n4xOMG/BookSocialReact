@@ -4,9 +4,16 @@ import { Button, Dialog, DialogContent } from "@mui/material";
 import React from "react";
 
 export default function ViewImageModal({ open, onClose, image, onNext, onPrev }) {
+  if (!image) return null;
+  
+  const imageUrl =
+    typeof image === "string"
+      ? image
+      : image?.url;
+
   return (
     <Dialog
-      open={open}
+      open={open  && !!image}
       onClose={onClose}
       maxWidth={false}
       PaperProps={{
@@ -35,6 +42,7 @@ export default function ViewImageModal({ open, onClose, image, onNext, onPrev })
         {/* Previous Button */}
         <Button
           onClick={onPrev}
+          disabled={!onPrev}
           className="nav-button"
           sx={{
             position: "absolute",
@@ -57,7 +65,7 @@ export default function ViewImageModal({ open, onClose, image, onNext, onPrev })
 
         {/* Image */}
         <img
-          src={image.url}
+          src={imageUrl}
           alt="Selected"
           style={{
             objectFit: "contain",
@@ -71,6 +79,7 @@ export default function ViewImageModal({ open, onClose, image, onNext, onPrev })
         {/* Next Button */}
         <Button
           onClick={onNext}
+          disabled={!onNext}
           className="nav-button"
           sx={{
             position: "absolute",

@@ -154,9 +154,6 @@ export default function NotificationMenu() {
 
   return (
     <>
-      {loading && !notifications.length ? (
-        <LoadingSpinner />
-      ) : (
         <div>
           <Tooltip title="Notifications">
             <IconButton
@@ -171,14 +168,15 @@ export default function NotificationMenu() {
               }}
             >
               <Badge
-                badgeContent={unreadCount}
+                variant={loading ? "dot" : "standard"}
+                badgeContent={loading ? null : unreadCount}
                 color="error"
                 sx={{
-                  "& .MuiBadge-badge": {
-                    fontSize: "10px",
-                    height: "18px",
-                    minWidth: "18px",
-                    padding: "0 4px",
+                  opacity: loading ? 0.5 : 1,
+                  transition: "opacity 0.2s",
+                  "& .MuiBadge-dot": {
+                    width: 8,
+                    height: 8,
                   },
                 }}
               >
@@ -232,7 +230,11 @@ export default function NotificationMenu() {
                 },
               }}
             >
-              {sortedNotifications?.length > 0 ? (
+              {loading && notifications.length === 0 ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                  <CircularProgress size={20} />
+                </Box>
+              ) : sortedNotifications?.length > 0 ? (
                 <>
                   {sortedNotifications.map((noti, index) => (
                     <Box
@@ -295,7 +297,6 @@ export default function NotificationMenu() {
             </Paper>
           </Menu>
         </div>
-      )}
     </>
   );
 }

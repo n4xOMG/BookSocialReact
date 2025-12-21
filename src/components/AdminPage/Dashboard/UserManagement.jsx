@@ -22,7 +22,10 @@ import {
 } from "@mui/material";
 import { Edit, Delete, Block, CheckCircle, Search, VerifiedUser, GppBad } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUsers } from "../../../redux/admin/admin.action";
+import { fetchAllUsers, deleteUser, updateUser, banUser, suspendUser, unbanUser, unsuspendUser } from "../../../redux/admin/admin.action";
+import EditUserDialog from "./EditUserDialog";
+import DeleteUserDialog from "./DeleteUserDialog";
+import BanSuspendUserDialog from "./BanSuspendUserDialog";
 
 const UserManagement = () => {
   const theme = useTheme();
@@ -30,6 +33,10 @@ const UserManagement = () => {
   const { users, loading, error } = useSelector((state) => state.admin);
   const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openBanSuspendDialog, setOpenBanSuspendDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -47,6 +54,68 @@ const UserManagement = () => {
       return <Chip label="Suspended" color="warning" size="small" icon={<GppBad />} />;
     }
     return <Chip label="Active" color="success" size="small" icon={<CheckCircle />} />;
+  };
+
+  const handleEditClick = (user) => {
+    setSelectedUser(user);
+    setOpenEditDialog(true);
+  };
+
+  const handleDeleteClick = (user) => {
+    setSelectedUser(user);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleEditClose = () => {
+    setOpenEditDialog(false);
+    setSelectedUser(null);
+  };
+
+  const handleDeleteClose = () => {
+    setOpenDeleteDialog(false);
+    setSelectedUser(null);
+  };
+
+  const handleUpdateUser = (userId, userData) => {
+    dispatch(updateUser(userId, userData));
+    handleEditClose();
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedUser) {
+        dispatch(deleteUser(selectedUser.id));
+        handleDeleteClose();
+    }
+  };
+
+  const handleBanSuspendClick = (user) => {
+    setSelectedUser(user);
+    setOpenBanSuspendDialog(true);
+  };
+
+  const handleBanSuspendClose = () => {
+    setOpenBanSuspendDialog(false);
+    setSelectedUser(null);
+  };
+
+  const handleBanSuspendAction = (userId, actionType, banReason) => {
+    switch (actionType) {
+      case "suspend":
+        dispatch(suspendUser(userId));
+        break;
+      case "unsuspend":
+        dispatch(unsuspendUser(userId));
+        break;
+      case "ban":
+        dispatch(banUser(userId, banReason));
+        break;
+      case "unban":
+        dispatch(unbanUser(userId));
+        break;
+      default:
+        break;
+    }
+    handleBanSuspendClose();
   };
 
   return (
@@ -151,17 +220,17 @@ const UserManagement = () => {
                   <TableCell>{getStatusChip(user)}</TableCell>
                   <TableCell align="right">
                     <Tooltip title="Edit User">
-                      <IconButton size="small" sx={{ color: theme.palette.primary.main }}>
+                      <IconButton size="small" sx={{ color: theme.palette.primary.main }} onClick={() => handleEditClick(user)}>
                         <Edit fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Ban/Suspend">
-                      <IconButton size="small" sx={{ color: theme.palette.warning.main }}>
+                      <IconButton size="small" sx={{ color: theme.palette.warning.main }} onClick={() => handleBanSuspendClick(user)}>
                         <Block fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete User">
-                      <IconButton size="small" sx={{ color: theme.palette.error.main }}>
+                      <IconButton size="small" sx={{ color: theme.palette.error.main }} onClick={() => handleDeleteClick(user)}>
                         <Delete fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -200,6 +269,29 @@ const UserManagement = () => {
           Next
         </Button>
       </Box>
+
+
+      {/* Dialogs */}
+      <EditUserDialog
+        open={openEditDialog}
+        handleClose={handleEditClose}
+        handleUpdate={handleUpdateUser}
+        user={selectedUser}
+      />
+      
+      <DeleteUserDialog
+        open={openDeleteDialog}
+        handleClose={handleDeleteClose}
+        handleConfirm={handleConfirmDelete}
+        user={selectedUser}
+      />
+      
+      <BanSuspendUserDialog
+        open={openBanSuspendDialog}
+        handleClose={handleBanSuspendClose}
+        handleAction={handleBanSuspendAction}
+        user={selectedUser}
+      />
     </Box>
   );
 };

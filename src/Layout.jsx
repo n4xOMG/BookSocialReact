@@ -3,11 +3,13 @@ import { Outlet } from "react-router-dom";
 import Header from "./components/HomePage/Header";
 import Sidebar from "./components/HomePage/Sidebar";
 import { Box, useTheme } from "@mui/material";
+import Footer from "./components/HomePage/Footer";
 
 export default function Layout({
   toggleTheme,
   showSidebar = true,
   showHeader = true,
+  showFooter = true,
 }) {
   const theme = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,14 +46,15 @@ export default function Layout({
           flexDirection: "column",
           width: "100%",
           minHeight: "100vh",
-          // overflow: "hidden", // tránh lỗi scroll ngang
+          overflow: "visible", // tránh lỗi scroll ngang
           overflowY: "auto"
         }}
       >
         {showHeader && <Header onSidebarToggle={handleSidebarToggle} />}
-        <Box sx={{ flex: 1, minHeight: 0}}>
+        <Box sx={{ flex: 1}}>
           <Outlet />
         </Box>
+        {showFooter && <Footer/> }
       </Box>
     </Box>
   );

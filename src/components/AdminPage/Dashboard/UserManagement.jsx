@@ -19,6 +19,7 @@ import {
   Avatar,
   TextField,
   InputAdornment,
+  useMediaQuery,
 } from "@mui/material";
 import { Edit, Delete, Block, CheckCircle, Search, VerifiedUser, GppBad } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,6 +38,7 @@ const UserManagement = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openBanSuspendDialog, setOpenBanSuspendDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -120,7 +122,16 @@ const UserManagement = () => {
 
   return (
     <Box>
-      <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <Box
+        sx={{
+          mb: 4,
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          justifyContent: "space-between",
+          alignItems: isMobile ? "flex-start" : "center",
+          gap: isMobile ? 2 : 0,
+        }}
+      >
         <Box>
           <Typography variant="h4" className="font-serif" fontWeight="700" sx={{ color: theme.palette.text.primary }}>
             User Management
@@ -136,7 +147,7 @@ const UserManagement = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           sx={{
-            width: 300,
+            width: isMobile ? "100%" : 300,
             "& .MuiOutlinedInput-root": {
               borderRadius: "12px",
               bgcolor: theme.palette.background.paper,
@@ -158,97 +169,116 @@ const UserManagement = () => {
         </Alert>
       )}
 
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{
-          borderRadius: "16px",
-          border: "1px solid",
-          borderColor: theme.palette.divider,
-          bgcolor: theme.palette.background.paper,
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: theme.palette.action.hover }}>
-              <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-                  <CircularProgress />
+      {isMobile ? (
+        <UserCardList
+          users={users}
+          loading={loading}
+          getStatusChip={getStatusChip}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
+          onBan={handleBanSuspendClick}
+        />
+      ) : (
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            borderRadius: "16px",
+            border: "1px solid",
+            borderColor: theme.palette.divider,
+            bgcolor: theme.palette.background.paper,
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: theme.palette.action.hover }}>
+                <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600 }}>
+                  Actions
                 </TableCell>
               </TableRow>
-            ) : Array.isArray(users) && users.length > 0 ? (
-              users.map((user) => (
-                <TableRow key={user.id} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                      <Avatar src={user.avatarUrl} alt={user.username} sx={{ width: 40, height: 40 }}>
-                        {user.username?.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="600">
-                          {user.fullname || user.username}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          @{user.username}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={user.role?.name || "USER"}
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        borderColor: theme.palette.divider,
-                        fontWeight: 500,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>{getStatusChip(user)}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Edit User">
-                      <IconButton size="small" sx={{ color: theme.palette.primary.main }} onClick={() => handleEditClick(user)}>
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Ban/Suspend">
-                      <IconButton size="small" sx={{ color: theme.palette.warning.main }} onClick={() => handleBanSuspendClick(user)}>
-                        <Block fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete User">
-                      <IconButton size="small" sx={{ color: theme.palette.error.main }} onClick={() => handleDeleteClick(user)}>
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                    <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">No users found.</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : Array.isArray(users) && users.length > 0 ? (
+                users.map((user) => (
+                  <TableRow key={user.id} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Avatar src={user.avatarUrl} alt={user.username} sx={{ width: 40, height: 40 }}>
+                          {user.username?.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {user.fullname || user.username}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            @{user.username}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={user.role?.name || "USER"}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          borderColor: theme.palette.divider,
+                          fontWeight: 500,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>{getStatusChip(user)}</TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Edit User">
+                        <IconButton size="small" sx={{ color: theme.palette.primary.main }} onClick={() => handleEditClick(user)}>
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Ban/Suspend">
+                        <IconButton size="small" sx={{ color: theme.palette.warning.main }} onClick={() => handleBanSuspendClick(user)}>
+                          <Block fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete User">
+                        <IconButton size="small" sx={{ color: theme.palette.error.main }} onClick={() => handleDeleteClick(user)}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                    <Typography color="text.secondary">No users found.</Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mt: 3, gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: isMobile ? "space-between" : "flex-end",
+          alignItems: "center",
+          mt: 3,
+          gap: 2,
+        }}
+      >
         <Button
           onClick={() => setPage(Math.max(0, page - 1))}
           disabled={page === 0 || loading}
@@ -295,5 +325,85 @@ const UserManagement = () => {
     </Box>
   );
 };
+
+const UserCardList = ({ users, loading, getStatusChip, onEdit, onDelete, onBan }) => {
+  if (loading) {
+    return (
+      <Box sx={{ py: 6, textAlign: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!users || users.length === 0) {
+    return (
+      <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+        No users found.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {users.map((user) => (
+        <Paper
+          key={user.id}
+          sx={{
+            p: 2,
+            borderRadius: "16px",
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Avatar src={user.avatarUrl} sx={{ width: 44, height: 44 }}>
+              {user.username?.charAt(0).toUpperCase()}
+            </Avatar>
+
+            <Box sx={{ flex: 1, textAlign: "left" }}>
+              <Typography fontWeight={600}>
+                {user.fullname || user.username}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                @{user.username}
+              </Typography>
+            </Box>
+            <Chip
+              label={user.role?.name || "USER"}
+              size="small"
+              variant="outlined"
+            />
+            {getStatusChip(user)}
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{pl: 4}}>
+            Email: {user.email}
+          </Typography>
+
+          {/* Actions */}
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 1,
+            }}
+          >
+            <IconButton size="small" onClick={() => onEdit(user)}>
+              <Edit fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => onBan(user)}>
+              <Block fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => onDelete(user)}>
+              <Delete fontSize="small" />
+            </IconButton>
+          </Box>
+        </Paper>
+      ))}
+    </Box>
+  );
+};
+
 
 export default UserManagement;

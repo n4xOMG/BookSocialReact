@@ -1,5 +1,5 @@
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
-import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography, useTheme } from "@mui/material";
+import { Avatar, Box, Button, CircularProgress, Grid, IconButton, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { Link } from 'react-router-dom';
 import { Stomp } from "@stomp/stompjs";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -37,6 +37,7 @@ export default function MessagesPage() {
   const MAX_RECONNECT_ATTEMPTS = 5;
   const reconnectAttemptsRef = useRef(0);
   const RECONNECT_INTERVAL = 3000;
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -239,7 +240,7 @@ export default function MessagesPage() {
           theme.palette.mode === "dark"
             ? "linear-gradient(135deg, #0f0f1c 0%, #1a1a2e 100%)"
             : "linear-gradient(135deg, #f8f7f4 0%, #e8e6e3 100%)",
-        p: 3,
+        p: isMobile ? 0 : 3,
       }}
     >
       <Grid
@@ -247,7 +248,7 @@ export default function MessagesPage() {
         sx={{
           height: "100%",
           overflow: "hidden",
-          borderRadius: "24px",
+          borderRadius: isMobile ? "none" : "24px",
           background: theme.palette.mode === "dark" ? "rgba(18, 18, 30, 0.6)" : "rgba(255, 255, 255, 0.6)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
@@ -258,7 +259,7 @@ export default function MessagesPage() {
       >
         <Grid
           item
-          xs={3}
+          xs={isMobile ? 12 : 3}
           sx={{
             px: 3,
             borderRight: "1px solid",
@@ -266,9 +267,23 @@ export default function MessagesPage() {
           }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 2 }}>
+            <Box sx={{ flexGrow: 1, overflowY: "auto", mt: isMobile ? 1 : 2 }}>
               <SearchUser />
-              <Box sx={{ mt: 2 }}>
+              <Box
+                sx={{
+                  mt: isMobile ? 1 : 2,
+                  display: "flex",
+                  flexDirection: isMobile ? "row" : "column",
+                  gap: isMobile ? 1.5 : 0,
+                  overflowX: isMobile ? "auto" : "visible",
+                  overflowY: "hidden",
+                  pb: isMobile ? 1 : 0,
+
+                  "&::-webkit-scrollbar": {
+                    display: "none",
+                  },
+                }}
+              >
                 {chats.map((chat) => {
                   const chatMessages = allMessages[chat.id] || [];
                   const seenCount = seenMessageCountsRef.current[chat.id] || 0;
@@ -302,7 +317,7 @@ export default function MessagesPage() {
             </Box>
           </Box>
         </Grid>
-        <Grid item xs={9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <Grid item xs={isMobile ? 12 : 9} sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
           {currentChat ? (
             <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
               <Box
@@ -319,8 +334,8 @@ export default function MessagesPage() {
                 <Avatar
                   src={otherUser?.avatarUrl}
                   sx={{
-                    width: 48,
-                    height: 48,
+                    width: isMobile ? 40 : 48,
+                    height: isMobile ? 40 : 48,
                     border: "2px solid",
                     borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.4)" : "rgba(157, 80, 187, 0.3)",
                     boxShadow: "0 4px 12px rgba(157, 80, 187, 0.3)",
@@ -351,17 +366,34 @@ export default function MessagesPage() {
               <Box
                 ref={messagesContainerRef}
                 sx={{
-                  flexGrow: 1,
+                  flexGrow:  1,
+                  // height: isMobile ? "auto" : "100%",
+                  minHeight: 0,
+                  maxHeight: isMobile ? "55vh" : "none",
                   overflowY: "auto",
-                  p: 2,
+                  px: 2,
+                  py: 1.5,
                   display: "flex",
                   flexDirection: "column-reverse",
                 }}
               >
 
-                {[...messages].reverse().map((message) => (
-                  <ChatMessage key={message.id} message={message} />
-                ))}
+                {messages.length === 0 ? (
+                  <Box
+                    sx={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    Start the conversation 👋
+                  </Box>
+                ) : (
+                  [...messages].reverse().map((message) => (
+                    <ChatMessage key={message.id} message={message} />
+                  ))
+                )}
               </Box>
               <Box
                 sx={{
@@ -388,7 +420,12 @@ export default function MessagesPage() {
                     <img src={imagePreview} alt="Preview" style={{ maxWidth: "100px", borderRadius: 8 }} />
                   </Box>
                 )}
-                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
                   <TextField
                     placeholder="Type a message"
                     sx={{

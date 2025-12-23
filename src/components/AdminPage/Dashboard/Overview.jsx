@@ -193,7 +193,7 @@ const Overview = () => {
         <>
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {getMetrics().map((metric) => (
-              <Grid item xs={12} sm={6} md={3} key={metric.title}>
+              <Grid item xs={6} sm={6} md={3} key={metric.title}>
                 <StatCard {...metric} theme={theme} />
               </Grid>
             ))}
@@ -227,7 +227,7 @@ const Overview = () => {
           </Typography>
           <Grid container spacing={3}>
             {getSecondaryMetrics().map((metric) => (
-              <Grid item xs={12} sm={6} md={3} key={metric.title}>
+              <Grid item xs={6} sm={6} md={3} key={metric.title}>
                 <Paper
                   elevation={0}
                   sx={{

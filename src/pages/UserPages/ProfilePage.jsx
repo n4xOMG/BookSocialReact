@@ -20,6 +20,7 @@ import {
   Tab,
   Tabs,
   Typography,
+  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
@@ -42,6 +43,7 @@ const ProfilePage = () => {
   const { user, loading: authLoading, error: authError } = useSelector((state) => state.auth);
   const hasRequestedRef = useRef(false);
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     if (user || hasRequestedRef.current) {
@@ -114,7 +116,7 @@ const ProfilePage = () => {
         <Paper
           elevation={0}
           sx={{
-            height: 200,
+            height: isMobile ? 150 : 200,
             borderRadius: "24px 24px 0 0",
             background: "linear-gradient(135deg, rgba(157, 80, 187, 0.3), rgba(110, 72, 170, 0.3))",
             mb: -8,
@@ -186,7 +188,7 @@ const ProfilePage = () => {
               variant="subtitle1"
               sx={{
                 ml: 2,
-                mb: 4,
+                mb: isMobile ? 1 : 4,
                 color: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.8)" : "rgba(110, 72, 170, 0.8)",
                 fontWeight: 500,
               }}
@@ -252,7 +254,7 @@ const ProfilePage = () => {
               <Tab label="Purchases" icon={<CreditCard />} iconPosition="start" id="profile-tab-7" aria-controls="profile-tabpanel-7" />
             </Tabs>
 
-            <Box sx={{ px: 2 }}>
+            <Box sx={{ px: isMobile ? 0 : 2 }}>
               <TabPanel value={tabValue} index={0}>
                 <PersonalInfo user={user} />
               </TabPanel>

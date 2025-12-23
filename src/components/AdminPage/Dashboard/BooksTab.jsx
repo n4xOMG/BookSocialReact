@@ -14,6 +14,7 @@ import {
   Paper,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import React, { useEffect, useState } from "react";
@@ -40,12 +41,15 @@ import StarIcon from "@mui/icons-material/Star";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import LanguageIcon from "@mui/icons-material/Language";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { useTheme } from "@emotion/react";
 
 const BooksTab = () => {
   const dispatch = useDispatch();
   const { books, bookCount, featuredBooks, trendingBooks, loading: booksLoading, error: booksError } = useSelector((state) => state.book);
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.category);
   const { tags, loading: tagsLoading, error: tagsError } = useSelector((state) => state.tag);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [filters, setFilters] = useState({
     category: "",
@@ -367,6 +371,7 @@ const BooksTab = () => {
             handleDelete={openDeleteDialog}
             handleToggleIsSuggested={handleToggleIsSuggested}
             handleManageChapters={handleManageChapters}
+            isMobile={isMobile}
           />
         )}
       </Paper>

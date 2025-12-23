@@ -35,6 +35,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,6 +49,7 @@ import {
   updateCreditPackage,
 } from "../../../redux/creditpackage/creditpackage.action";
 import LoadingSpinner from "../../LoadingSpinner";
+import { useTheme } from "@emotion/react";
 
 const CreditsManagement = () => {
   const dispatch = useDispatch();
@@ -58,7 +60,8 @@ const CreditsManagement = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState(null);
   const [viewMode, setViewMode] = useState("table"); // table or grid
-
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   // State for form management
   const [currentPackage, setCurrentPackage] = useState({
     name: "",
@@ -105,6 +108,12 @@ const CreditsManagement = () => {
   useEffect(() => {
     dispatch(getAllCreditPackages());
   }, [dispatch]);
+
+  useEffect(() => {
+  if (isMobile && viewMode !== "grid") {
+    setViewMode("grid");
+  }
+}, [isMobile, viewMode]);
 
   // Form handling methods
   const handleOpen = (pkg = null) => {
@@ -373,7 +382,7 @@ const CreditsManagement = () => {
       )}
 
       {/* Toolbar with actions */}
-      <Box sx={{ mb: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Box sx={{ mb: 2, display: "flex", alignItems: "center", justifyContent: "space-between", flexDirection: isMobile ? "column" : "row" }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TextField
             size="small"
@@ -408,35 +417,37 @@ const CreditsManagement = () => {
         </Box>
 
         <Box>
-          <Button variant="contained" color="primary" onClick={() => handleOpen()} startIcon={<AddIcon />}>
+          <Button variant="contained" color="primary" onClick={() => handleOpen()} startIcon={<AddIcon />} sx={{mt: isMobile ? 1 : 0}}>
             Add Credit Package
           </Button>
         </Box>
       </Box>
 
       {/* View toggle buttons */}
-      <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
-        <Button
-          color={viewMode === "table" ? "primary" : "inherit"}
-          onClick={() => setViewMode("table")}
-          variant={viewMode === "table" ? "contained" : "text"}
-          size="small"
-          sx={{ mr: 1 }}
-        >
-          Table View
-        </Button>
-        <Button
-          color={viewMode === "grid" ? "primary" : "inherit"}
-          onClick={() => setViewMode("grid")}
-          variant={viewMode === "grid" ? "contained" : "text"}
-          size="small"
-        >
-          Grid View
-        </Button>
-      </Box>
-
+      {!isMobile && (
+        <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            color={viewMode === "table" ? "primary" : "inherit"}
+            onClick={() => setViewMode("table")}
+            variant={viewMode === "table" ? "contained" : "text"}
+            size="small"
+            sx={{ mr: 1 }}
+          >
+            Table View
+          </Button>
+          <Button
+            color={viewMode === "grid" ? "primary" : "inherit"}
+            onClick={() => setViewMode("grid")}
+            variant={viewMode === "grid" ? "contained" : "text"}
+            size="small"
+          >
+            Grid View
+          </Button>
+        </Box>
+      )}
+        
       {/* Table View */}
-      {viewMode === "table" && (
+      {viewMode === "table" && !isMobile && (
         <>
           <TableContainer component={Paper} elevation={2} sx={{ mb: 2 }}>
             <Table>

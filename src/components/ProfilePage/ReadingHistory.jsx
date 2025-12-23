@@ -1,6 +1,6 @@
 import BookIcon from "@mui/icons-material/Book";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { Box, Button, Chip, Divider, Grid, LinearProgress, Paper, Skeleton, Typography, useTheme } from "@mui/material";
+import { Box, Button, Chip, Divider, Grid, LinearProgress, Paper, Skeleton, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
@@ -11,6 +11,7 @@ const ReadingHistory = ({ userId }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const { readingProgresses = [] } = useSelector((state) => state.user);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     let isMounted = true;
@@ -171,86 +172,125 @@ const ReadingHistory = ({ userId }) => {
               <Paper
                 elevation={0}
                 sx={{
-                  p: 2,
+                  p: isMobile ? 1.5 : 2,
                   borderRadius: "12px",
                   display: "flex",
-                  background: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.5)",
+                  flexDirection: isMobile ? "row" : "row",
+                  gap: isMobile ? 1.5 : 0,
+                  background:
+                    theme.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.05)"
+                      : "rgba(255, 255, 255, 0.5)",
                   backdropFilter: "blur(8px)",
                   border: "1px solid",
-                  borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
+                  borderColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "rgba(0, 0, 0, 0.08)",
                   transition: "all 0.3s",
-                  "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 8px 24px rgba(157, 80, 187, 0.2)",
-                    borderColor: theme.palette.mode === "dark" ? "rgba(157, 80, 187, 0.3)" : "rgba(157, 80, 187, 0.2)",
-                  },
                 }}
               >
+                {/* Book cover */}
                 <Box
                   component="img"
                   src={item.bookCover.url}
                   alt={item.bookTitle}
                   sx={{
-                    width: 80,
-                    height: 120,
+                    width: isMobile ? 56 : 80,
+                    height: isMobile ? 84 : 120,
                     borderRadius: 1,
                     objectFit: "cover",
                     boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                    mr: 3,
+                    flexShrink: 0,
                   }}
                 />
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Typography variant="h6" fontWeight="medium" gutterBottom>
+
+                {/* Content */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  {/* Title + Chip */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: 1,
+                    }}
+                  >
+                    <Typography
+                      variant={isMobile ? "subtitle2" : "h6"}
+                      fontWeight={600}
+                      sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: isMobile ? 2 : "unset",
+                        WebkitBoxOrient: "vertical",
+                      }}
+                    >
                       {item.bookTitle}
                     </Typography>
-                    <Chip
-                      label={`${item.progress.toFixed(0)}% Complete`}
-                      color="primary"
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontWeight: "medium" }}
-                    />
+
+                    {!isMobile && (
+                      <Chip
+                        label={`${item.progress.toFixed(0)}%`}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    )}
                   </Box>
 
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Currently on: Chapter {item.chapterNum} - {item.chapterName}
+                  {/* Chapter */}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mt: 0.5 }}
+                  >
+                    Ch. {item.chapterNum}: {item.chapterName}
                   </Typography>
 
+                  {/* Progress */}
                   <LinearProgress
                     variant="determinate"
                     value={item.progress}
                     sx={{
                       mt: 1,
-                      mb: 2,
-                      height: 8,
+                      height: 6,
                       borderRadius: 4,
-                      backgroundColor: (theme) => theme.palette.grey[200],
+                      backgroundColor: theme.palette.grey[200],
                     }}
                   />
 
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Last read: {new Date(item.updatedAt).toLocaleDateString()}
-                    </Typography>
+                  {/* Footer */}
+                  <Box
+                    sx={{
+                      mt: 1.2,
+                      display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
+                      justifyContent: "space-between",
+                      alignItems: isMobile ? "stretch" : "center",
+                      gap: isMobile ? 1 : 0,
+                    }}
+                  >
+                    {!isMobile && (
+                      <Typography variant="caption" color="text.secondary">
+                        Last read: {new Date(item.updatedAt).toLocaleDateString()}
+                      </Typography>
+                    )}
+
                     <Button
-                      size="small"
+                      size={isMobile ? "small" : "medium"}
+                      fullWidth={isMobile}
                       variant="contained"
-                      color="primary"
                       startIcon={<MenuBookIcon fontSize="small" />}
                       sx={{
                         textTransform: "none",
                         borderRadius: "12px",
-                        px: 2,
                         background: "linear-gradient(135deg, #9d50bb, #6e48aa)",
                         boxShadow: "0 4px 12px rgba(157, 80, 187, 0.3)",
-                        "&:hover": {
-                          background: "linear-gradient(135deg, #b968c7, #9d50bb)",
-                          boxShadow: "0 6px 16px rgba(157, 80, 187, 0.4)",
-                        },
                       }}
                     >
-                      Continue Reading
+                      Continue
                     </Button>
                   </Box>
                 </Box>

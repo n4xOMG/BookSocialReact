@@ -141,7 +141,7 @@ export default function FloatingMenu({
         <Box
           sx={{
             position: "fixed",
-            bottom: { xs: "20%", sm: "15%", md: "10%", lg: "5%" },
+            bottom: { xs: "5%", sm: "15%", md: "10%", lg: "5%" },
             left: "50%",
             transform: "translateX(-50%)",
             bgcolor: "#050505",

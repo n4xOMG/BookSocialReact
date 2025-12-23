@@ -1,9 +1,10 @@
-import { Box, Typography, Stack, Link as MuiLink, useTheme, Avatar } from "@mui/material";
+import { Box, Typography, Stack, Link as MuiLink, useTheme, Avatar, useMediaQuery } from "@mui/material";
 import React from "react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <Box
@@ -22,10 +23,10 @@ const Footer = () => {
         textAlign="center"
       >
         <Stack
-          direction="row"
-          spacing={3}
-          alignItems="flex-start"
+          direction={isMobile ? "column" : "row"}
+          spacing={isMobile ? 1 : 3}
           textAlign="left"
+          alignItems={isMobile ? "center" : "flex-start"}
           sx={{ mb: 3, }}
         >
           {/* LEFT: Logo + Name */}
@@ -61,6 +62,7 @@ const Footer = () => {
               color: "text.secondary",
               lineHeight: 1.6,
               maxWidth: 700,
+              textAlign: isMobile ? "center" : "flex-start"
             }}
           >
             Read, write, connect. The fusion of Tale and Verse represents the vision of a boundless universe. It is a unified platform where every story resides and every narrative voice is connected.
@@ -70,10 +72,11 @@ const Footer = () => {
 
         {/* Links */}
         <Stack
-          direction="row"
-          spacing={3}
+          direction={isMobile ? "column" : "row"}
+          spacing={isMobile ? 1 : 3}
           flexWrap="wrap"
           justifyContent="center"
+          alignItems={isMobile ? "center" : "flex-start"}
         >
           {[
             { label: "FAQ", to: "/faq" },

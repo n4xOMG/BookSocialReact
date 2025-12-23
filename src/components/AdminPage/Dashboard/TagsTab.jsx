@@ -21,6 +21,8 @@ import {
   Backdrop,
   CircularProgress,
   InputAdornment,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { Edit, Delete, Search } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,7 +35,8 @@ const TagsTab = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentTag, setCurrentTag] = useState({ name: "" });
-
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [page, setPage] = useState(1); //1-i
   const itemsPerPage = 5;
 
@@ -139,11 +142,11 @@ const TagsTab = () => {
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <Box sx={{ position: "relative", minHeight: "80vh", width: '60%', mx: 'auto', p: 2}}>
+        <Box sx={{ position: "relative", minHeight: "80vh", width: isMobile ? "100%" : '60%', mx: 'auto', p: isMobile ? 0 : 2}}>
           <Backdrop open={loading} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}>
             <CircularProgress color="inherit"/>
           </Backdrop>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+          <Stack direction={isMobile ? "column" : "row"} justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
             <Typography variant="h4" fontWeight={600} sx={{color: "primary.main"}} gutterBottom>
               Tags Management
             </Typography>
@@ -163,7 +166,7 @@ const TagsTab = () => {
               }}
             />
 
-            <Button variant="contained" color="primary" onClick={() => handleOpen()} >
+            <Button variant="contained" color="primary" onClick={() => handleOpen()} sx={{mt: isMobile ? 2 : 0}}>
               Add Tag
             </Button>
           </Stack>

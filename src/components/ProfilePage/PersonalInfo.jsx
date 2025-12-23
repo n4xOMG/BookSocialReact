@@ -1,7 +1,7 @@
 import CakeIcon from "@mui/icons-material/Cake";
 import SaveIcon from "@mui/icons-material/Save";
 import WcIcon from "@mui/icons-material/Wc";
-import { Alert, Box, Button, Divider, Grid, MenuItem, Paper, TextField, Typography, useTheme } from "@mui/material";
+import { Alert, Box, Button, Divider, Grid, MenuItem, Paper, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateUserProfile } from "../../redux/auth/auth.action";
@@ -20,6 +20,8 @@ const PersonalInfo = ({ user }) => {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const theme = useTheme();
+  
 
   useEffect(() => {
     setBirthdate(user?.birthdate ? user.birthdate.slice(0, 10) : "");
@@ -78,8 +80,6 @@ const PersonalInfo = ({ user }) => {
       },
     },
   };
-
-  const theme = useTheme();
 
   return (
     <Paper

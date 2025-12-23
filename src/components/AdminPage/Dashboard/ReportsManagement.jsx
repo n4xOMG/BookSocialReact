@@ -20,6 +20,7 @@ import {
   TableRow,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,11 +28,14 @@ import { useNavigate } from "react-router-dom";
 import { deleteReportedObjectAction, getAllReportsAction } from "../../../redux/report/report.action";
 import LoadingSpinner from "../../LoadingSpinner";
 import ReportDetailsDialog from "./ReportDetailsDialog";
+import { useTheme } from "@emotion/react";
 const ReportsManagement = () => {
   const { reports = [] } = useSelector((state) => state.report);
   const { navigate } = useNavigate();
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [actionDialog, setActionDialog] = useState({
     open: false,
     report: null,
@@ -123,65 +127,90 @@ const ReportsManagement = () => {
 
       {loading ? (
         <LoadingSpinner />
-      ) : (
-        <TableContainer component={Paper}>
-          <Table aria-label="reports table">
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Reported Object</TableCell>
-                <TableCell>Reason</TableCell>
-                <TableCell>Reporter</TableCell>
-                <TableCell>Reported Date</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {reports && reports.length > 0 ? (
-                reports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell>{report.id}</TableCell>
-                    <TableCell>
-                      {report.book && report.book.title
-                        ? `Book: ${report.book.title}`
-                        : report.chapter && report.chapter.title
-                        ? `Chapter: ${report.chapter.title}`
-                        : report.comment && report.comment.content
-                        ? `Comment: ${
-                            report.comment.content.length > 50 ? `${report.comment.content.substring(0, 47)}...` : report.comment.content
-                          }`
-                        : "No Related Object"}
-                    </TableCell>
-                    <TableCell>{report.reason}</TableCell>
-                    <TableCell>{report.reporter ? `${report.reporter.fullname} (${report.reporter.username})` : "Unknown"}</TableCell>
-                    <TableCell>{report.reportedDate ? new Date(report.reportedDate).toLocaleString() : "Unknown"}</TableCell>
-                    <TableCell>{report.resolved ? "Resolved" : "Pending"}</TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="Show Details">
-                        <IconButton color="primary" onClick={() => handleOpenDetailsDialog(report)}>
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete Object">
-                        <IconButton color="error" onClick={() => handleOpenDialog(report, "delete")}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+      ) : isMobile ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {reports.map((report) => (
+              <Paper key={report.id} sx={{ p: 2, borderRadius: 2 }}>
+                <Typography fontWeight={600}>Report #{report.id}</Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  Reason: {report.reason}
+                </Typography>
+
+                <Typography variant="body2">
+                  Status: {report.resolved ? "Resolved" : "Pending"}
+                </Typography>
+
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 1 }}>
+                  <IconButton onClick={() => handleOpenDetailsDialog(report)}>
+                    <VisibilityIcon />
+                  </IconButton>
+                  <IconButton color="error" onClick={() => handleOpenDialog(report, "delete")}>
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              </Paper>
+            ))}
+          </Box>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table aria-label="reports table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Reported Object</TableCell>
+                  <TableCell>Reason</TableCell>
+                  <TableCell>Reporter</TableCell>
+                  <TableCell>Reported Date</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {reports && reports.length > 0 ? (
+                  reports.map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell>{report.id}</TableCell>
+                      <TableCell>
+                        {report.book && report.book.title
+                          ? `Book: ${report.book.title}`
+                          : report.chapter && report.chapter.title
+                          ? `Chapter: ${report.chapter.title}`
+                          : report.comment && report.comment.content
+                          ? `Comment: ${
+                              report.comment.content.length > 50 ? `${report.comment.content.substring(0, 47)}...` : report.comment.content
+                            }`
+                          : "No Related Object"}
+                      </TableCell>
+                      <TableCell>{report.reason}</TableCell>
+                      <TableCell>{report.reporter ? `${report.reporter.fullname} (${report.reporter.username})` : "Unknown"}</TableCell>
+                      <TableCell>{report.reportedDate ? new Date(report.reportedDate).toLocaleString() : "Unknown"}</TableCell>
+                      <TableCell>{report.resolved ? "Resolved" : "Pending"}</TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="Show Details">
+                          <IconButton color="primary" onClick={() => handleOpenDetailsDialog(report)}>
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Object">
+                          <IconButton color="error" onClick={() => handleOpenDialog(report, "delete")}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      No reports available.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    No reports available.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
       {/* Action Confirmation Dialog */}
       <Dialog

@@ -16,6 +16,9 @@ import {
   MenuItem, 
   useTheme,
   Button,
+  useMediaQuery,
+  Box,
+  Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,6 +29,7 @@ export default function UserChatCard({ chat, isSelected, onChatDeleted, hasNewMe
   const dispatch = useDispatch();
   const theme = useTheme();
   const userChat = chat.userOne.id === user.id ? chat.userTwo : chat.userOne;
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -76,7 +80,14 @@ export default function UserChatCard({ chat, isSelected, onChatDeleted, hasNewMe
     <>
       <Card
         sx={{
-          mb: 1.5,
+          mb: isMobile ? 0 : 1.5,
+          minWidth: isMobile ? 90 : "auto",
+          maxWidth: isMobile ? 90 : "auto",
+          p: isMobile ? 1 : 0,
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: "center",
+          
           boxShadow: hasNewMessage ? "0 0 12px rgba(157, 80, 187, 0.4)" : "none",
           cursor: "pointer",
           transition: "all 0.3s ease",
@@ -117,67 +128,115 @@ export default function UserChatCard({ chat, isSelected, onChatDeleted, hasNewMe
           },
         }}
       >
-        <CardHeader
-          action={
-            <IconButton size="small" onClick={handleMenuClick}>
-              <MoreHorizRounded fontSize="small" />
-            </IconButton>
-          }
-          title={userChat.username}
-          subheader={userChat.fullname}
-          titleTypographyProps={{
-            variant: "subtitle2",
-            fontWeight: hasNewMessage ? "bold" : "medium",
-            color: isSelected ? (theme.palette.mode === "light" ? "primary.dark" : "white") : "text.primary",
-          }}
-          subheaderTypographyProps={{
-            variant: "caption",
-            color: isSelected ? (theme.palette.mode === "light" ? "primary.dark" : "white") : "text.secondary",
-            noWrap: true,
-          }}
-          avatar={
-            <Badge
-              badgeContent={unreadCount}
-              color="secondary"
-              invisible={unreadCount === 0}
+        {isMobile ? (
+          <Box sx={{ position: "relative", width: "100%" }}>
+            {/* Menu */}
+            <IconButton
+              size="small"
+              onClick={handleMenuClick}
               sx={{
-                "& .MuiBadge-badge": {
-                  backgroundColor: "#9d50bb",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  fontSize: "0.7rem",
-                  minWidth: "18px",
-                  height: "18px",
-                },
+                position: "absolute",
+                top: -6,
+                right: -6,
+                zIndex: 2,
               }}
             >
+              <MoreHorizRounded fontSize="small" />
+            </IconButton>
+
+            {/* Avatar */}
+            <Badge
+              badgeContent={unreadCount}
+              invisible={unreadCount === 0}
+              color="secondary"
+            >
               <Avatar
+                src={userChat.avatarUrl}
                 sx={{
                   width: 48,
                   height: 48,
-                  border: "2px solid",
-                  borderColor: hasNewMessage
-                    ? "#9d50bb"
-                    : isSelected
-                    ? theme.palette.mode === "dark"
-                      ? "rgba(157, 80, 187, 0.6)"
-                      : "rgba(157, 80, 187, 0.5)"
-                    : theme.palette.mode === "dark"
-                    ? "rgba(157, 80, 187, 0.3)"
-                    : "rgba(157, 80, 187, 0.2)",
-                  boxShadow: hasNewMessage
-                    ? "0 0 8px rgba(157, 80, 187, 0.5)"
-                    : isSelected
-                    ? "0 4px 12px rgba(157, 80, 187, 0.3)"
-                    : "none",
+                  mx: "auto",
+                  border: "2px solid #9d50bb",
                 }}
-                src={userChat.avatarUrl || "https://www.w3schools.com/howto/img_avatar.png"}
               >
                 {!userChat.avatarUrl && getInitials(userChat)}
               </Avatar>
             </Badge>
-          }
-        />
+
+            {/* Username */}
+            <Typography
+              variant="caption"
+              fontWeight={hasNewMessage ? 600 : 500}
+              textAlign="center"
+              noWrap
+              sx={{ mt: 0.5 }}
+            >
+              {userChat.username}
+            </Typography>
+          </Box>
+        ) : (
+          <CardHeader
+            action={
+              <IconButton size="small" onClick={handleMenuClick}>
+                <MoreHorizRounded fontSize="small" />
+              </IconButton>
+            }
+            title={userChat.username}
+            subheader={userChat.fullname}
+            titleTypographyProps={{
+              variant: "subtitle2",
+              fontWeight: hasNewMessage ? "bold" : "medium",
+              color: isSelected ? (theme.palette.mode === "light" ? "primary.dark" : "white") : "text.primary",
+            }}
+            subheaderTypographyProps={{
+              variant: "caption",
+              color: isSelected ? (theme.palette.mode === "light" ? "primary.dark" : "white") : "text.secondary",
+              noWrap: true,
+            }}
+            avatar={
+              <Badge
+                badgeContent={unreadCount}
+                color="secondary"
+                invisible={unreadCount === 0}
+                sx={{
+                  "& .MuiBadge-badge": {
+                    backgroundColor: "#9d50bb",
+                    color: "#fff",
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    minWidth: "18px",
+                    height: "18px",
+                  },
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    border: "2px solid",
+                    borderColor: hasNewMessage
+                      ? "#9d50bb"
+                      : isSelected
+                      ? theme.palette.mode === "dark"
+                        ? "rgba(157, 80, 187, 0.6)"
+                        : "rgba(157, 80, 187, 0.5)"
+                      : theme.palette.mode === "dark"
+                      ? "rgba(157, 80, 187, 0.3)"
+                      : "rgba(157, 80, 187, 0.2)",
+                    boxShadow: hasNewMessage
+                      ? "0 0 8px rgba(157, 80, 187, 0.5)"
+                      : isSelected
+                      ? "0 4px 12px rgba(157, 80, 187, 0.3)"
+                      : "none",
+                  }}
+                  src={userChat.avatarUrl || "https://www.w3schools.com/howto/img_avatar.png"}
+                >
+                  {!userChat.avatarUrl && getInitials(userChat)}
+                </Avatar>
+              </Badge>
+            }
+          />
+        )}
       </Card>
 
       {/* More Menu */}

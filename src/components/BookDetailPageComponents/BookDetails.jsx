@@ -9,8 +9,8 @@ export const BookDetails = ({ book, categories, tags }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [expanded, setExpanded] = useState(false);
 
-  const MAX_CHARS_DESKTOP = 210;
-  const MAX_CHARS_MOBILE = 100;
+  const MAX_CHARS_DESKTOP = 300;
+  const MAX_CHARS_MOBILE = 150;
 
   const currentMaxChars = isMobile ? MAX_CHARS_MOBILE : MAX_CHARS_DESKTOP;
   const shouldTruncate = book.description && book.description.length > currentMaxChars;
@@ -32,7 +32,9 @@ export const BookDetails = ({ book, categories, tags }) => {
     if (!shouldTruncate || expanded) {
       return book.description;
     }
-    return `${book.description.substring(0, currentMaxChars)}...`;
+    const text = book.description.substring(0, currentMaxChars);
+    const lastSpaceIndex = text.lastIndexOf(" ");
+    return `${text.substring(0, lastSpaceIndex > 0 ? lastSpaceIndex : currentMaxChars)}...`;
   };
 
   return (

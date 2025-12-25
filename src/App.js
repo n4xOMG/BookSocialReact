@@ -12,6 +12,8 @@ import { useAuthInitialization, useRateLimitAlert, useAccountRestrictionAlert, u
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import ForgotPassword from "./pages/Authentication/ForgotPassword";
 import OtpVerification from "./pages/Authentication/OtpVerification";
+import EmailChangeVerification from "./pages/Authentication/EmailChangeVerification";
+import RecoverEmail from "./pages/Authentication/RecoverEmail";
 import ResetPassword from "./pages/Authentication/ResetPassword";
 import SignIn from "./pages/Authentication/SignIn";
 import SignUp from "./pages/Authentication/SignUp";
@@ -96,6 +98,8 @@ function App() {
             <Route path="/sign-in" element={<SignIn toggleTheme={toggleTheme} />} />
             <Route path="/sign-up" element={user ? <Navigate to="/" replace /> : <SignUp toggleTheme={toggleTheme} />} />
             <Route path="/verify-otp" element={user ? <Navigate to="/" replace /> : <OtpVerification toggleTheme={toggleTheme} />} />
+            <Route path="/verify-email-change" element={<EmailChangeVerification toggleTheme={toggleTheme} />} />
+            <Route path="/recover-email" element={<RecoverEmail toggleTheme={toggleTheme} />} />
             <Route path="/forgot-password" element={<ForgotPassword toggleTheme={toggleTheme} />} />
             <Route path="/reset-password" element={<ResetPassword toggleTheme={toggleTheme} />} />
           </Route>

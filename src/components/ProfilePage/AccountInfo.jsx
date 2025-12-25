@@ -6,9 +6,10 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SaveIcon from "@mui/icons-material/Save";
 import { Alert, Avatar, Badge, Box, Button, Divider, Grid, IconButton, Paper, TextField, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { updateUserProfile } from "../../redux/auth/auth.action";
-import UploadToCloudinary from "../../utils/uploadToCloudinary";
+import { UploadToServer } from "../../utils/uploadToServer";
 
 const AccountInfo = ({ user }) => {
   const [fullname, setFullname] = useState(user?.fullname || "");
@@ -23,6 +24,8 @@ const AccountInfo = ({ user }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const auth = useSelector((state) => state.auth);
 
   useEffect(() => {
     setFullname(user?.fullname || "");
@@ -40,6 +43,8 @@ const AccountInfo = ({ user }) => {
     }
   };
 
+  const isEmailChanging = email && user?.email && email !== user.email;
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -50,8 +55,9 @@ const AccountInfo = ({ user }) => {
       let uploadedAvatarUrl = avatarUrl;
 
       if (selectedFile) {
-        // Upload the selected file to Cloudinary
-        uploadedAvatarUrl = await UploadToCloudinary(selectedFile, "avatars");
+        const username = auth?.user?.username || user?.username || "unknown";
+        const uploadResult = await UploadToServer(selectedFile, username, "avatars");
+        uploadedAvatarUrl = uploadResult.url;
       }
 
       const updatedData = {
@@ -69,13 +75,32 @@ const AccountInfo = ({ user }) => {
         return;
       }
 
-      setMessage(result?.message || "Account information updated successfully.");
+      const responseMessage = result?.payload?.message || result?.message;
+      const isPendingEmailVerification = 
+        responseMessage?.toLowerCase().includes("check your new email") ||
+        responseMessage?.toLowerCase().includes("verification otp");
+
+      if (isEmailChanging && isPendingEmailVerification) {
+        // Email change requires OTP verification - keep user logged in for secure JWT-based verification
+        setMessage("Email change initiated. Please verify with the OTP sent to your new email. A recovery link will be sent to your old email after verification.");
+        
+        setTimeout(() => {
+          navigate("/verify-email-change", {
+            state: {
+              email: email, // For display purposes
+            },
+          });
+        }, 2000);
+        return;
+      }
+
+      setMessage(responseMessage || "Account information updated successfully.");
       setPassword("");
       setSelectedFile(null);
       setPreviewURL("");
       setAvatarUrl(uploadedAvatarUrl);
     } catch (err) {
-      setError("Failed to update account information.");
+      setError(err?.message || "Failed to update account information.");
     } finally {
       setLoading(false);
     }

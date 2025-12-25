@@ -242,11 +242,59 @@ export const updateUserProfile = (reqData) => async (dispatch) => {
 
     // Backend returns: { message, success, data: UserDTO }
     const userData = data?.data || data;
+    const message = extractMessage(data);
 
     dispatch({ type: UPDATE_PROFILE_SUCCESS, payload: userData });
-    return { payload: userData };
+    return { payload: userData, message };
   } catch (error) {
     const message = extractErrorMessage(error, "Error updating profile.");
+    dispatch({ type: UPDATE_PROFILE_FAILED, payload: message });
+    return { error: message };
+  }
+};
+
+export const confirmEmailChangeAction = (otp) => async (dispatch) => {
+  dispatch({ type: UPDATE_PROFILE_REQUEST });
+  try {
+    const { data } = await api.post(`${API_BASE_URL}/api/user/confirm-email-change`, { otp });
+    logger.debug("Confirm email change response: ", { data });
+
+    const userData = data?.data || data;
+    const message = extractMessage(data);
+
+    dispatch({ type: UPDATE_PROFILE_SUCCESS, payload: userData });
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("tokenTimestamp");
+    localStorage.removeItem("rememberMe");
+    dispatch({ type: LOGOUT });
+    
+    return { payload: userData, message };
+  } catch (error) {
+    const message = extractErrorMessage(error, "Error confirming email change.");
+    dispatch({ type: UPDATE_PROFILE_FAILED, payload: message });
+    return { error: message };
+  }
+};
+
+export const rollbackEmailAction = (token) => async (dispatch) => {
+  dispatch({ type: UPDATE_PROFILE_REQUEST });
+  try {
+    const { data } = await httpClient.post(`${API_BASE_URL}/user/rollback-email?token=${encodeURIComponent(token)}`);
+    logger.debug("Rollback email response: ", { data });
+
+    const userData = data?.data || data;
+    const message = extractMessage(data);
+
+    dispatch({ type: UPDATE_PROFILE_SUCCESS, payload: userData });
+    // Clear any existing session since email has changed
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("tokenTimestamp");
+    localStorage.removeItem("rememberMe");
+    dispatch({ type: LOGOUT });
+    
+    return { payload: userData, message };
+  } catch (error) {
+    const message = extractErrorMessage(error, "Error recovering email.");
     dispatch({ type: UPDATE_PROFILE_FAILED, payload: message });
     return { error: message };
   }

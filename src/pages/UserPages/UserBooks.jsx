@@ -20,14 +20,13 @@ import {
   Tooltip,
   Typography,
   useMediaQuery,
-  useTheme
+  useTheme,
 } from "@mui/material";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useNavigate } from "react-router-dom";
 
-// Modals
 import AddMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/AddMangaChapterModal";
 import AddChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/AddNovelChapterModal";
 import DeleteBookModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/DeleteBookModal";
@@ -35,15 +34,12 @@ import DeleteChapterModal from "../../components/AdminPage/Dashboard/BooksTab/Ch
 import EditChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditChapterModal";
 import EditMangaChapterModal from "../../components/AdminPage/Dashboard/BooksTab/ChapterModal/EditMangaChapterModal";
 import EditBookDialog from "../../components/AdminPage/Dashboard/BooksTab/EditBookDialog";
-
-// Components
 import { BookList } from "../../components/UserBooks/BookList";
 import { FilterChip } from "../../components/UserBooks/FilterChip";
 import FilterDrawer from "../../components/UserBooks/FilterDrawer";
 import { UserBookChapterList } from "../../components/UserBooks/UserBookChapterList";
 import AccountRestrictionAlert from "../../components/common/AccountRestrictionAlert";
 
-// Redux Actions
 import { getBookByIdAction, getBooksByAuthorAction } from "../../redux/book/book.action";
 import { getCategories } from "../../redux/category/category.action";
 import { clearChapters, manageChapterByBookId } from "../../redux/chapter/chapter.action";
@@ -62,15 +58,13 @@ const UserBooks = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  
-  // Redux State
+
   const { booksByAuthor, booksByAuthorPage, booksByAuthorHasMore, book } = useSelector((store) => store.book);
   const { chapters } = useSelector((store) => store.chapter);
   const { user } = useSelector((store) => store.auth);
   const { tags = [] } = useSelector((store) => store.tag);
   const { categories = [] } = useSelector((store) => store.category);
 
-  // Local State
   const [openModal, setOpenModal] = useState({ type: null, data: null });
   const [isListLoading, setIsListLoading] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -82,8 +76,6 @@ const UserBooks = () => {
   const [filterOptions, setFilterOptions] = useState(() => createInitialFilters());
   const [suspendedAlertOpen, setSuspendedAlertOpen] = useState(false);
 
-
-  // Chapter Sorting State
   const [chapterSortBy, setChapterSortBy] = useState("uploadDate");
   const [chapterSortDir, setChapterSortDir] = useState("asc");
   const [chapterSortAnchorEl, setChapterSortAnchorEl] = useState(null);
@@ -110,7 +102,6 @@ const UserBooks = () => {
     return false;
   };
 
-  // Handlers
   const handleOpenModal = (type, data = null) => setOpenModal({ type, data });
   const handleCloseModal = () => setOpenModal({ type: null, data: null });
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
@@ -140,7 +131,6 @@ const UserBooks = () => {
 
   const toggleFilterDrawer = () => setOpenFilterDrawer((prev) => !prev);
 
-  // Chapter Sort Handlers
   const handleOpenChapterSort = (event) => setChapterSortAnchorEl(event.currentTarget);
   const handleCloseChapterSort = () => setChapterSortAnchorEl(null);
   const handleChapterSortChange = (sortBy, sortDir) => {
@@ -170,9 +160,20 @@ const UserBooks = () => {
     } finally {
       setLoadingMore(false);
     }
-  }, [dispatch, user?.id, booksByAuthorHasMore, booksByAuthorPage, loadingMore, isListLoading, debouncedQuery, selectedCategories, selectedTags, sortBy, sortOrder]);
+  }, [
+    dispatch,
+    user?.id,
+    booksByAuthorHasMore,
+    booksByAuthorPage,
+    loadingMore,
+    isListLoading,
+    debouncedQuery,
+    selectedCategories,
+    selectedTags,
+    sortBy,
+    sortOrder,
+  ]);
 
-  // Infinite Scroll Observer
   const lastBookElementRef = useCallback(
     (node) => {
       if (isListLoading || loadingMore || !booksByAuthorHasMore) return;
@@ -187,7 +188,6 @@ const UserBooks = () => {
     [isListLoading, loadingMore, booksByAuthorHasMore, loadMoreBooks]
   );
 
-  // Initial Data Fetching
   useEffect(() => {
     dispatch(clearChapters());
   }, [dispatch]);
@@ -221,7 +221,9 @@ const UserBooks = () => {
       }
     };
     fetchBooks();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [dispatch, user?.id, debouncedQuery, selectedCategories, selectedTags, sortBy, sortOrder]);
 
   // Auto-select first book
@@ -244,10 +246,9 @@ const UserBooks = () => {
       setIsDetailLoading(false);
       return;
     }
-    
+
     // Fetch Book Details
     dispatch(getBookByIdAction(null, selectedBookId));
-
   }, [dispatch, selectedBookId]);
 
   // Fetch Chapters when book or sort changes
@@ -266,17 +267,17 @@ const UserBooks = () => {
       }
     };
     fetchChapters();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [dispatch, selectedBookId, chapterSortBy, chapterSortDir]);
 
   // Helpers
-  const getTagsByIds = (tagIds = []) => {
-    if (!Array.isArray(tagIds)) return [];
-    return tags.filter((tag) => tagIds.includes(tag.id));
-  };
-
   const selectedTagChips = useMemo(() => tags.filter((tag) => selectedTags.includes(tag.id)), [tags, selectedTags]);
-  const selectedCategoryChips = useMemo(() => categories.filter((category) => selectedCategories.includes(category.id)), [categories, selectedCategories]);
+  const selectedCategoryChips = useMemo(
+    () => categories.filter((category) => selectedCategories.includes(category.id)),
+    [categories, selectedCategories]
+  );
 
   const handleRemoveFilter = (type, id) => {
     if (type === "category") {
@@ -286,11 +287,18 @@ const UserBooks = () => {
     }
   };
 
-  const isManga = useMemo(() => {
-    const tagNames = (book?.tagNames || []).map((name) => name?.toLowerCase());
-    if (tagNames.includes("manga")) return true;
-    return getTagsByIds(book?.tagIds || []).some((tag) => tag.name.toLowerCase() === "manga");
-  }, [book, tags]);
+  // Get the currently selected book from the list (more reliable than the separate book state)
+  const selectedBook = useMemo(() => {
+    return booksByAuthor.find((b) => b.id === selectedBookId) || null;
+  }, [booksByAuthor, selectedBookId]);
+
+  // Determine book type by category
+  const isImageDominant = useMemo(() => {
+    if (!selectedBook?.categoryName) return false;
+
+    const categoryName = selectedBook.categoryName.toLowerCase();
+    return categoryName.includes("image");
+  }, [selectedBook?.categoryName]);
 
   // Styles
   const panelStyle = {
@@ -315,21 +323,24 @@ const UserBooks = () => {
     <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", bgcolor: theme.palette.background.default }}>
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", width: "100%" }}>
         <PanelGroup direction={isMobile ? "vertical" : "horizontal"} style={{ width: "100%", height: "100%" }}>
-          
           {/* LEFT PANEL: BOOK LIST */}
           <Panel minSize={30} defaultSize={40} style={panelStyle}>
             <Box sx={headerStyle}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <Typography variant="h4" className="font-serif" sx={{ fontWeight: 800, color: theme.palette.text.primary, letterSpacing: "-0.02em" }}>
+                <Typography
+                  variant="h4"
+                  className="font-serif"
+                  sx={{ fontWeight: 800, color: theme.palette.text.primary, letterSpacing: "-0.02em" }}
+                >
                   My Books
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1 }}>
-                   <Tooltip title="Dashboard">
+                  <Tooltip title="Dashboard">
                     <Button variant="text" onClick={() => navigate("/author/dashboard")} sx={{ color: theme.palette.text.secondary }}>
                       Dashboard
                     </Button>
-                   </Tooltip>
-                   <Button
+                  </Tooltip>
+                  <Button
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={() => {
@@ -373,7 +384,9 @@ const UserBooks = () => {
                   InputProps={{
                     endAdornment: searchQuery && (
                       <InputAdornment position="end">
-                        <IconButton size="small" onClick={handleClearSearch}><ClearIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" onClick={handleClearSearch}>
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
                       </InputAdornment>
                     ),
                   }}
@@ -393,11 +406,14 @@ const UserBooks = () => {
                     disableUnderline
                     sx={{ fontSize: "0.875rem", fontWeight: 500 }}
                     startAdornment={
-                       <InputAdornment position="start">
-                          <IconButton size="small" onClick={handleSortOrderChange}>
-                            <SortIcon fontSize="small" sx={{ transform: filterOptions.sortOrder === "desc" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-                          </IconButton>
-                       </InputAdornment>
+                      <InputAdornment position="start">
+                        <IconButton size="small" onClick={handleSortOrderChange}>
+                          <SortIcon
+                            fontSize="small"
+                            sx={{ transform: filterOptions.sortOrder === "desc" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                          />
+                        </IconButton>
+                      </InputAdornment>
                     }
                   >
                     <MenuItem value="title">Title</MenuItem>
@@ -424,7 +440,9 @@ const UserBooks = () => {
 
             <Box sx={{ flex: 1, overflowY: "auto", p: 0 }}>
               {isListLoading && !booksByAuthor.length ? (
-                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}><CircularProgress /></Box>
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                  <CircularProgress />
+                </Box>
               ) : booksByAuthor.length > 0 ? (
                 <>
                   <BookList
@@ -435,10 +453,25 @@ const UserBooks = () => {
                     onDeleteBook={(b) => handleOpenModal("deleteBook", b)}
                     lastBookElementRef={lastBookElementRef}
                   />
-                  {loadingMore && <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}><CircularProgress size={20} /></Box>}
+                  {loadingMore && (
+                    <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+                      <CircularProgress size={20} />
+                    </Box>
+                  )}
                 </>
               ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 2, p: 3, textAlign: "center" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    gap: 2,
+                    p: 3,
+                    textAlign: "center",
+                  }}
+                >
                   <Typography variant="h6" color="text.secondary">
                     {hasActiveFilters ? "No books match your filters" : "Your library is empty"}
                   </Typography>
@@ -450,81 +483,91 @@ const UserBooks = () => {
             </Box>
           </Panel>
 
-          <PanelResizeHandle style={{
-             width: isMobile ? "100%" : "2px",
-             height: isMobile ? "2px" : "100%",
-             backgroundColor: theme.palette.divider,
-             cursor: isMobile ? "row-resize" : "col-resize",
-             transition: "background-color 0.2s",
-             zIndex: 10
-          }} />
+          <PanelResizeHandle
+            style={{
+              width: isMobile ? "100%" : "2px",
+              height: isMobile ? "2px" : "100%",
+              backgroundColor: theme.palette.divider,
+              cursor: isMobile ? "row-resize" : "col-resize",
+              transition: "background-color 0.2s",
+              zIndex: 10,
+            }}
+          />
 
           {/* RIGHT PANEL: CHAPTERS */}
           <Panel minSize={30} defaultSize={60} style={panelStyle}>
-             <Box sx={{ ...headerStyle, borderBottom: "none", pb: 0, background: theme.palette.background.paper }}>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-                   <Typography variant="h5" className="font-serif" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
-                      Table of Contents
-                   </Typography>
-                   {selectedBookId && (
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <Tooltip title="Sort Chapters">
-                        <IconButton onClick={handleOpenChapterSort} size="small">
-                          <SortIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Menu
-                        anchorEl={chapterSortAnchorEl}
-                        open={Boolean(chapterSortAnchorEl)}
-                        onClose={handleCloseChapterSort}
-                        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                        transformOrigin={{ vertical: "top", horizontal: "right" }}
-                      >
-                        <MenuItem onClick={() => handleChapterSortChange("uploadDate", "asc")}>Oldest First</MenuItem>
-                        <MenuItem onClick={() => handleChapterSortChange("uploadDate", "desc")}>Newest First</MenuItem>
-                        <MenuItem onClick={() => handleChapterSortChange("chapterNum", "asc")}>Chapter Number (Asc)</MenuItem>
-                        <MenuItem onClick={() => handleChapterSortChange("chapterNum", "desc")}>Chapter Number (Desc)</MenuItem>
-                        <MenuItem onClick={() => handleChapterSortChange("price", "asc")}>Price (Low to High)</MenuItem>
-                        <MenuItem onClick={() => handleChapterSortChange("price", "desc")}>Price (High to Low)</MenuItem>
-                      </Menu>
-
-                       <Button
-                         variant="contained"
-                         size="small"
-                         startIcon={<AddIcon />}
-                         onClick={() => {
-                           if (!checkSuspendedAndAlert()) handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter");
-                         }}
-                         color="secondary"
-                         sx={{ borderRadius: "8px", textTransform: "none" }}
-                       >
-                         Add Chapter
-                       </Button>
-                    </Box>
-                   )}
-                </Box>
+            <Box sx={{ ...headerStyle, borderBottom: "none", pb: 0, background: theme.palette.background.paper }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Typography variant="h5" className="font-serif" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+                  Table of Contents
+                </Typography>
                 {selectedBookId && (
-                   <Box sx={{ p: 2, bgcolor: theme.palette.action.hover, borderRadius: "12px", mb: 2 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-                         {book?.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                         {chapters.length} {chapters.length === 1 ? "Chapter" : "Chapters"}
-                      </Typography>
-                   </Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Tooltip title="Sort Chapters">
+                      <IconButton onClick={handleOpenChapterSort} size="small">
+                        <SortIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Menu
+                      anchorEl={chapterSortAnchorEl}
+                      open={Boolean(chapterSortAnchorEl)}
+                      onClose={handleCloseChapterSort}
+                      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                      transformOrigin={{ vertical: "top", horizontal: "right" }}
+                    >
+                      <MenuItem onClick={() => handleChapterSortChange("uploadDate", "asc")}>Oldest First</MenuItem>
+                      <MenuItem onClick={() => handleChapterSortChange("uploadDate", "desc")}>Newest First</MenuItem>
+                      <MenuItem onClick={() => handleChapterSortChange("chapterNum", "asc")}>Chapter Number (Asc)</MenuItem>
+                      <MenuItem onClick={() => handleChapterSortChange("chapterNum", "desc")}>Chapter Number (Desc)</MenuItem>
+                      <MenuItem onClick={() => handleChapterSortChange("price", "asc")}>Price (Low to High)</MenuItem>
+                      <MenuItem onClick={() => handleChapterSortChange("price", "desc")}>Price (High to Low)</MenuItem>
+                    </Menu>
+
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={() => handleOpenModal(isImageDominant ? "addMangaChapter" : "addNovelChapter")}
+                      color="secondary"
+                      sx={{ borderRadius: "8px", textTransform: "none" }}
+                    >
+                      Add Chapter
+                    </Button>
+                  </Box>
                 )}
-             </Box>
-             <Divider />
-             <Box sx={{ flex: 1, overflowY: "auto", bgcolor: theme.palette.background.paper }}>
-                {isDetailLoading ? (
-                   <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}><CircularProgress /></Box>
-                ) : !selectedBookId ? (
-                   <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", color: theme.palette.text.secondary }}>
-                      <Typography>Select a book to view chapters</Typography>
-                   </Box>
-                ) : chapters.length > 0 ? (
-                   <UserBookChapterList
-                      chapters={chapters}
+              </Box>
+              {selectedBookId && (
+                <Box sx={{ p: 2, bgcolor: theme.palette.action.hover, borderRadius: "12px", mb: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                    {book?.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {chapters.length} {chapters.length === 1 ? "Chapter" : "Chapters"}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+            <Divider />
+            <Box sx={{ flex: 1, overflowY: "auto", bgcolor: theme.palette.background.paper }}>
+              {isDetailLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                  <CircularProgress />
+                </Box>
+              ) : !selectedBookId ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100%",
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  <Typography>Select a book to view chapters</Typography>
+                </Box>
+              ) : chapters.length > 0 ? (
+                <UserBookChapterList
+                  chapters={chapters}
                       onViewChapter={handleViewChapter}
                       onEditChapter={(c) => handleOpenModal("editChapter", c)}
                       onDeleteChapter={(c) => handleOpenModal("deleteChapter", c)}
@@ -532,28 +575,37 @@ const UserBooks = () => {
                 ) : (
                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 2 }}>
                       <Typography color="text.secondary">No chapters yet</Typography>
-                      <Button variant="outlined" startIcon={<AddIcon />} onClick={() => {
-                        if (!checkSuspendedAndAlert()) handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter");
-                      }}>
+                      <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenModal(isImageDominant ? "addMangaChapter" : "addNovelChapter")}>
                          Add Chapter
                       </Button>
                    </Box>
                 )}
              </Box>
           </Panel>
-
         </PanelGroup>
       </Box>
 
       {/* Modals */}
       <Suspense fallback={<CircularProgress />}>
-        {openModal.type === "editBook" && <EditBookDialog open={true} handleClose={handleCloseModal} currentBook={openModal.data} categories={categories} tags={tags} />}
+        {openModal.type === "editBook" && (
+          <EditBookDialog open={true} handleClose={handleCloseModal} currentBook={openModal.data} categories={categories} tags={tags} />
+        )}
         {openModal.type === "deleteBook" && <DeleteBookModal open={true} onClose={handleCloseModal} deleteBook={openModal.data} />}
-        {!isManga && openModal.type === "addNovelChapter" && <AddChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />}
-        {isManga && openModal.type === "addMangaChapter" && <AddMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />}
-        {!isManga && openModal.type === "editChapter" && <EditChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />}
-        {isManga && openModal.type === "editChapter" && <EditMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />}
-        {openModal.type === "deleteChapter" && <DeleteChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} deleteChapter={openModal.data} />}
+        {!isImageDominant && openModal.type === "addNovelChapter" && (
+          <AddChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
+        )}
+        {isImageDominant && openModal.type === "addMangaChapter" && (
+          <AddMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} />
+        )}
+        {!isImageDominant && openModal.type === "editChapter" && (
+          <EditChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />
+        )}
+        {isImageDominant && openModal.type === "editChapter" && (
+          <EditMangaChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} chapterDetails={openModal.data} />
+        )}
+        {openModal.type === "deleteChapter" && (
+          <DeleteChapterModal open={true} onClose={handleCloseModal} bookId={selectedBookId} deleteChapter={openModal.data} />
+        )}
       </Suspense>
 
       <FilterDrawer
@@ -564,7 +616,7 @@ const UserBooks = () => {
         filterOptions={filterOptions}
         onFilterChange={handleFilterChange}
       />
-      
+
       <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isDetailLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>

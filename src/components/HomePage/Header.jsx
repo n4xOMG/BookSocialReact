@@ -29,6 +29,7 @@ import MessageMenu from "./Header/MessageMenu";
 import NotificationMenu from "./Header/NotificationMenu";
 import ProfileMenu from "./Header/ProfileMenu";
 import SearchDropdown from "./SearchDropdown";
+import AccountRestrictionAlert from "../common/AccountRestrictionAlert";
 
 function HideOnScroll({ children }) {
   const [show, setShow] = useState(true);
@@ -96,9 +97,19 @@ const Header = ({ onSidebarToggle }) => {
   const isInitialMount = useRef(true);
 
   const [anchorEl, setAnchorEl] = useState(null);
+  const [suspendedAlertOpen, setSuspendedAlertOpen] = useState(false);
   const openMore = Boolean(anchorEl);
   const handleOpenMore = (e) => setAnchorEl(e.currentTarget);
   const handleCloseMore = () => setAnchorEl(null);
+
+  // Check if user is suspended and show alert if so
+  const checkSuspendedAndAlert = () => {
+    if (user?.isSuspended) {
+      setSuspendedAlertOpen(true);
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -399,7 +410,10 @@ const Header = ({ onSidebarToggle }) => {
                         },
                       }}
                     >
-                      <MenuItem onClick={() => navigate("/upload-book")}>
+                      <MenuItem onClick={() => {
+                        handleCloseMore();
+                        if (!checkSuspendedAndAlert()) navigate("/upload-book");
+                      }}>
                         <Upload />
                       </MenuItem>
                       {user && (
@@ -418,7 +432,11 @@ const Header = ({ onSidebarToggle }) => {
                   <>
                     <Tooltip title="Upload Story" arrow>
                       <IconButton
-                        onClick={checkAuth(() => navigate("/upload-book"))}
+                        onClick={() => {
+                          if (!checkSuspendedAndAlert()) {
+                            checkAuth(() => navigate("/upload-book"))();
+                          }
+                        }}
                         sx={{
                           backgroundColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
                           backdropFilter: "blur(10px)",
@@ -447,6 +465,15 @@ const Header = ({ onSidebarToggle }) => {
         </HideOnScroll>
       )}
       <AuthDialog />
+
+      {/* Suspended User Alert */}
+      <AccountRestrictionAlert
+        open={suspendedAlertOpen}
+        handleClose={() => setSuspendedAlertOpen(false)}
+        message="Your account is currently suspended. You cannot upload books until the suspension is lifted. Contact support for assistance."
+        isBanned={false}
+        isSuspended={true}
+      />
     </>
   );
 };

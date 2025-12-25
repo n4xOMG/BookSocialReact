@@ -41,6 +41,7 @@ import { BookList } from "../../components/UserBooks/BookList";
 import { FilterChip } from "../../components/UserBooks/FilterChip";
 import FilterDrawer from "../../components/UserBooks/FilterDrawer";
 import { UserBookChapterList } from "../../components/UserBooks/UserBookChapterList";
+import AccountRestrictionAlert from "../../components/common/AccountRestrictionAlert";
 
 // Redux Actions
 import { getBookByIdAction, getBooksByAuthorAction } from "../../redux/book/book.action";
@@ -79,6 +80,7 @@ const UserBooks = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [openFilterDrawer, setOpenFilterDrawer] = useState(false);
   const [filterOptions, setFilterOptions] = useState(() => createInitialFilters());
+  const [suspendedAlertOpen, setSuspendedAlertOpen] = useState(false);
 
 
   // Chapter Sorting State
@@ -98,6 +100,15 @@ const UserBooks = () => {
     }, 400);
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
+
+  // Check if user is suspended and show alert if so
+  const checkSuspendedAndAlert = () => {
+    if (user?.isSuspended) {
+      setSuspendedAlertOpen(true);
+      return true;
+    }
+    return false;
+  };
 
   // Handlers
   const handleOpenModal = (type, data = null) => setOpenModal({ type, data });
@@ -321,7 +332,9 @@ const UserBooks = () => {
                    <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    onClick={() => navigate("/upload-book")}
+                    onClick={() => {
+                      if (!checkSuspendedAndAlert()) navigate("/upload-book");
+                    }}
                     sx={{
                       borderRadius: "8px",
                       textTransform: "none",
@@ -479,7 +492,9 @@ const UserBooks = () => {
                          variant="contained"
                          size="small"
                          startIcon={<AddIcon />}
-                         onClick={() => handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter")}
+                         onClick={() => {
+                           if (!checkSuspendedAndAlert()) handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter");
+                         }}
                          color="secondary"
                          sx={{ borderRadius: "8px", textTransform: "none" }}
                        >
@@ -517,7 +532,9 @@ const UserBooks = () => {
                 ) : (
                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 2 }}>
                       <Typography color="text.secondary">No chapters yet</Typography>
-                      <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter")}>
+                      <Button variant="outlined" startIcon={<AddIcon />} onClick={() => {
+                        if (!checkSuspendedAndAlert()) handleOpenModal(isManga ? "addMangaChapter" : "addNovelChapter");
+                      }}>
                          Add Chapter
                       </Button>
                    </Box>
@@ -551,6 +568,15 @@ const UserBooks = () => {
       <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isDetailLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>
+
+      {/* Suspended User Alert */}
+      <AccountRestrictionAlert
+        open={suspendedAlertOpen}
+        handleClose={() => setSuspendedAlertOpen(false)}
+        message="Your account is currently suspended. You cannot upload books or add chapters until the suspension is lifted. Contact support for assistance."
+        isBanned={false}
+        isSuspended={true}
+      />
     </Box>
   );
 };

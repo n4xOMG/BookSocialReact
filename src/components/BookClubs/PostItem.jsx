@@ -328,73 +328,93 @@ const PostItem = ({ post, checkAuth }) => {
               borderColor: theme.palette.divider,
             }}
           >
-            <CardHeader
-              avatar={
-                <Avatar
-                  src={post.sharedPostUser?.avatarUrl || "/placeholder.svg"}
-                  alt={post.sharedPostUser?.username || "User"}
-                  sx={{ width: 32, height: 32 }}
-                />
-              }
-              title={
-                <Typography
-                  component={Link}
-                  to={`/profile/${post.sharedPostUser.id}`}
-                  variant="subtitle2"
-                  fontWeight="600"
+            {/* Check if shared post was deleted */}
+            {!post.sharedPostUser ? (
+              <CardContent>
+                <Box
                   sx={{
-                    cursor: "pointer",
-                    lineHeight: 1,
-                    display: "block",
-                    mb: 0,
-                    textDecoration: "none",
-                    color: theme.palette.text.primary,
-                    "&:hover": {
-                      textDecoration: "underline",
-                      color: theme.palette.primary.main,
-                    },
+                    p: 3,
+                    textAlign: "center",
+                    bgcolor: theme.palette.action.hover,
+                    borderRadius: 1,
                   }}
                 >
-                  {post.sharedPostUser?.username || "User"}
-                </Typography>
-              }
-              subheader={
-                <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
-                  <Typography
-                    component={Link}
-                    to={`/posts/${post.sharedPostId}`}
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                      mt: 0,
-                      lineHeight: 1,
-                      textDecoration: "none",
-                      "&:hover": {
-                        textDecoration: "underline",
-                        color: theme.palette.primary.main,
-                      },
-                    }}
-                  >
-                    {formatRelativetime(post.sharedPostTimestamp)}
+                  <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                    This post has been deleted.
                   </Typography>
-                </Tooltip>
-              }
-            />
-            <CardContent sx={{ pt: 0 }}>
-              {post.sharedPostContent && (
-                <Typography
-                  sx={{
-                    mb: 2,
-                    whiteSpace: "pre-line",
-                    fontSize: "0.95rem",
-                    color: theme.palette.text.primary,
-                  }}
-                >
-                  {post.sharedPostContent}
-                </Typography>
-              )}
-              {post.sharedPostImages?.length > 0 && renderImages(post.sharedPostImages, "shared")}
-            </CardContent>
+                </Box>
+              </CardContent>
+            ) : (
+              <>
+                <CardHeader
+                  avatar={
+                    <Avatar
+                      src={post.sharedPostUser?.avatarUrl || "/placeholder.svg"}
+                      alt={post.sharedPostUser?.username || "User"}
+                      sx={{ width: 32, height: 32 }}
+                    />
+                  }
+                  title={
+                    <Typography
+                      component={Link}
+                      to={`/profile/${post.sharedPostUser.id}`}
+                      variant="subtitle2"
+                      fontWeight="600"
+                      sx={{
+                        cursor: "pointer",
+                        lineHeight: 1,
+                        display: "block",
+                        mb: 0,
+                        textDecoration: "none",
+                        color: theme.palette.text.primary,
+                        "&:hover": {
+                          textDecoration: "underline",
+                          color: theme.palette.primary.main,
+                        },
+                      }}
+                    >
+                      {post.sharedPostUser?.username || "User"}
+                    </Typography>
+                  }
+                  subheader={
+                    <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
+                      <Typography
+                        component={Link}
+                        to={`/posts/${post.sharedPostId}`}
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{
+                          mt: 0,
+                          lineHeight: 1,
+                          textDecoration: "none",
+                          "&:hover": {
+                            textDecoration: "underline",
+                            color: theme.palette.primary.main,
+                          },
+                        }}
+                      >
+                        {formatRelativetime(post.sharedPostTimestamp)}
+                      </Typography>
+                    </Tooltip>
+                  }
+                />
+                <CardContent sx={{ pt: 0 }}>
+                  {post.sharedPostContent && (
+                    <Typography
+                      sx={{
+                        mb: 2,
+                        whiteSpace: "pre-line",
+                        fontSize: "0.95rem",
+                        color: theme.palette.text.primary,
+                      }}
+                    >
+                      {post.sharedPostContent}
+                    </Typography>
+                  )}
+                  {post.sharedPostImages?.length > 0 && renderImages(post.sharedPostImages, "shared")}
+                </CardContent>
+              </>
+            )}
           </Card>
         )}
 

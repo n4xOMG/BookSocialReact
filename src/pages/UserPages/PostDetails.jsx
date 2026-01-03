@@ -349,69 +349,89 @@ const PostDetail = () => {
                     boxShadow: "inset 0 0 10px rgba(0,0,0,0.2)",
                   }}
                 >
-                  <CardHeader
-                    avatar={
-                      <Avatar
-                        src={post.sharedPostUser?.avatarUrl || "/placeholder.svg"}
-                        alt={post.sharedPostUser?.username || "User"}
-                        sx={{ width: 30, height: 30 }}
-                      />
-                    }
-                    title={
-                      <Typography
-                        onClick={() => navigate(`/profile/${post.sharedPostUser.id}`)}
-                        variant="subtitle2"
-                        fontWeight="600"
+                  {/* Check if shared post was deleted */}
+                  {!post.sharedPostUser ? (
+                    <CardContent>
+                      <Box
                         sx={{
-                          textDecoration: "none",
-                          color: "inherit",
-                          "&:hover": { textDecoration: "underline", color: "primary.main" },
-                          cursor: "pointer"
-                        }}
-                    >
-                      {post.sharedPostUser?.username || "User"}
-                    </Typography>
-                  }
-                  subheader={
-                    <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
-                      <Typography 
-                        onClick={() => navigate(`/posts/${post.sharedPostId}`)}
-                        variant="caption" 
-                        color="text.secondary" 
-                        sx={{
-                          mt: 0, 
-                          lineHeight: 1,
-                          textDecoration: "none",
-                          "&:hover": {
-                                    textDecoration: "underline",
-                                    color: "primary.main",
-                                      },
-                              cursor: "pointer",
+                          p: 3,
+                          textAlign: "center",
+                          bgcolor: theme.palette.action.hover,
+                          borderRadius: 1,
                         }}
                       >
-                        {formatRelativeTime(post.sharedPostTimestamp)}
-                      </Typography>
-                    </Tooltip>
+                        <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                          This post has been deleted.
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  ) : (
+                    <>
+                      <CardHeader
+                        avatar={
+                          <Avatar
+                            src={post.sharedPostUser?.avatarUrl || "/placeholder.svg"}
+                            alt={post.sharedPostUser?.username || "User"}
+                            sx={{ width: 30, height: 30 }}
+                          />
+                        }
+                        title={
+                          <Typography
+                            onClick={() => navigate(`/profile/${post.sharedPostUser.id}`)}
+                            variant="subtitle2"
+                            fontWeight="600"
+                            sx={{
+                              textDecoration: "none",
+                              color: "inherit",
+                              "&:hover": { textDecoration: "underline", color: "primary.main" },
+                              cursor: "pointer"
+                            }}
+                        >
+                          {post.sharedPostUser?.username || "User"}
+                        </Typography>
+                      }
+                      subheader={
+                        <Tooltip title={formatExactTime(post.sharedPostTimestamp)} placement="bottom">
+                          <Typography 
+                            onClick={() => navigate(`/posts/${post.sharedPostId}`)}
+                            variant="caption" 
+                            color="text.secondary" 
+                            sx={{
+                              mt: 0, 
+                              lineHeight: 1,
+                              textDecoration: "none",
+                              "&:hover": {
+                                        textDecoration: "underline",
+                                        color: "primary.main",
+                                          },
+                                  cursor: "pointer",
+                            }}
+                          >
+                            {formatRelativeTime(post.sharedPostTimestamp)}
+                          </Typography>
+                        </Tooltip>
 
-                  }
-                />
-                <CardContent sx={{ pt: 0 }}>
-                  {post.sharedPostContent && (
-                    <Typography
-                      sx={{
-                        mb: 2,
-                        whiteSpace: "pre-line",
-                        fontSize: "1rem", 
-                        fontWeight: "normal",
-                      }}
-                    >
-                      {post.sharedPostContent}
-                    </Typography>
+                      }
+                    />
+                    <CardContent sx={{ pt: 0 }}>
+                      {post.sharedPostContent && (
+                        <Typography
+                          sx={{
+                            mb: 2,
+                            whiteSpace: "pre-line",
+                            fontSize: "1rem", 
+                            fontWeight: "normal",
+                          }}
+                        >
+                          {post.sharedPostContent}
+                        </Typography>
+                      )}
+                      {post.sharedPostImages?.length > 0 && renderImages(post.sharedPostImages, "shared")}
+                    </CardContent>
+                    </>
                   )}
-                  {post.sharedPostImages?.length > 0 && renderImages(post.sharedPostImages, "shared")}
-                </CardContent>
-              </Card>
-            )}
+                </Card>
+              )}
             
             {!isEditing && (
               post.images?.length > 0 && renderImages(post.images, "post")

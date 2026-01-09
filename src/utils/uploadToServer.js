@@ -6,11 +6,27 @@ export const generateUniqueUploadId = () => {
 };
 const logger = createLogger("ImageServer");
 
+/**
+ * Sanitizes folder name to remove/replace characters that cause URL issues
+ * (e.g., semicolons, commas in book titles like "Frankenstein; Or, The Modern Prometheus")
+ */
+const sanitizeFolderName = (name) => {
+  if (!name) return name;
+  return name
+    .replace(/[;,]/g, "") // Remove semicolons and commas
+    .replace(/\s+/g, "_") // Replace spaces with underscores
+    .replace(/[<>:"/\\|?*]/g, "") // Remove other problematic characters
+    .replace(/_+/g, "_") // Collapse multiple underscores
+    .trim();
+};
+
 export async function UploadToServer(file, username, folderName, { useAuth = true } = {}) {
+  const sanitizedFolderName = sanitizeFolderName(folderName);
+
   const formData = new FormData();
   formData.append("file", file);
   formData.append("username", username);
-  formData.append("folderName", folderName);
+  formData.append("folderName", sanitizedFolderName);
 
   const client = useAuth ? api : authApi;
 

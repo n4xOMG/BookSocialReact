@@ -90,7 +90,7 @@ const BookClubs = () => {
       else dispatch(fetchPosts(0, postsPerPage));
     } catch (err) {
       console.error("Failed to add post:", err);
-      setSubmissionError("Failed to add post. Please try again.");
+      setSubmissionError(err.message || "Failed to add post. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

@@ -96,7 +96,7 @@ const PostDialog = ({ open, onClose, onSubmit, editingPost, user }) => {
       }
     } catch (err) {
       console.error("Failed to submit post:", err);
-      setSubmissionError("Failed to submit post. Please try again.");
+      setSubmissionError(err.message || "Failed to submit post. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

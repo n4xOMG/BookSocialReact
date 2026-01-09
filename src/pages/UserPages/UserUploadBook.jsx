@@ -120,7 +120,7 @@ export default function UserUploadBook() {
       setSnackbarMessage("Book uploaded successfully!");
       setSnackbarOpen(true);
 
-      navigate("/");
+      navigate("/stories");
     } catch (error) {
       console.error("Upload Error:", error);
       setSnackbarMessage("Error uploading book. Please try again.");

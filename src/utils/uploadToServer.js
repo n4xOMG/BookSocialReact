@@ -57,7 +57,13 @@ export async function UploadToServer(file, username, folderName, { useAuth = tru
     return { url: imagePath, safety };
   } catch (error) {
     const message = error?.response?.data?.message || error.message || "Failed to upload image.";
-    logger.error("Upload failed", { message, status: error?.response?.status });
+    
+    if (message.toLowerCase().includes("explicit content")) {
+      logger.warn("Explicit content upload attempt blocked", { message });
+    } else {
+      logger.error("Upload failed", { message, status: error?.response?.status });
+    }
+    
     throw new Error(message);
   }
 }

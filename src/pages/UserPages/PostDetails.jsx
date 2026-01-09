@@ -72,6 +72,102 @@ const PostDetail = () => {
 
   const getImages = () => (imageSource === "shared" ? post.sharedPostImages : post.images);
 
+  // PostImage component to handle mild content censoring
+  const PostImage = ({ item, index, count, source }) => {
+    const imageUrl = typeof item === "string" ? item : item?.url || "";
+    const isMild = typeof item === "object" ? (item.isMild || item.mild) : false;
+    const [isBlurred, setIsBlurred] = useState(isMild);
+
+    return (
+      <Grid
+        key={index}
+        item
+        xs={count === 1 ? 12 : count === 2 ? 6 : count === 3 && index === 0 ? 12 : 6}
+        sx={{
+          position: "relative",
+          height: count === 1 ? "auto" : count === 2 ? 400 : count === 3 && index === 0 ? 250 : 200,
+        }}
+      >
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            overflow: "hidden",
+            borderRadius: 2,
+          }}
+        >
+          <Box
+            component="img"
+            src={imageUrl}
+            onClick={() => !isBlurred && handleImageClick(index, source)}
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              cursor: isBlurred ? "default" : "pointer",
+              filter: isBlurred ? "blur(20px)" : "none",
+              transition: "filter 0.3s ease",
+            }}
+          />
+          {isBlurred && (
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                bgcolor: "rgba(0,0,0,0.3)",
+                zIndex: 1,
+              }}
+            >
+              <Typography variant="body2" sx={{ color: "white", mb: 1, fontWeight: "bold" }}>
+                Mild Content
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsBlurred(false);
+                }}
+                sx={{
+                  bgcolor: "rgba(0,0,0,0.6)",
+                  "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+                }}
+              >
+                Show
+              </Button>
+            </Box>
+          )}
+        </Box>
+        {index === 3 && count > 4 && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              bgcolor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "#fff",
+              fontSize: "1.5rem",
+              fontWeight: "bold",
+              borderRadius: 2,
+              cursor: "pointer",
+              zIndex: 2,
+            }}
+            onClick={() => handleImageClick(index, source)}
+          >
+            +{count - 4} more
+          </Box>
+        )}
+      </Grid>
+    );
+  };
+
   const renderImages = (images, source = "post") => {
     if (!images || images.length === 0) return null;
 
@@ -79,57 +175,15 @@ const PostDetail = () => {
 
     return (
       <Grid container spacing={1} sx={{ mt: 2, mb: 1 }}>
-        {images.slice(0, 4).map((item, index) => {
-          const imageUrl =
-            typeof item === "string"
-              ? item
-              : item?.url || "";
-
-          return (
-          <Grid
+        {images.slice(0, 4).map((item, index) => (
+          <PostImage
             key={index}
-            item
-            xs={count === 1 ? 12 : count === 2 ? 6 : count === 3 && index === 0 ? 12 : 6}
-            sx={{
-              position: "relative",
-              height: count === 1 ? "auto" : count === 2 ? 400 : count === 3 && index === 0 ? 250 : 200,
-            }}
-          >
-            <Box
-              component="img"
-                src={imageUrl}
-              onClick={() => handleImageClick(index, source)}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 2,
-                cursor: "pointer",
-              }}
-            />
-            {index === 3 && count > 4 && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  inset: 0,
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  color: "#fff",
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  borderRadius: 2,
-                  cursor: "pointer",
-                }}
-                onClick={() => handleImageClick(index, source)}
-              >
-                +{count - 4} more
-              </Box>
-            )}
-          </Grid>
-          )
-        })}
+            item={item}
+            index={index}
+            count={count}
+            source={source}
+          />
+        ))}
       </Grid>
     );
   };

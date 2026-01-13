@@ -71,6 +71,9 @@ import {
   SET_EDIT_CHOICE_REQUEST,
   SET_EDIT_CHOICE_SUCCESS,
   CLEAR_ALL_BOOKS,
+  GET_ADMIN_BOOKS_REQUEST,
+  GET_ADMIN_BOOKS_SUCCESS,
+  GET_ADMIN_BOOKS_FAILED,
 } from "./book.actionType";
 
 const logger = createLogger("BookActions");
@@ -89,6 +92,22 @@ export const getAllBookAction =
       const message = extractErrorMessage(error);
       logger.info("error trying to get all books", message);
       dispatch({ type: GET_ALL_BOOK_FAILED, payload: message });
+    }
+  };
+
+export const getAdminBooksAction =
+  (page = 0, size = 10, filters = {}) =>
+  async (dispatch) => {
+    dispatch({ type: GET_ADMIN_BOOKS_REQUEST });
+    try {
+      const params = { page, size, ...filters };
+      const { data } = await httpClient.get(`${API_BASE_URL}/books`, { params });
+      dispatch({ type: GET_ADMIN_BOOKS_SUCCESS, payload: data });
+      return { payload: data };
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      logger.info("error trying to get admin books", message);
+      dispatch({ type: GET_ADMIN_BOOKS_FAILED, payload: message });
     }
   };
 

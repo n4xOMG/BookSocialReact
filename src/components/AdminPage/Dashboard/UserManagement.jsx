@@ -23,15 +23,18 @@ import {
 } from "@mui/material";
 import { Edit, Delete, Block, CheckCircle, Search, VerifiedUser, GppBad } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUsers, deleteUser, updateUser, banUser, suspendUser, unbanUser, unsuspendUser } from "../../../redux/admin/admin.action";
+import { fetchAllUsers, deleteUser, updateUser, banUser, suspendUser, unbanUser, unsuspendUser, fetchMostActiveUsers, fetchTopSpenders, fetchContentAnalytics } from "../../../redux/admin/admin.action";
 import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
 import BanSuspendUserDialog from "./BanSuspendUserDialog";
+import ActiveUsersTable from "./Analytics/ActiveUsersTable";
+import TopSpendersTable from "./Analytics/TopSpendersTable";
+import PopularAuthorsTable from "./Analytics/PopularAuthorsTable";
 
 const UserManagement = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const { users, loading, error } = useSelector((state) => state.admin);
+  const { users, loading, error, activeUsers, topSpenders, contentAnalytics } = useSelector((state) => state.admin);
   const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -39,6 +42,12 @@ const UserManagement = () => {
   const [openBanSuspendDialog, setOpenBanSuspendDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  useEffect(() => {
+    dispatch(fetchMostActiveUsers());
+    dispatch(fetchTopSpenders());
+    dispatch(fetchContentAnalytics());
+  }, [dispatch]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -161,6 +170,24 @@ const UserManagement = () => {
             ),
           }}
         />
+      </Box>
+
+      {/* Analytics Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+          User Insights
+        </Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 3 }}>
+          <Box>
+            <ActiveUsersTable users={activeUsers} />
+          </Box>
+          <Box>
+            <TopSpendersTable spenders={topSpenders} />
+          </Box>
+          <Box>
+            <PopularAuthorsTable authors={contentAnalytics?.popularAuthors || []} />
+          </Box>
+        </Box>
       </Box>
 
       {error && (

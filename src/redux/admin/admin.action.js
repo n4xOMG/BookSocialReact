@@ -66,6 +66,60 @@ export const fetchPlatformAnalytics = () => async (dispatch) => {
   }
 };
 
+export const fetchBestBooks = (period = "week", limit = 10) => async (dispatch) => {
+  dispatch({ type: types.FETCH_BEST_BOOKS_REQUEST });
+  try {
+    const response = await api.get("/admin/dashboard/best-books", {
+      params: { period, limit }
+    });
+    dispatch({
+      type: types.FETCH_BEST_BOOKS_SUCCESS,
+      payload: response.data?.data || [],
+    });
+  } catch (error) {
+    dispatch({
+      type: types.FETCH_BEST_BOOKS_FAILURE,
+      payload: error.response?.data?.message || error.message,
+    });
+  }
+};
+
+export const fetchMostActiveUsers = (period = "week", limit = 10) => async (dispatch) => {
+  dispatch({ type: types.FETCH_MOST_ACTIVE_USERS_REQUEST });
+  try {
+    const response = await api.get("/admin/dashboard/active-users", {
+      params: { period, limit }
+    });
+    dispatch({
+      type: types.FETCH_MOST_ACTIVE_USERS_SUCCESS,
+      payload: response.data?.data || [],
+    });
+  } catch (error) {
+    dispatch({
+      type: types.FETCH_MOST_ACTIVE_USERS_FAILURE,
+      payload: error.response?.data?.message || error.message,
+    });
+  }
+};
+
+export const fetchTopSpenders = (period = "week", limit = 10) => async (dispatch) => {
+  dispatch({ type: types.FETCH_TOP_SPENDERS_REQUEST });
+  try {
+    const response = await api.get("/admin/dashboard/top-spenders", {
+      params: { period, limit }
+    });
+    dispatch({
+      type: types.FETCH_TOP_SPENDERS_SUCCESS,
+      payload: response.data?.data || [],
+    });
+  } catch (error) {
+    dispatch({
+      type: types.FETCH_TOP_SPENDERS_FAILURE,
+      payload: error.response?.data?.message || error.message,
+    });
+  }
+};
+
 export const fetchUserStatusCounts = () => async (dispatch) => {
   dispatch({ type: types.FETCH_USER_STATUS_COUNTS_REQUEST });
   try {

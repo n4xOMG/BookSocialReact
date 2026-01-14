@@ -6,6 +6,10 @@ const initialState = {
   revenueAnalytics: null,
   contentAnalytics: null,
   platformAnalytics: null,
+  
+  bestBooks: [],
+  activeUsers: [],
+  topSpenders: [],
 
   // User management
   users: [],
@@ -19,6 +23,9 @@ const initialState = {
   revenueAnalyticsLoading: false,
   contentAnalyticsLoading: false,
   platformAnalyticsLoading: false,
+  bestBooksLoading: false,
+  activeUsersLoading: false,
+  topSpendersLoading: false,
   usersLoading: false,
   userStatusCountsLoading: false,
 
@@ -28,6 +35,9 @@ const initialState = {
   revenueAnalyticsError: null,
   contentAnalyticsError: null,
   platformAnalyticsError: null,
+  bestBooksError: null,
+  activeUsersError: null,
+  topSpendersError: null,
   usersError: null,
   userStatusCountsError: null,
 };
@@ -104,6 +114,30 @@ export const adminReducer = (state = initialState, action) => {
         platformAnalyticsLoading: false,
         platformAnalyticsError: action.payload,
       };
+
+    // Best Books
+    case types.FETCH_BEST_BOOKS_REQUEST:
+      return { ...state, bestBooksLoading: true, bestBooksError: null };
+    case types.FETCH_BEST_BOOKS_SUCCESS:
+      return { ...state, bestBooksLoading: false, bestBooks: action.payload, bestBooksError: null };
+    case types.FETCH_BEST_BOOKS_FAILURE:
+      return { ...state, bestBooksLoading: false, bestBooksError: action.payload };
+
+    // Active Users
+    case types.FETCH_MOST_ACTIVE_USERS_REQUEST:
+      return { ...state, activeUsersLoading: true, activeUsersError: null };
+    case types.FETCH_MOST_ACTIVE_USERS_SUCCESS:
+      return { ...state, activeUsersLoading: false, activeUsers: action.payload, activeUsersError: null };
+    case types.FETCH_MOST_ACTIVE_USERS_FAILURE:
+      return { ...state, activeUsersLoading: false, activeUsersError: action.payload };
+
+    // Top Spenders
+    case types.FETCH_TOP_SPENDERS_REQUEST:
+      return { ...state, topSpendersLoading: true, topSpendersError: null };
+    case types.FETCH_TOP_SPENDERS_SUCCESS:
+      return { ...state, topSpendersLoading: false, topSpenders: action.payload, topSpendersError: null };
+    case types.FETCH_TOP_SPENDERS_FAILURE:
+      return { ...state, topSpendersLoading: false, topSpendersError: action.payload };
 
     // Users Management
     case types.FETCH_ALL_USERS_REQUEST:

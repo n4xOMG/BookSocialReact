@@ -61,6 +61,9 @@ import {
   RECORD_BOOK_VIEW_SUCCESS,
   RECORD_BOOK_VIEW_FAILED,
   CLEAR_ALL_BOOKS,
+  GET_ADMIN_BOOKS_REQUEST,
+  GET_ADMIN_BOOKS_SUCCESS,
+  GET_ADMIN_BOOKS_FAILED,
 } from "./book.actionType";
 
 const initialState = {
@@ -69,6 +72,8 @@ const initialState = {
   favoured: null,
   book: null,
   books: [],
+  adminBooks: [],
+  adminTotalBooks: 0,
   bookCount: 0,
   latestUpdateBooks: [],
   userFavouredBooks: [],
@@ -96,6 +101,7 @@ export const bookReducer = (state = initialState, action) => {
     case BOOK_DELETE_REQUEST:
     case GET_BOOK_REQUEST:
     case GET_ALL_BOOK_REQUEST:
+    case GET_ADMIN_BOOKS_REQUEST:
     case GET_BOOK_COUNT_REQUEST:
     case FOLLOW_BOOK_REQUEST:
     case RATING_BOOK_REQUEST:
@@ -181,6 +187,21 @@ export const bookReducer = (state = initialState, action) => {
         error: null,
         books: page > 0 ? [...(state.books || []), ...booksRes] : booksRes,
       };
+
+    case GET_ADMIN_BOOKS_SUCCESS: {
+      const payload = action.payload;
+      const content = Array.isArray(payload) ? payload : payload.content || [];
+      const totalElements = payload.totalElements || content.length;
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        adminBooks: content,
+        adminTotalBooks: totalElements,
+      };
+    }
+
+    case CLEAR_ALL_BOOKS:
 
     case CLEAR_ALL_BOOKS:
       return {
@@ -312,6 +333,7 @@ export const bookReducer = (state = initialState, action) => {
     case BOOK_DELETE_FAILED:
     case GET_BOOK_FAILED:
     case GET_ALL_BOOK_FAILED:
+    case GET_ADMIN_BOOKS_FAILED:
     case GET_BOOK_COUNT_FAILED:
     case FOLLOW_BOOK_FAILED:
     case RATING_BOOK_FAILED:

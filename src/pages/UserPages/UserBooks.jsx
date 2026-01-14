@@ -1,4 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ClearIcon from "@mui/icons-material/Clear";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import SearchIcon from "@mui/icons-material/Search";
@@ -69,7 +70,12 @@ const UserBooks = () => {
   const [isListLoading, setIsListLoading] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [selectedBookId, setSelectedBookId] = useState(null);
+  // Initialize selectedBookId from localStorage to persist across navigation
+  const [selectedBookId, setSelectedBookId] = useState(() => {
+    const stored = localStorage.getItem("userBooks_selectedBookId");
+    // Keep as string or number based on what was stored - the comparison uses String() for safety
+    return stored ? (isNaN(Number(stored)) ? stored : Number(stored)) : null;
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [openFilterDrawer, setOpenFilterDrawer] = useState(false);
@@ -226,18 +232,36 @@ const UserBooks = () => {
     };
   }, [dispatch, user?.id, debouncedQuery, selectedCategories, selectedTags, sortBy, sortOrder]);
 
-  // Auto-select first book
+  // Auto-select first book only if no book is currently selected
+  // This prevents resetting selection after adding chapters or other updates
   useEffect(() => {
     if (!booksByAuthor.length) {
       setSelectedBookId(null);
+      localStorage.removeItem("userBooks_selectedBookId");
       return;
     }
-    if (!selectedBookId || !booksByAuthor.some((item) => item.id === selectedBookId)) {
-      setSelectedBookId(booksByAuthor[0].id);
+    // Only auto-select if there's no current selection
+    // If current selection is not in the list (e.g., after filter change), select first book
+    // Use == for comparison since localStorage stores strings but API may return numbers
+    if (selectedBookId === null) {
+      const firstBookId = booksByAuthor[0].id;
+      setSelectedBookId(firstBookId);
+      localStorage.setItem("userBooks_selectedBookId", String(firstBookId));
+    } else if (!booksByAuthor.some((item) => String(item.id) === String(selectedBookId))) {
+      // Current selection not in filtered list, select first available
+      const firstBookId = booksByAuthor[0].id;
+      setSelectedBookId(firstBookId);
+      localStorage.setItem("userBooks_selectedBookId", String(firstBookId));
     }
   }, [booksByAuthor, selectedBookId]);
 
-  const handleSelectBook = useCallback((id) => setSelectedBookId(id), []);
+  const handleSelectBook = useCallback((id) => {
+    setSelectedBookId(id);
+    // Persist to localStorage so selection survives navigation to editor and back
+    if (id) {
+      localStorage.setItem("userBooks_selectedBookId", id.toString());
+    }
+  }, []);
 
   // Fetch Book Details & Chapters
   useEffect(() => {
@@ -327,13 +351,26 @@ const UserBooks = () => {
           <Panel minSize={30} defaultSize={40} style={panelStyle}>
             <Box sx={headerStyle}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <Typography
-                  variant="h4"
-                  className="font-serif"
-                  sx={{ fontWeight: 800, color: theme.palette.text.primary, letterSpacing: "-0.02em" }}
-                >
-                  My Books
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Tooltip title="Back to Home">
+                    <IconButton
+                      onClick={() => navigate("/")}
+                      sx={{
+                        bgcolor: theme.palette.action.hover,
+                        "&:hover": { bgcolor: theme.palette.action.selected },
+                      }}
+                    >
+                      <ArrowBackIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Typography
+                    variant="h4"
+                    className="font-serif"
+                    sx={{ fontWeight: 800, color: theme.palette.text.primary, letterSpacing: "-0.02em" }}
+                  >
+                    My Books
+                  </Typography>
+                </Box>
                 <Box sx={{ display: "flex", gap: 1 }}>
                   <Tooltip title="Dashboard">
                     <Button variant="text" onClick={() => navigate("/author/dashboard")} sx={{ color: theme.palette.text.secondary }}>

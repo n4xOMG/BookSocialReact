@@ -16,11 +16,14 @@ import {
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import { addCategory, deleteCategory, editCategory, getCategories } from "../../../redux/category/category.action";
+import { fetchContentAnalytics } from "../../../redux/admin/admin.action";
 import { useDispatch, useSelector } from "react-redux";
 import LoadingSpinner from "../../LoadingSpinner";
+import CategoryStats from "./Analytics/CategoryStats";
 
 const CategoriesTab = () => {
   const { categories } = useSelector((state) => state.category);
+  const { contentAnalytics } = useSelector((state) => state.admin);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
@@ -29,7 +32,10 @@ const CategoriesTab = () => {
   useEffect(() => {
     const loadCategories = async () => {
       setLoading(true);
-      await dispatch(getCategories());
+      await Promise.all([
+        dispatch(getCategories()),
+        dispatch(fetchContentAnalytics())
+      ]);
       setLoading(false);
     };
     loadCategories();
@@ -64,6 +70,11 @@ const CategoriesTab = () => {
         <LoadingSpinner />
       ) : (
         <Box>
+          <Box sx={{ mb: 4, height: 400 }}>
+             {contentAnalytics?.categoryStats && (
+                <CategoryStats stats={contentAnalytics.categoryStats} />
+             )}
+          </Box>
           <Button variant="contained" onClick={() => handleOpen()} sx={{ mb: 2 }}>
             Add Category
           </Button>

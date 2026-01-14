@@ -22,12 +22,13 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   deleteBookAction,
   editBookAction,
-  getAllBookAction,
+  getAdminBooksAction,
   getBookCountAction,
   getFeaturedBooks,
   getTrendingBooks,
   setEditorChoice,
 } from "../../../redux/book/book.action";
+import { fetchBestBooks, fetchContentAnalytics } from "../../../redux/admin/admin.action";
 import { getCategories } from "../../../redux/category/category.action";
 import { getTags } from "../../../redux/tag/tag.action";
 import UploadToCloudinary from "../../../utils/uploadToCloudinary";
@@ -36,6 +37,8 @@ import BooksFilter from "./BooksTab/BooksFilter";
 import BooksTable from "./BooksTab/BooksTable";
 import EditBookDialog from "./BooksTab/EditBookDialog";
 import ManageChaptersDialog from "./BooksTab/ManageChaptersDialog";
+import BestBooksTable from "./Analytics/BestBooksTable";
+import PopularChaptersTable from "./Analytics/PopularChaptersTable";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import StarIcon from "@mui/icons-material/Star";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -45,9 +48,20 @@ import { useTheme } from "@emotion/react";
 
 const BooksTab = () => {
   const dispatch = useDispatch();
-  const { books, bookCount, featuredBooks, trendingBooks, loading: booksLoading, error: booksError } = useSelector((state) => state.book);
+  const { 
+    books, 
+    adminBooks,
+    adminTotalBooks,
+    bookCount, 
+    featuredBooks, 
+    trendingBooks, 
+    loading: booksLoading, 
+    error: booksError 
+  } = useSelector((state) => state.book);
   const { categories, loading: categoriesLoading, error: categoriesError } = useSelector((state) => state.category);
   const { tags, loading: tagsLoading, error: tagsError } = useSelector((state) => state.tag);
+  const { bestBooks, contentAnalytics } = useSelector((state) => state.admin);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -59,7 +73,6 @@ const BooksTab = () => {
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalBooks, setTotalBooks] = useState(0);
   const [openEdit, setOpenEdit] = useState(false);
   const [currentBook, setCurrentBook] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,12 +94,14 @@ const BooksTab = () => {
       try {
         setRefreshing(true);
         await Promise.all([
-          dispatch(getAllBookAction()),
+          dispatch(getAdminBooksAction(page, rowsPerPage, filters)),
           dispatch(getBookCountAction()),
           dispatch(getCategories()),
           dispatch(getTags()),
           dispatch(getFeaturedBooks()),
           dispatch(getTrendingBooks()),
+          dispatch(fetchBestBooks()),
+          dispatch(fetchContentAnalytics()),
         ]);
         setRefreshing(false);
       } catch (e) {
@@ -95,30 +110,31 @@ const BooksTab = () => {
       }
     };
     fetchBooksData();
-  }, [dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]); // Initial load
 
-  // Calculate language distribution when books change
+  // Fetch when page/filters change
   useEffect(() => {
-    if (books && books.length > 0) {
-      const langCount = books.reduce((acc, book) => {
+    dispatch(getAdminBooksAction(page, rowsPerPage, filters));
+  }, [dispatch, page, rowsPerPage, filters]);
+
+  // Calculate language distribution when books change (using all books metric if available, else current page)
+  useEffect(() => {
+    if (adminBooks && adminBooks.length > 0) {
+      const langCount = adminBooks.reduce((acc, book) => {
         const lang = book.language || "Unknown";
         acc[lang] = (acc[lang] || 0) + 1;
         return acc;
       }, {});
       setLanguageStats(langCount);
     }
-  }, [books]);
-
-  // Update totalBooks whenever books or filters change
-  useEffect(() => {
-    setTotalBooks(filteredBooks.length);
-  }, [books, filters]);
+  }, [adminBooks]);
 
   const handleRefreshData = async () => {
     setRefreshing(true);
     try {
       await Promise.all([
-        dispatch(getAllBookAction()),
+        dispatch(getAdminBooksAction(page, rowsPerPage, filters)),
         dispatch(getBookCountAction()),
         dispatch(getFeaturedBooks()),
         dispatch(getTrendingBooks()),
@@ -139,7 +155,7 @@ const BooksTab = () => {
     if (bookToDelete) {
       try {
         await dispatch(deleteBookAction(bookToDelete));
-        await dispatch(getAllBookAction());
+        dispatch(getAdminBooksAction(page, rowsPerPage, filters));
         await dispatch(getBookCountAction());
         setDeleteDialogOpen(false);
         setBookToDelete(null);
@@ -158,7 +174,7 @@ const BooksTab = () => {
     try {
       await dispatch(setEditorChoice(id, book));
       // Refresh the books data to show the updated state
-      await dispatch(getAllBookAction());
+      dispatch(getAdminBooksAction(page, rowsPerPage, filters));
       await dispatch(getFeaturedBooks());
     } catch (error) {
       console.error("Error toggling isSuggested status:", error);
@@ -192,7 +208,7 @@ const BooksTab = () => {
 
       await dispatch(editBookAction(currentBook.id, updatedBookData));
       // Refresh books data
-      await dispatch(getAllBookAction());
+      dispatch(getAdminBooksAction(page, rowsPerPage, filters));
 
       handleEditClose();
     } catch (error) {
@@ -204,7 +220,7 @@ const BooksTab = () => {
 
   const handleFilterChange = (e) => {
     setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setPage(0);
+    setPage(0); // Reset to first page on filter change
   };
 
   const handleChangePage = (event, newPage) => {
@@ -216,16 +232,7 @@ const BooksTab = () => {
     setPage(0);
   };
 
-  const filteredBooks = books.filter((book) => {
-    const matchesCategory = filters.category ? book.categoryId === parseInt(filters.category) : true;
-    const matchesTag = filters.tag ? book.tagIds?.includes(parseInt(filters.tag)) : true;
-    const matchesStatus = filters.status ? book.status === filters.status : true;
-    const matchesTitle = filters.title ? book.title?.toLowerCase().includes(filters.title.toLowerCase()) : true;
-    return matchesCategory && matchesTag && matchesStatus && matchesTitle;
-  });
-
-  const paginatedBooks = filteredBooks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
+  // We no longer slice locally. adminBooks should only contain the current page.
   const isLoading = booksLoading || categoriesLoading || tagsLoading;
 
   const getCategoryById = (categoryId) => {
@@ -335,6 +342,21 @@ const BooksTab = () => {
         </Alert>
       )}
 
+      {/* Analytics Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+          Performance Insights
+        </Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+          <Box>
+            <BestBooksTable books={bestBooks} />
+          </Box>
+          <Box>
+            <PopularChaptersTable chapters={contentAnalytics?.popularChapters || []} />
+          </Box>
+        </Box>
+      </Box>
+
       {/* Filters */}
       <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
@@ -352,11 +374,11 @@ const BooksTab = () => {
           Books List
         </Typography>
 
-        {!isLoading && filteredBooks.length === 0 ? (
+        {!isLoading && adminBooks.length === 0 ? (
           <Alert severity="info">No books match your filters.</Alert>
         ) : (
           <BooksTable
-            books={paginatedBooks.map((book) => ({
+            books={adminBooks.map((book) => ({
               ...book,
               category: getCategoryById(book.categoryId),
               tags: getTagsByIds(book.tagIds),
@@ -364,7 +386,7 @@ const BooksTab = () => {
             loading={isLoading}
             page={page}
             rowsPerPage={rowsPerPage}
-            totalBooks={filteredBooks.length}
+            totalBooks={adminTotalBooks}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
             handleEditOpen={handleEditOpen}

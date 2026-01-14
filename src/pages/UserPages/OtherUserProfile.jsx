@@ -120,9 +120,10 @@ const OtherUserProfile = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch({ type: CLEAR_PROFILE_USER });
-    dispatch(getProfileUserById(userId));
-  }, [dispatch, userId]);
+    return () => {
+      dispatch({ type: CLEAR_PROFILE_USER });
+    };
+  }, [dispatch]);
 
 
   if (loading) {

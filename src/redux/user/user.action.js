@@ -402,6 +402,8 @@ export const getBlockedUsers = () => async (dispatch) => {
 export const blockUser = (userIdToBlock) => async (dispatch) => {
   dispatch({ type: BLOCK_USER_REQUEST });
   try {
+    console.log("Blocking user:", userIdToBlock);
+
     const response = await api.post(`${API_BASE_URL}/api/user/block/${userIdToBlock}`);
     const { data, message, success } = extractResponsePayload(response);
     logger.debug("Block user response: ", { data });

@@ -296,19 +296,24 @@ export const userReducer = (state = initialState, action) => {
     }
     case FOLLOW_AUTHOR_SUCCESS:
     case UNFOLLOW_AUTHOR_SUCCESS: {
-      const payload = action.payload || {};
-      const followState = payload.followedByCurrentUser !== undefined ? { followedByCurrentUser: payload.followedByCurrentUser } : {};
+      const isFollow = action.type === FOLLOW_AUTHOR_SUCCESS;
+
       return {
         ...state,
         error: null,
-        user: state.user
-          ? state.user.id && payload.id && state.user.id === payload.id
-            ? { ...state.user, ...payload }
-            : { ...state.user, ...followState }
-          : state.user,
-        users: payload.id ? replaceUser(state.users, payload) : state.users,
+
+        profileUser: state.profileUser
+          ? {
+              ...state.profileUser,
+              followedByCurrentUser: isFollow,
+            }
+          : state.profileUser,
+
+        user: state.user,
+        users: state.users,
       };
     }
+
     case GET_TOTAL_USERS_SUCCESS:
       return {
         ...state,

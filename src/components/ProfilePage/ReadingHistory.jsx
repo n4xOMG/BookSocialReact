@@ -4,6 +4,8 @@ import { Box, Button, Chip, Divider, Grid, LinearProgress, Paper, Skeleton, Typo
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
+import { formatLastReadDate } from "../../utils/formatDate";
+import { useNavigate } from "react-router-dom";
 
 const ReadingHistory = ({ userId }) => {
   const [loading, setLoading] = useState(true);
@@ -12,6 +14,7 @@ const ReadingHistory = ({ userId }) => {
   const theme = useTheme();
   const { readingProgresses = [] } = useSelector((state) => state.user);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -206,7 +209,7 @@ const ReadingHistory = ({ userId }) => {
                 />
 
                 {/* Content */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ flex: 1, minWidth: 0, ml: 2, }}>
                   {/* Title + Chip */}
                   <Box
                     sx={{
@@ -229,6 +232,7 @@ const ReadingHistory = ({ userId }) => {
                     >
                       {item.bookTitle}
                     </Typography>
+                    
 
                     {!isMobile && (
                       <Chip
@@ -240,11 +244,24 @@ const ReadingHistory = ({ userId }) => {
                     )}
                   </Box>
 
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      display: "block",
+                      textAlign: 'left',
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {item.bookAuthor}
+                  </Typography>
                   {/* Chapter */}
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    sx={{ display: "block", mt: 0.5 }}
+                    sx={{ display: "block", mt: 0.5, }}
                   >
                     Ch. {item.chapterNum}: {item.chapterName}
                   </Typography>
@@ -274,7 +291,7 @@ const ReadingHistory = ({ userId }) => {
                   >
                     {!isMobile && (
                       <Typography variant="caption" color="text.secondary">
-                        Last read: {new Date(item.updatedAt).toLocaleDateString()}
+                        Last read: {formatLastReadDate(item.lastReadAt)}
                       </Typography>
                     )}
 
@@ -283,6 +300,7 @@ const ReadingHistory = ({ userId }) => {
                       fullWidth={isMobile}
                       variant="contained"
                       startIcon={<MenuBookIcon fontSize="small" />}
+                      onClick={() => navigate(`/books/${item.bookId}/chapters/${item.chapterId}`)}
                       sx={{
                         textTransform: "none",
                         borderRadius: "12px",

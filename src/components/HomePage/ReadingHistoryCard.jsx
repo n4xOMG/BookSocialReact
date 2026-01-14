@@ -2,28 +2,8 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { Box, Card, LinearProgress, Typography, Stack, Skeleton, Chip, alpha, useTheme } from "@mui/material";
 import React, { memo } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatLastReadDate } from "../../utils/formatDate";
 
-function formatLastReadDate(dateString) {
-  const now = new Date();
-  const lastRead = new Date(dateString);
-  const diffTime = Math.abs(now - lastRead);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    if (diffHours === 0) {
-      const diffMinutes = Math.floor(diffTime / (1000 * 60));
-      return `${diffMinutes} min ago`;
-    }
-    return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-  } else if (diffDays === 1) {
-    return "Yesterday";
-  } else if (diffDays < 7) {
-    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-  } else {
-    return lastRead.toLocaleDateString();
-  }
-}
 
 const ReadingHistoryCard = memo(({ readingProgresses = [] }) => {
   const navigate = useNavigate();

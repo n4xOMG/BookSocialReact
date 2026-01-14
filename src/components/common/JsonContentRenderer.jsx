@@ -65,30 +65,36 @@ const JsonContentRenderer = ({ content, themeMode = "light" }) => {
 };
 
 const renderTextNode = (node, index) => {
-  let text = node.text;
+  const text = node.text || "\u00A0";
 
-  // Handle empty text nodes
-  if (!text && index === 0) {
-    text = "\u00A0"; // Non-breaking space for empty paragraphs
-  }
+  const parts = text.split(/(\s+)/);
 
-  let element = <span key={index}>{text}</span>;
+  const content = parts.map((part, i) => {
+    if (part === "") return null;
 
-  // Apply formatting
-  if (node.bold) {
-    element = <strong key={index}>{element}</strong>;
-  }
+    return (
+      <span
+        key={`${index}-${i}`}
+        style={{
+          userSelect: "none",
+          pointerEvents: "none",
+          whiteSpace: "pre-wrap",
+        }}
+      >
+        {part}
+      </span>
+    );
+  });
 
-  if (node.italic) {
-    element = <em key={index}>{element}</em>;
-  }
+  let element = <span>{content}</span>;
 
-  if (node.underline) {
-    element = <u key={index}>{element}</u>;
-  }
+  if (node.bold) element = <strong>{element}</strong>;
+  if (node.italic) element = <em>{element}</em>;
+  if (node.underline) element = <u>{element}</u>;
 
-  return element;
+  return <React.Fragment key={index}>{element}</React.Fragment>;
 };
+
 
 const renderElementNode = (node, index, themeMode, renderNode) => {
   const children = node.children || [];
@@ -134,6 +140,8 @@ const renderElementNode = (node, index, themeMode, renderNode) => {
         >
           {node.url ? (
             <img
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
               src={node.url}
               alt={node.alt || "Image"}
               style={{
@@ -141,6 +149,8 @@ const renderElementNode = (node, index, themeMode, renderNode) => {
                 height: "auto",
                 borderRadius: "4px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                userSelect: "none",
+                pointerEvents: "none",
               }}
               onError={(e) => {
                 e.target.style.display = "none";

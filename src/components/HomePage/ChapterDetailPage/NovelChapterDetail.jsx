@@ -32,7 +32,8 @@ export default function NovelChapterDetail({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("readerThemeMode") || "light";
   });
@@ -140,10 +141,27 @@ export default function NovelChapterDetail({
       window.removeEventListener("popstate", handleNavigation);
     };
   }, [debouncedSaveProgress]);
+
   const handleThemeModeChange = (value) => {
     setThemeMode(value);
     localStorage.setItem("readerThemeMode", value);
   };
+
+  //blockCopy
+  useEffect(() => {
+    const blockCopy = (e) => e.preventDefault();
+
+    document.addEventListener("copy", blockCopy);
+    document.addEventListener("cut", blockCopy);
+    document.addEventListener("contextmenu", blockCopy);
+
+    return () => {
+      document.removeEventListener("copy", blockCopy);
+      document.removeEventListener("cut", blockCopy);
+      document.removeEventListener("contextmenu", blockCopy);
+    };
+  }, []);
+
   return (
     <>
       {loading ? (
@@ -160,7 +178,17 @@ export default function NovelChapterDetail({
           <Box
             onClick={toggleFloatingMenu}
             ref={contentRef}
-            sx={{ flex: 1, p: 3, typography: "body1", lineHeight: 1.75, px: isSmallScreen ? 2 : 10 }}
+            sx={{ 
+              flex: 1, 
+              p: 3, 
+              typography: "body1", 
+              lineHeight: 1.75, 
+              px: isMobile ? 2 : isTablet ? 10 : 40, 
+              //block select
+              userSelect: "none", 
+              WebkitUserSelect: "none",
+              MozUserSelect: "none",
+            }}
           >
             {processedContent ? (
               <JsonContentRenderer content={processedContent} themeMode={themeMode} />

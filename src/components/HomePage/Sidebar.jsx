@@ -22,7 +22,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getReadingProgressByUser } from "../../redux/user/user.action";
 import ReadingHistoryCard from "./ReadingHistoryCard";
 
-// Định nghĩa DrawerHeader và MiniDrawer
 const drawerWidth = 220;
 const collapsedDrawerWidth = 70;
 
@@ -101,7 +100,6 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [historyExpanded, setHistoryExpanded] = useState(true);
 
-  // Thay đổi 3: Memoize menu items
   const menuItems = useMemo(
     () => [
       { text: "Home", icon: <Explore />, link: "/" },
@@ -160,7 +158,6 @@ export const Sidebar = ({ toggleTheme, isDarkMode, open, setOpen }) => {
     >
       {/* Sidebar Header */}
       <DrawerHeader sx={{ justifyContent: "left", px: 2 }}>
-        {/* Thay đổi 4: Tối ưu hóa logic hiển thị nút */}
         <IconButton onClick={() => setOpen(!open)} sx={{ display: "inline-flex" }}>
           {open ? <ChevronLeft /> : <ChevronRight />}
         </IconButton>

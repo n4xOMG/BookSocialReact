@@ -59,6 +59,7 @@ export const BookDetailPage = () => {
   const book = useSelector((store) => store.book.book);
   const relatedBooks = useSelector((store) => store.book.relatedBooks);
   const rating = useSelector((store) => store.book.rating);
+  const avgRating = useSelector((store) => store.book.avgRating);
   const progresses = useSelector((store) => store.book.progresses);
   const categories = useSelector((store) => store.category.categories);
   const tags = useSelector((store) => store.tag.tags);
@@ -158,6 +159,8 @@ export const BookDetailPage = () => {
   const handleRating = checkAuth(async (value) => {
     try {
       await dispatch(ratingBookAction(bookId, value));
+      // Refetch the average rating to update the UI immediately
+      await dispatch(getAvgBookRating(bookId));
     } catch {
       // ignore
     }
@@ -237,7 +240,7 @@ export const BookDetailPage = () => {
                     }}
                   >
                     <Typography variant="subtitle1" fontWeight="bold">
-                      {book.avgRating ? book.avgRating.toFixed(1) : "0.0"}
+                      {(avgRating !== null && avgRating !== undefined ? avgRating : book?.avgRating ?? 0).toFixed(1)}
                     </Typography>
                     <StarRate fontSize="small" />
                   </Box>

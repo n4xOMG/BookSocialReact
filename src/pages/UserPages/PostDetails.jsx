@@ -1,4 +1,4 @@
-import { Delete, Edit, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon } from "@mui/icons-material";
+import { Delete, Edit, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon, MenuBook } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -212,14 +212,18 @@ const PostDetail = () => {
 
   const handleSaveEdit = async () => {
     const newFiles = editImages.filter((img) => img instanceof File);
-    const existingUrls = editImages.filter((img) => typeof img === "string");
+    const existingImages = editImages.filter((img) => !(img instanceof File));
 
     try {
-      const uploadedUrls = await Promise.all(newFiles.map((file) => UploadToServer(file, user.username, "bookposts")));
+      const uploadResults = await Promise.all(newFiles.map((file) => UploadToServer(file, user.username, "bookposts")));
+      const uploadedImageObjects = uploadResults.map((result) => ({
+        url: result.url,
+        isMild: result.safety?.level === "MILD"
+      }));
 
       const postData = {
         content: editContent,
-        images: [...existingUrls, ...uploadedUrls],
+        images: [...existingImages, ...uploadedImageObjects],
       };
 
       const result = await dispatch(updatePost(post.id, postData));
@@ -347,7 +351,13 @@ const PostDetail = () => {
                 {editImages.map((img, index) => (
                   <Box key={index} sx={{ position: "relative", width: 100, height: 100 }}>
                     <img
-                      src={typeof img === "string" ? img : URL.createObjectURL(img)}
+                      src={
+                        typeof img === "string" 
+                          ? img 
+                          : (img instanceof File || img instanceof Blob)
+                            ? URL.createObjectURL(img) 
+                            : img?.url || ""
+                      }
                       alt=""
                       style={{
                         width: "100%",
@@ -392,8 +402,61 @@ const PostDetail = () => {
                 </Typography>
               )}
 
-              {/* Shared post display */}
-              {post.sharedPostId && (
+              {/* Shared post / book display */}
+              {post.postType === 'BOOK_SHARE' && post.sharedBook ? (
+                  <Card
+                      elevation={0}
+                      sx={{
+                          borderRadius: "12px",
+                          mb: 2,
+                          display: "flex",
+                          overflow: "hidden",
+                          border: "1px solid",
+                          borderColor: theme.palette.divider,
+                          cursor: "pointer",
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                              transform: "scale(1.02)",
+                              borderColor: theme.palette.primary.main,
+                              boxShadow: theme.shadows[3],
+                          }
+                      }}
+                      onClick={() => navigate(`/books/${post.sharedBook.id}`)}
+                  >
+                      <Box
+                          component="img"
+                          src={post.sharedBook.bookCover?.url || "/placeholder.svg"}
+                          alt={post.sharedBook.title}
+                          sx={{
+                              width: 100,
+                              minWidth: 100,
+                              height: 150,
+                              objectFit: "cover",
+                          }}
+                      />
+                      <Box sx={{ p: 2, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                          <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.3, mb: 0.5 }}>
+                              {post.sharedBook.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                              by {post.sharedBook.author?.name || "Unknown Author"}
+                          </Typography>
+                          <Box 
+                            sx={{ 
+                              display: "flex", 
+                              alignItems: "center", 
+                              gap: 0.5,
+                              color: theme.palette.primary.main 
+                            }}
+                          >
+                              <MenuBook fontSize="small" />
+                              <Typography variant="caption" fontWeight="600">
+                                 Read Now
+                              </Typography>
+                          </Box>
+                      </Box>
+                  </Card>
+              ) : post.sharedPostId && (
                 <Card
                   variant="outlined"
                   sx={{

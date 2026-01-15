@@ -1,4 +1,4 @@
-import { Delete, Edit, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon } from "@mui/icons-material";
+import { Delete, Edit, Favorite, FavoriteBorder, Link as LinkIcon, Message, Share as ShareIcon, MenuBook } from "@mui/icons-material";
 import { Avatar, Box, Button, Card, CardContent, CardHeader, Chip, Divider, Grid, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useState } from "react";
@@ -317,7 +317,60 @@ const PostItem = ({ post, checkAuth }) => {
         )}
 
         {/* Display shared post information */}
-        {post.sharedPostId && (
+        {post.postType === 'BOOK_SHARE' && post.sharedBook ? (
+            <Card
+                elevation={0}
+                sx={{
+                    borderRadius: "12px",
+                    mb: 2,
+                    display: "flex",
+                    overflow: "hidden",
+                    border: "1px solid",
+                    borderColor: theme.palette.divider,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                        transform: "scale(1.02)",
+                        borderColor: theme.palette.primary.main,
+                        boxShadow: theme.shadows[3],
+                    }
+                }}
+                onClick={() => navigate(`/books/${post.sharedBook.id}`)}
+            >
+                <Box
+                    component="img"
+                    src={post.sharedBook.bookCover?.url || "/placeholder.svg"}
+                    alt={post.sharedBook.title}
+                    sx={{
+                        width: 100,
+                        minWidth: 100,
+                        height: 150,
+                        objectFit: "cover",
+                    }}
+                />
+                <Box sx={{ p: 2, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.3, mb: 0.5 }}>
+                        {post.sharedBook.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        by {post.sharedBook.author?.name || "Unknown Author"}
+                    </Typography>
+                    <Box 
+                      sx={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: 0.5,
+                        color: theme.palette.primary.main 
+                      }}
+                    >
+                        <MenuBook fontSize="small" />
+                        <Typography variant="caption" fontWeight="600">
+                           Read Now
+                        </Typography>
+                    </Box>
+                </Box>
+            </Card>
+        ) : post.sharedPostId && (
           <Card
             elevation={0}
             sx={{

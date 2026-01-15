@@ -153,3 +153,23 @@ export const likePost = (postId) => async (dispatch) => {
     return { error: errorMessage };
   }
 };
+
+export const shareBook = (bookId, postDTO) => async (dispatch) => {
+  dispatch({ type: ADD_POST_REQUEST });
+  try {
+    const response = await api.post(`${API_BASE_URL}/posts/share-book/${bookId}`, postDTO);
+    const { data, message, success } = extractResponsePayload(response);
+    
+    if (!success) {
+        throw new Error(message || "Failed to share book.");
+    }
+
+    dispatch({ type: ADD_POST_SUCCESS, payload: data });
+    return { payload: data, message, success };
+  } catch (error) {
+    const errorMessage = extractErrorMessage(error);
+    logger.error("Failed to share book", error);
+    dispatch({ type: ADD_POST_FAILURE, payload: errorMessage });
+    return { error: errorMessage };
+  }
+};

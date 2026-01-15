@@ -1,24 +1,28 @@
+import { useTheme } from "@emotion/react";
+import LanguageIcon from "@mui/icons-material/Language";
+import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import StarIcon from "@mui/icons-material/Star";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import {
   Alert,
   Box,
-  Card,
-  CardContent,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Divider,
   Grid,
   IconButton,
   Paper,
   Tooltip,
   Typography,
-  useMediaQuery,
+  useMediaQuery
 } from "@mui/material";
 import Button from "@mui/material/Button";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { fetchBestBooks, fetchContentAnalytics } from "../../../redux/admin/admin.action";
 import {
   deleteBookAction,
   editBookAction,
@@ -28,23 +32,16 @@ import {
   getTrendingBooks,
   setEditorChoice,
 } from "../../../redux/book/book.action";
-import { fetchBestBooks, fetchContentAnalytics } from "../../../redux/admin/admin.action";
 import { getCategories } from "../../../redux/category/category.action";
 import { getTags } from "../../../redux/tag/tag.action";
 import UploadToCloudinary from "../../../utils/uploadToCloudinary";
 import LoadingSpinner from "../../LoadingSpinner";
+import BestBooksTable from "./Analytics/BestBooksTable";
+import PopularChaptersTable from "./Analytics/PopularChaptersTable";
 import BooksFilter from "./BooksTab/BooksFilter";
 import BooksTable from "./BooksTab/BooksTable";
 import EditBookDialog from "./BooksTab/EditBookDialog";
 import ManageChaptersDialog from "./BooksTab/ManageChaptersDialog";
-import BestBooksTable from "./Analytics/BestBooksTable";
-import PopularChaptersTable from "./Analytics/PopularChaptersTable";
-import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
-import StarIcon from "@mui/icons-material/Star";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import LanguageIcon from "@mui/icons-material/Language";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import { useTheme } from "@emotion/react";
 
 const BooksTab = () => {
   const dispatch = useDispatch();
@@ -78,15 +75,12 @@ const BooksTab = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Manage chapters dialog state
   const [manageChaptersOpen, setManageChaptersOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
 
-  // Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState(null);
 
-  // Language distribution calculation
   const [languageStats, setLanguageStats] = useState({});
 
   useEffect(() => {
@@ -110,15 +104,13 @@ const BooksTab = () => {
       }
     };
     fetchBooksData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch]); // Initial load
 
-  // Fetch when page/filters change
+  }, [dispatch]);
+
   useEffect(() => {
     dispatch(getAdminBooksAction(page, rowsPerPage, filters));
   }, [dispatch, page, rowsPerPage, filters]);
 
-  // Calculate language distribution when books change (using all books metric if available, else current page)
   useEffect(() => {
     if (adminBooks && adminBooks.length > 0) {
       const langCount = adminBooks.reduce((acc, book) => {
@@ -173,7 +165,6 @@ const BooksTab = () => {
   const handleToggleIsSuggested = async (id, book) => {
     try {
       await dispatch(setEditorChoice(id, book));
-      // Refresh the books data to show the updated state
       dispatch(getAdminBooksAction(page, rowsPerPage, filters));
       await dispatch(getFeaturedBooks());
     } catch (error) {
@@ -198,7 +189,6 @@ const BooksTab = () => {
       if (currentBook.coverFile) {
         imageUrl = await UploadToCloudinary(currentBook.coverFile, "books");
       }
-      // Prepare the updated book data with categoryIds and tagIds
       const updatedBookData = {
         ...currentBook,
         bookCover: imageUrl,
@@ -207,7 +197,6 @@ const BooksTab = () => {
       };
 
       await dispatch(editBookAction(currentBook.id, updatedBookData));
-      // Refresh books data
       dispatch(getAdminBooksAction(page, rowsPerPage, filters));
 
       handleEditClose();
@@ -220,7 +209,7 @@ const BooksTab = () => {
 
   const handleFilterChange = (e) => {
     setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setPage(0); // Reset to first page on filter change
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -232,7 +221,6 @@ const BooksTab = () => {
     setPage(0);
   };
 
-  // We no longer slice locally. adminBooks should only contain the current page.
   const isLoading = booksLoading || categoriesLoading || tagsLoading;
 
   const getCategoryById = (categoryId) => {
@@ -243,7 +231,6 @@ const BooksTab = () => {
     return tags.filter((tag) => tagIds?.includes(tag.id));
   };
 
-  // Handler to open Manage Chapters Dialog
   const handleManageChapters = (book) => {
     setSelectedBook(book);
     setManageChaptersOpen(true);
@@ -254,7 +241,6 @@ const BooksTab = () => {
     setManageChaptersOpen(false);
   };
 
-  // Stats cards data
   const statsCards = [
     {
       title: "Total Books",

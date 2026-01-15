@@ -124,8 +124,11 @@ export const bookReducer = (state = initialState, action) => {
 
     case GET_TRENDING_BOOKS_SUCCESS:
       return { ...state, loading: false, error: null, trendingBooks: action.payload };
+    
+    case GET_LATEST_UPDATE_BOOK_SUCCESS:
+      return { ...state, loading: false, error: null, latestUpdateBooks: action.payload };
     case GET_RELATED_BOOKS_SUCCESS:
-      return { ...state, loading: false, relatedBooks: action.payload };
+      return { ...state, loading: false, error: null, relatedBooks: action.payload };
     case GET_BOOK_SUCCESS:
       return {
         ...state,
@@ -164,8 +167,6 @@ export const bookReducer = (state = initialState, action) => {
         trendingBooks: state.trendingBooks.map((book) => (book.id === action.payload.id ? action.payload : book)),
         featuredBooks: state.featuredBooks.map((book) => (book.id === action.payload.id ? action.payload : book)),
       };
-    case GET_LATEST_UPDATE_BOOK_SUCCESS:
-      return { ...state, loading: false, latestUpdateBooks: action.payload };
     case FOLLOW_BOOK_SUCCESS:
       return {
         ...state,
@@ -202,8 +203,6 @@ export const bookReducer = (state = initialState, action) => {
     }
 
     case CLEAR_ALL_BOOKS:
-
-    case CLEAR_ALL_BOOKS:
       return {
         ...state,
         books: [],
@@ -214,7 +213,6 @@ export const bookReducer = (state = initialState, action) => {
       return { ...state, loading: false, error: null, rating: action.payload };
 
     case GET_FAVOURED_BOOK_SUCCESS: {
-      // Support Spring Page<BookDTO> or array fallback
       const payload = action.payload;
       let content = Array.isArray(payload) ? payload : payload.content || [];
       let page = payload.pageable?.pageNumber ?? 0;
@@ -245,6 +243,7 @@ export const bookReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        error: null,
         booksByAuthor: pageNumber > 0 ? [...state.booksByAuthor, ...content] : content,
         booksByAuthorPage: pageNumber,
         booksByAuthorHasMore: hasMore,

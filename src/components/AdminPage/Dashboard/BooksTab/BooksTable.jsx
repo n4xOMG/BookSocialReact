@@ -123,11 +123,11 @@ const BooksTable = ({
                   size="small"
                   onClick={() => handleToggleIsSuggested(book.id, {
                     ...book,
-                    isSuggested: !book.isSuggested,
+                    suggested: !book.suggested,
                   })}
-                  color={book.isSuggested ? "warning" : "default"}
+                  color={book.suggested ? "warning" : "default"}
                 >
-                  {book.isSuggested ? <StarIcon /> : <StarBorderIcon />}
+                  {book.suggested ? <StarIcon /> : <StarBorderIcon />}
                 </IconButton>
 
                 <IconButton
@@ -240,12 +240,12 @@ const BooksTable = ({
                       </Stack>
                     </TableCell>
                     <TableCell align="center">
-                      <Tooltip title={book.isSuggested ? "Remove from featured" : "Add to featured"}>
+                      <Tooltip title={book.suggested ? "Remove from featured" : "Add to featured"}>
                         <IconButton
-                          onClick={() => handleToggleIsSuggested(book.id, { ...book, isSuggested: !book.isSuggested })}
-                          color={book.isSuggested ? "warning" : "default"}
+                          onClick={() => handleToggleIsSuggested(book.id, { ...book, suggested: !book.suggested })}
+                          color={book.suggested ? "warning" : "default"}
                         >
-                          {book.isSuggested ? <StarIcon /> : <StarBorderIcon />}
+                          {book.suggested ? <StarIcon /> : <StarBorderIcon />}
                         </IconButton>
                       </Tooltip>
                     </TableCell>

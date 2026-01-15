@@ -1,11 +1,12 @@
-import { FavoriteBorder, MenuBook, Report, StarRate, Sort as SortIcon } from "@mui/icons-material";
+import { FavoriteBorder, MenuBook, Report, StarRate, Sort as SortIcon, Share as ShareIcon } from "@mui/icons-material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useTheme, Menu, MenuItem, Tooltip } from "@mui/material";
+import { Box, Button, Container, Grid, IconButton, Paper, Rating, Typography, useTheme, Menu, MenuItem, Tooltip, Snackbar, Alert } from "@mui/material";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 import ReportModal from "../../components/BookClubs/ReportModal";
+import ShareModal from "../../components/BookClubs/ShareModal";
 import AuthorCard from "../../components/BookDetailPageComponents/AuthorCard";
 import { BookDetails } from "../../components/BookDetailPageComponents/BookDetails";
 import { ChapterList } from "../../components/BookDetailPageComponents/ChapterList";
@@ -21,6 +22,7 @@ import {
   ratingBookAction,
   recordBookViewAction,
 } from "../../redux/book/book.action";
+import { shareBook } from "../../redux/post/post.action";
 import { clearChapters, getAllChaptersByBookIdAction } from "../../redux/chapter/chapter.action";
 import { createReportAction } from "../../redux/report/report.action";
 import { isTokenExpired, useAuthCheck } from "../../utils/useAuthCheck";
@@ -42,6 +44,16 @@ export const BookDetailPage = () => {
   const [chapterSortBy, setChapterSortBy] = useState("uploadDate");
   const [chapterSortDir, setChapterSortDir] = useState("asc");
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
+
+  // Share Modal
+  const [openShareModal, setOpenShareModal] = useState(false);
+  const [shareContent, setShareContent] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   // Optimized Selectors
   const book = useSelector((store) => store.book.book);
@@ -279,6 +291,22 @@ export const BookDetailPage = () => {
                     >
                       <Report />
                     </IconButton>
+
+                    <IconButton
+                      onClick={() => setOpenShareModal(true)}
+                      sx={{
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: "12px",
+                        color: theme.palette.text.secondary,
+                        "&:hover": {
+                          color: theme.palette.primary.main,
+                          borderColor: theme.palette.primary.main,
+                          bgcolor: theme.palette.primary.light + "10",
+                        },
+                      }}
+                    >
+                      <ShareIcon />
+                    </IconButton>
                   </Box>
 
                   {/* Start Reading Button */}
@@ -379,6 +407,37 @@ export const BookDetailPage = () => {
         setReportReason={setReportReason}
         handleSubmitReport={handleSubmitReport}
       />
+      
+      <ShareModal
+        openShareModal={openShareModal}
+        setOpenShareModal={setOpenShareModal}
+        shareContent={shareContent}
+        setShareContent={setShareContent}
+        handleShare={checkAuth(async () => {
+             const postDTO = { content: shareContent };
+             try {
+                 await dispatch(shareBook(bookId, postDTO));
+                 setSnackbar({ open: true, message: "Book shared successfully!", severity: "success" });
+                 setOpenShareModal(false);
+                 setShareContent("");
+             } catch (e) {
+                 console.error("Failed to share book:", e);
+                 setSnackbar({ open: true, message: "Failed to share book.", severity: "error" });
+             }
+        })}
+      />
+
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '12px', boxShadow: theme.shadows[3] }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
       <AuthDialog />
     </Box>
   );
